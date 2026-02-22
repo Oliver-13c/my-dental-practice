@@ -69,10 +69,10 @@ export function AppointmentBookingWizard() {
   const t = useTranslations('AppointmentBooking');
   const { user, isLoading } = useAuth();
 
-  const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [bookingData, setBookingData] = useState<BookingData>({ date: '', time: '', patientInfo: null });
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [step, setStep] = React.useState<1 | 2 | 3>(1);
+  const [bookingData, setBookingData] = React.useState<BookingData>({ date: '', time: '', patientInfo: null });
+  const [loading, setLoading] = React.useState(false);
+  const [success, setSuccess] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
   if (isLoading) {
@@ -80,7 +80,7 @@ export function AppointmentBookingWizard() {
   }
 
   if (!user) {
-    return <p>Please log in to book an appointment.</p>;
+    return <p>{t('auth.login.loginFirst')}</p>;
   }
 
   function handleNext() {
@@ -109,7 +109,7 @@ export function AppointmentBookingWizard() {
 
   async function submitBooking() {
     if (!bookingData.patientInfo) {
-      setError('Patient info missing');
+      setError(t('AppointmentBooking.patientInfoMissing'));
       return;
     }
     setLoading(true);
@@ -128,6 +128,20 @@ export function AppointmentBookingWizard() {
         const err = await res.json();
         throw new Error(err.error || 'Booking failed');
       }
+
+      // send confirmation email
+      await fetch('/api/send-confirmation-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: bookingData.patientInfo.email,
+          patientInfo: bookingData.patientInfo,
+          appointmentDate: bookingData.date,
+          appointmentTime: bookingData.time,
+          lang: 'en', // TODO: dynamic lang from user or context
+        }),
+      });
+
       setSuccess(true);
     } catch (e: any) {
       setError(e.message || 'Error during booking');
@@ -139,7 +153,7 @@ export function AppointmentBookingWizard() {
   if (success) {
     return (
       <div className="text-center p-6">
-        <h2 className="text-xl font-bold mb-4">{t('bookingSuccessMessage')}</h2>
+        <h2 className="text-xl font-bold mb-4">{t('AppointmentBooking.bookingSuccessMessage')}</h2>
       </div>
     );
   }
@@ -147,7 +161,7 @@ export function AppointmentBookingWizard() {
   return (
     <div className="max-w-3xl mx-auto p-6 bg-surface rounded shadow">
       {error && <div className="mb-4 text-red-600">{error}</div>}
-      {loading && <div className="mb-4">{t('loading')}</div>}
+      {loading && <div className="mb-4">{t('AppointmentBooking.loading')}</div>}
       {step === 1 && (
         <SelectDateTimeStep
           onNext={handleNext}
@@ -160,7 +174,7 @@ export function AppointmentBookingWizard() {
         <EnterPatientInfo
           onBack={handleBack}
           onNext={() => {
-            // Save patient info from form should be implemented / wired
+            savePatientInfo(bookingData.patientInfo!); // Ensure patientInfo is saved by EnterPatientInfo component
             handleNext();
           }}
         />
@@ -172,7 +186,7 @@ export function AppointmentBookingWizard() {
         />
       )}
       {step === 3 && !bookingData.patientInfo && (
-        <div className="text-red-600">{t('patientInfoMissing')}</div>
+        <div className="text-red-600">{t('AppointmentBooking.patientInfoMissing')}</div>
       )}
     </div>
   );
