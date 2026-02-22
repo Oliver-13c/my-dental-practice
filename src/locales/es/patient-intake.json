@@ -1,0 +1,38 @@
+{
+  "form": {
+    "title": "Formulario de Ingreso del Paciente",
+    "fullName": "Nombre Completo",
+    "dateOfBirth": "Fecha de Nacimiento",
+    "contactNumber": "Número de Contacto",
+    "email": "Correo Electrónico",
+    "medicalHistory": "Historial Médico",
+    "insuranceProvider": "Proveedor de Seguro",
+    "insurancePolicyNumber": "Número de Póliza de Seguro",
+    "submit": "Enviar",
+    "submitting": "Enviando...",
+    "success": "Formulario de ingreso del paciente enviado correctamente.",
+    "error": "No se pudo enviar el formulario. Intente nuevamente.",
+    "errors": {
+      "fullNameRequired": "El nombre completo es obligatorio",
+      "dateOfBirthRequired": "La fecha de nacimiento es obligatoria",
+      "contactNumberRequired": "El número de contacto es obligatorio",
+      "invalidEmail": "Correo electrónico inválido"
+    }
+  },
+  "staffView": {
+    "title": "Datos de Ingreso del Paciente",
+    "loading": "Cargando datos...",
+    "fetchError": "Error al cargar los datos de ingreso.",
+    "confirmDelete": "¿Está seguro de eliminar esta entrada?",
+    "deleteError": "Error al eliminar la entrada.",
+    "fullName": "Nombre Completo",
+    "dateOfBirth": "Fecha de Nacimiento",
+    "contactNumber": "Número de Contacto",
+    "email": "Correo Electrónico",
+    "medicalHistory": "Historial Médico",
+    "insuranceProvider": "Proveedor de Seguro",
+    "insurancePolicyNumber": "Número de Póliza de Seguro",
+    "actions": "Acciones",
+    "delete": "Eliminar"
+  }
+}
