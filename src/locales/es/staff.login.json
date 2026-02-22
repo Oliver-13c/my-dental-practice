@@ -1,0 +1,8 @@
+{
+  "title": "Inicio de Sesión del Personal",
+  "email": "Correo Electrónico",
+  "password": "Contraseña",
+  "login": "Iniciar Sesión",
+  "loading": "Iniciando sesión...",
+  "invalidCredentials": "Correo o contraseña inválidos"
+}
