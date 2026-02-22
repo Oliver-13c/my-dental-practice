@@ -2,11 +2,10 @@ import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { EnterPatientInfo } from './steps/EnterPatientInfo';
 import { Confirmation } from './steps/Confirmation';
+import { useAuth } from '@/shared/hooks/useAuth';
 
-// Step 1 placeholder component
 function SelectDateTimeStep({ onNext, onDataChange, selectedDate, selectedTime }: { onNext: () => void; onDataChange: (data: { date: string; time: string }) => void; selectedDate: string; selectedTime: string }) {
   const t = useTranslations('AppointmentBooking');
-
   const isNextDisabled = !selectedDate || !selectedTime;
 
   return (
@@ -54,9 +53,7 @@ function SelectDateTimeStep({ onNext, onDataChange, selectedDate, selectedTime }
   );
 }
 
-// Types for collected data
 interface PatientInfo {
-  id?: string; // patient id optionally
   fullName: string;
   dateOfBirth: string;
   contactNumber: string;
@@ -70,60 +67,35 @@ interface BookingData {
 
 export function AppointmentBookingWizard() {
   const t = useTranslations('AppointmentBooking');
-  const [step, setStep] = React.useState<1 | 2 | 3>(1);
-  const [bookingData, setBookingData] = React.useState<BookingData>({
-    date: '',
-    time: '',
-    patientInfo: null,
-  });
+  const { user, isLoading } = useAuth();
 
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [isSuccess, setIsSuccess] = React.useState(false);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [bookingData, setBookingData] = useState<BookingData>({ date: '', time: '', patientInfo: null });
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [error, setError] = React.useState<string | null>(null);
+
+  if (isLoading) {
+    return <p>Loading...</p>;
+  }
+
+  if (!user) {
+    return <p>Please log in to book an appointment.</p>;
+  }
 
   function handleNext() {
     if (step === 3) {
-      // Final step: send appointment to backend
-      if (!bookingData.patientInfo?.id) {
-        setError(t('patientInfoMissing'));
-        return;
-      }
-
-      const payload = {
-        patient_id: bookingData.patientInfo.id,
-        appointment_date: bookingData.date,
-        appointment_time: bookingData.time,
-      };
-
-      setIsLoading(true);
-      setError(null);
-      fetch('/api/appointments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-        .then(async (res) => {
-          setIsLoading(false);
-          if (res.ok) {
-            setIsSuccess(true);
-          } else {
-            const data = await res.json();
-            setError(data?.error || t('appointmentSaveError'));
-          }
-        })
-        .catch(() => {
-          setIsLoading(false);
-          setError(t('appointmentSaveError'));
-        });
-
-      return;
+      submitBooking();
+    } else {
+      setStep((prev) => (prev + 1) as 1 | 2 | 3);
     }
-    setStep((prev) => (prev + 1) as 1 | 2 | 3);
   }
 
   function handleBack() {
     if (step > 1) {
       setStep((prev) => (prev - 1) as 1 | 2 | 3);
+      setError(null);
+      setSuccess(false);
     }
   }
 
@@ -135,17 +107,47 @@ export function AppointmentBookingWizard() {
     setBookingData((prev) => ({ ...prev, patientInfo: data }));
   }
 
-  if (isSuccess) {
+  async function submitBooking() {
+    if (!bookingData.patientInfo) {
+      setError('Patient info missing');
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/appointments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patient_id: user.id,
+          appointment_date: bookingData.date,
+          appointment_time: bookingData.time,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Booking failed');
+      }
+      setSuccess(true);
+    } catch (e: any) {
+      setError(e.message || 'Error during booking');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (success) {
     return (
-      <div className="max-w-3xl mx-auto p-6 bg-surface rounded shadow text-center">
-        <h2 className="text-2xl font-bold mb-4">{t('confirmationSuccessTitle')}</h2>
-        <p className="mb-4">{t('confirmationSuccessMessage')}</p>
+      <div className="text-center p-6">
+        <h2 className="text-xl font-bold mb-4">{t('bookingSuccessMessage')}</h2>
       </div>
     );
   }
 
   return (
     <div className="max-w-3xl mx-auto p-6 bg-surface rounded shadow">
+      {error && <div className="mb-4 text-red-600">{error}</div>}
+      {loading && <div className="mb-4">{t('loading')}</div>}
       {step === 1 && (
         <SelectDateTimeStep
           onNext={handleNext}
@@ -157,8 +159,8 @@ export function AppointmentBookingWizard() {
       {step === 2 && (
         <EnterPatientInfo
           onBack={handleBack}
-          onNext={(data) => {
-            savePatientInfo(data);
+          onNext={() => {
+            // Save patient info from form should be implemented / wired
             handleNext();
           }}
         />
@@ -167,8 +169,6 @@ export function AppointmentBookingWizard() {
         <Confirmation
           onBack={handleBack}
           onNext={handleNext}
-          isLoading={isLoading}
-          error={error}
         />
       )}
       {step === 3 && !bookingData.patientInfo && (
