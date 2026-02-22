@@ -1,0 +1,37 @@
+{
+  "auth": {
+    "login": {
+      "loginTitle": "Iniciar sesión",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "login": "Iniciar",
+      "loginError": "Error al iniciar sesión. Por favor, verifique sus credenciales."
+    },
+    "signup": {
+      "signupTitle": "Regístrate",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "signup": "Regístrate",
+      "signupError": "Error al registrarse. Inténtalo de nuevo."
+    }
+  },
+  "AppointmentBooking": {
+    "title": "Reserva de cita en varios pasos",
+    "step1Title": "Seleccione fecha y hora",
+    "step1Placeholder": "Espacio reservado: el componente de selección de fecha/hora irá aquí.",
+    "step2Title": "Ingrese información del paciente",
+    "step2Placeholder": "Espacio reservado: el formulario de información del paciente irá aquí.",
+    "step3Title": "Confirmación",
+    "step3Placeholder": "Espacio reservado: confirme los detalles de la cita aquí.",
+    "nextButton": "Siguiente",
+    "backButton": "Atrás",
+    "confirmBookingButton": "Confirmar cita",
+    "summaryLabel": "Resumen",
+    "dateLabel": "Fecha",
+    "timeLabel": "Hora",
+    "patientInfoLabel": "Información del paciente",
+    "bookingSuccessMessage": "¡Su cita ha sido reservada con éxito!",
+    "loading": "Cargando...",
+    "patientInfoMissing": "Falta la información del paciente."
+  }
+}
