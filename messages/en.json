@@ -1,0 +1,9 @@
+{
+  "patient": {
+    "registration": {
+      "patient_registration_title": "Patient Registration",
+      "patient_registration_submit": "Submit",
+      "form_placeholder": "The registration form will be here."
+    }
+  }
+}
