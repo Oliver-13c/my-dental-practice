@@ -1,0 +1,9 @@
+{
+  "patient": {
+    "registration": {
+      "patient_registration_title": "Registro de Paciente",
+      "patient_registration_submit": "Enviar",
+      "form_placeholder": "Aquí estará el formulario de registro."
+    }
+  }
+}
