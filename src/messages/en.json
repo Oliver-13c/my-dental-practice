@@ -1,0 +1,37 @@
+{
+  "auth": {
+    "login": {
+      "loginTitle": "Login",
+      "email": "Email",
+      "password": "Password",
+      "login": "Log In",
+      "loginError": "Failed to login. Please check your credentials."
+    },
+    "signup": {
+      "signupTitle": "Sign Up",
+      "email": "Email",
+      "password": "Password",
+      "signup": "Sign Up",
+      "signupError": "Failed to sign up. Please try again."
+    }
+  },
+  "AppointmentBooking": {
+    "title": "Multi-step Appointment Booking",
+    "step1Title": "Select Date and Time",
+    "step1Placeholder": "Placeholder: Date/time picker component will go here.",
+    "step2Title": "Enter Patient Info",
+    "step2Placeholder": "Placeholder: Patient info form will go here.",
+    "step3Title": "Confirmation",
+    "step3Placeholder": "Placeholder: Confirm appointment details here.",
+    "nextButton": "Next",
+    "backButton": "Back",
+    "confirmBookingButton": "Confirm Booking",
+    "summaryLabel": "Summary",
+    "dateLabel": "Date",
+    "timeLabel": "Time",
+    "patientInfoLabel": "Patient Information",
+    "bookingSuccessMessage": "Your appointment has been booked successfully!",
+    "loading": "Loading...",
+    "patientInfoMissing": "Patient information is missing."
+  }
+}
