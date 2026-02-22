@@ -1,0 +1,8 @@
+{
+  "title": "Staff Login",
+  "email": "Email",
+  "password": "Password",
+  "login": "Log In",
+  "loading": "Logging in...",
+  "invalidCredentials": "Invalid email or password"
+}
