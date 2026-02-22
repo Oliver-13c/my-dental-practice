@@ -1,0 +1,38 @@
+{
+  "form": {
+    "title": "Patient Intake Form",
+    "fullName": "Full Name",
+    "dateOfBirth": "Date of Birth",
+    "contactNumber": "Contact Number",
+    "email": "Email",
+    "medicalHistory": "Medical History",
+    "insuranceProvider": "Insurance Provider",
+    "insurancePolicyNumber": "Insurance Policy Number",
+    "submit": "Submit",
+    "submitting": "Submitting...",
+    "success": "Patient intake form submitted successfully.",
+    "error": "Failed to submit the patient intake form. Please try again.",
+    "errors": {
+      "fullNameRequired": "Full Name is required",
+      "dateOfBirthRequired": "Date of Birth is required",
+      "contactNumberRequired": "Contact Number is required",
+      "invalidEmail": "Invalid email address"
+    }
+  },
+  "staffView": {
+    "title": "Patient Intake Data",
+    "loading": "Loading data...",
+    "fetchError": "Failed to load patient intake data.",
+    "confirmDelete": "Are you sure you want to delete this entry?",
+    "deleteError": "Failed to delete the entry.",
+    "fullName": "Full Name",
+    "dateOfBirth": "Date of Birth",
+    "contactNumber": "Contact Number",
+    "email": "Email",
+    "medicalHistory": "Medical History",
+    "insuranceProvider": "Insurance Provider",
+    "insurancePolicyNumber": "Insurance Policy Number",
+    "actions": "Actions",
+    "delete": "Delete"
+  }
+}
