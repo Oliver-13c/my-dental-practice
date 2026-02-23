@@ -1,6 +1,8 @@
 import React from 'react';
 import { useTranslations } from 'next-intl';
 
+export const dynamic = 'force-dynamic';
+
 export default function PatientRegistrationPage() {
   const t = useTranslations('patient.registration');
   return (

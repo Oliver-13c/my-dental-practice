@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { signInStaff } from '@/shared/api/supabase-auth';
 
+export const dynamic = 'force-dynamic';
+
 export default function StaffLoginPage() {
   const t = useTranslations('staff.login');
   const router = useRouter();

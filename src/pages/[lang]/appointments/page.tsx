@@ -1,6 +1,8 @@
 import { BookAppointmentForm } from '@/features/book-appointment';
 import { useLocale } from 'next-intl';
 
+export const dynamic = 'force-dynamic';
+
 export default function AppointmentsPage() {
   const locale = useLocale();
 
