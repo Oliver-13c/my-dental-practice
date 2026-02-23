@@ -1,0 +1,16 @@
+{
+  "booking": {
+    "title": "Reservar cita",
+    "select_slot": "Seleccionar horario",
+    "patient_name": "Nombre del paciente",
+    "book": "Reservar"
+  },
+  "staff": {
+    "login": {
+      "title": "Inicio de Sesión del Personal",
+      "email": "Correo Electrónico",
+      "password": "Contraseña",
+      "login": "Iniciar Sesión"
+    }
+  }
+}
