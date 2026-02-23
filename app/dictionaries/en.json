@@ -1,0 +1,16 @@
+{
+  "booking": {
+    "title": "Book Appointment",
+    "select_slot": "Select Slot",
+    "patient_name": "Patient Name",
+    "book": "Book"
+  },
+  "staff": {
+    "login": {
+      "title": "Staff Login",
+      "email": "Email",
+      "password": "Password",
+      "login": "Log In"
+    }
+  }
+}
