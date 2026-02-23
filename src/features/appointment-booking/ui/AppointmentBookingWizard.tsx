@@ -112,6 +112,10 @@ export function AppointmentBookingWizard() {
       setError(t('AppointmentBooking.patientInfoMissing'));
       return;
     }
+    if (!user) {
+      setError('User not authenticated');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -172,17 +176,21 @@ export function AppointmentBookingWizard() {
       )}
       {step === 2 && (
         <EnterPatientInfo
-          onBack={handleBack}
           onNext={() => {
-            savePatientInfo(bookingData.patientInfo!); // Ensure patientInfo is saved by EnterPatientInfo component
+            savePatientInfo(bookingData.patientInfo!);
             handleNext();
           }}
+          onDataChange={(data) => setBookingData({ ...bookingData, patientInfo: data })}
+          patientInfo={bookingData.patientInfo}
         />
       )}
       {step === 3 && bookingData.patientInfo && (
         <Confirmation
-          onBack={handleBack}
-          onNext={handleNext}
+          onConfirm={submitBooking}
+          onEdit={handleBack}
+          data={bookingData}
+          loading={loading}
+          error={error}
         />
       )}
       {step === 3 && !bookingData.patientInfo && (

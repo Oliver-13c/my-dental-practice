@@ -60,3 +60,14 @@ export async function getStaffSession(): Promise<StaffSession | null> {
 export async function signOutStaff(): Promise<void> {
   await supabase.auth.signOut();
 }
+
+export async function getServerSession(): Promise<Session | null> {
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error || !data.session) return null;
+    return data.session;
+  } catch (error) {
+    console.error('Error getting server session:', error);
+    return null;
+  }
+}

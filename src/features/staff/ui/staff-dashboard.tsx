@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 import { getStaffSession, signOutStaff } from '@/shared/api/supabase-auth';
 

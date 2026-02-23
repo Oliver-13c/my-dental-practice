@@ -1,4 +1,9 @@
-import { PatientInfo } from '@/features/appointment-booking/ui/AppointmentBookingWizard';
+interface PatientInfo {
+  fullName: string;
+  dateOfBirth?: string;
+  contactNumber?: string;
+  email?: string;
+}
 
 export function appointmentConfirmationEmail(patientInfo: PatientInfo, appointmentDate: string, appointmentTime: string, lang: string = 'en') {
   const isSpanish = lang === 'es';

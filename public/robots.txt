@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://my-dental-practice.vercel.app/sitemap.xml
