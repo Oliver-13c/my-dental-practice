@@ -2,10 +2,18 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import type { Session, User } from '@supabase/supabase-js';
 import type { StaffRole, StaffSession } from '@/entities/staff/model/staff.types';
 
-const supabase = createClientComponentClient();
+let supabase: ReturnType<typeof createClientComponentClient> | null = null;
+
+function getSupabase() {
+  if (!supabase) {
+    supabase = createClientComponentClient();
+  }
+  return supabase;
+}
 
 export async function signInStaff(email: string, password: string): Promise<StaffSession | null> {
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const sb = getSupabase();
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
   if (error) {
     console.error('SignIn Error:', error.message);
     return null;
@@ -13,7 +21,7 @@ export async function signInStaff(email: string, password: string): Promise<Staf
   if (!data.session) return null;
 
   // Retrieve user role from custom claim or profile table
-  const { data: profileData, error: profileError } = await supabase
+  const { data: profileData, error: profileError } = await sb
     .from('staff_profiles')
     .select('role')
     .eq('id', data.user?.id)
@@ -34,12 +42,13 @@ export async function signInStaff(email: string, password: string): Promise<Staf
 }
 
 export async function getStaffSession(): Promise<StaffSession | null> {
-  const { data, error } = await supabase.auth.getSession();
+  const sb = getSupabase();
+  const { data, error } = await sb.auth.getSession();
   if (error || !data.session) return null;
 
   const userId = data.session.user.id;
 
-  const { data: profileData, error: profileError } = await supabase
+  const { data: profileData, error: profileError } = await sb
     .from('staff_profiles')
     .select('role')
     .eq('id', userId)
@@ -58,12 +67,14 @@ export async function getStaffSession(): Promise<StaffSession | null> {
 }
 
 export async function signOutStaff(): Promise<void> {
-  await supabase.auth.signOut();
+  const sb = getSupabase();
+  await sb.auth.signOut();
 }
 
 export async function getServerSession(): Promise<Session | null> {
   try {
-    const { data, error } = await supabase.auth.getSession();
+    const sb = getSupabase();
+    const { data, error } = await sb.auth.getSession();
     if (error || !data.session) return null;
     return data.session;
   } catch (error) {
