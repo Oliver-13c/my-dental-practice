@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { AppointmentType } from '@/entities/appointment/model/appointment.types';
 import { cancelBooking, rescheduleBooking } from '@/features/book-appointment/api/manage-booking';
@@ -20,8 +20,10 @@ export function AppointmentList({ patientName }: AppointmentListProps) {
     async function fetch() {
       setLoading(true);
       try {
-        const data = await fetch(`/api/patient/appointments?patientName=${encodeURIComponent(patientName)}`)
-          .then((res) => res.json());
+        const res = await (globalThis as any).fetch(`/api/patient/appointments?patientName=${encodeURIComponent(
+          patientName
+        )}`);
+        const data = await res.json();
         setAppointments(data);
         setError(null);
       } catch {

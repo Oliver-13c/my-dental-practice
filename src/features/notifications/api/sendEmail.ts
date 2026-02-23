@@ -1,7 +1,5 @@
 import { emailTemplates } from '@/shared/config/emailTemplates';
-import Resend from 'resend';
-
-const resend = new Resend(process.env.RESEND_API_KEY!);
+import { resend } from '@/shared/api/resend-client';
 
 // Function to send email notification
 export async function sendBookingConfirmationEmail(to: string, lang: string) {
