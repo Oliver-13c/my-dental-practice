@@ -9,10 +9,10 @@
     "jsx": "preserve",
     "moduleResolution": "Node",
     "strict": false,
-    "baseUrl": "src",
+    "baseUrl": ".",
     "paths": {
       "@/*": [
-        "*"
+        "./src/*"
       ]
     },
     "allowJs": true,
