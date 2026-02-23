@@ -1,0 +1,15 @@
+{
+  "site": {
+    "title": "Dental Practice",
+    "language": "English"
+  },
+  "header": {
+    "bookAppointment": "Book Appointment",
+    "myAppointments": "My Appointments",
+    "languageToggle": "Español"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signUp": "Sign up"
+  }
+}
