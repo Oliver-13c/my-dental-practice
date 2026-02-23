@@ -10,14 +10,16 @@ export interface Database {
           patient_id: string;
           start_time: string;
           end_time: string;
+          patient_name: string;
           status: string;
           created_at: string;
         };
         Insert: {
           id?: string;
-          patient_id: string;
+          patient_id?: string;
           start_time: string;
           end_time: string;
+          patient_name: string;
           status?: string;
           created_at?: string;
         };
@@ -26,6 +28,7 @@ export interface Database {
           patient_id?: string;
           start_time?: string;
           end_time?: string;
+          patient_name?: string;
           status?: string;
           created_at?: string;
         };

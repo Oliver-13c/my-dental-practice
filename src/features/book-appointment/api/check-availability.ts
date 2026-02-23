@@ -1,7 +1,7 @@
 import { createServerClient } from '@/shared/api/supabase-server';
-import { Database } from '@/shared/api/supabase-types';
+import type { Database } from '@/shared/api/supabase-types';
 
-const supabase = createServerClient<Database>();
+const supabase = createServerClient<Database>() as any;
 
 /**
  * Checks appointment availability for a given datetime and duration.

@@ -1,7 +1,7 @@
 import { createServerClient } from '@/shared/api/supabase-server';
-import { Database } from '@/shared/api/supabase-types';
+import type { Database } from '@/shared/api/supabase-types';
 
-const supabase = createServerClient<Database>();
+const supabase = createServerClient<Database>() as any;
 
 interface CreateBookingParams {
   startTime: string;
@@ -14,7 +14,7 @@ export async function createBooking({ startTime, endTime, patientName }: CreateB
   // This can be expanded later for role-based permissions
 
   // Check availability again to avoid race conditions
-  const { data: existing, error: existError } = await supabase
+  const { data: existing, error: existError } = await (supabase as any)
     .from('appointments')
     .select('id')
     .or(

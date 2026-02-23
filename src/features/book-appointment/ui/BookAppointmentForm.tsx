@@ -12,7 +12,7 @@ const appointmentSchema = z.object({
   reason: z.string().max(500).optional(),
 });
 
-type AppointmentFormData = z.infer<typeof appointmentSchema>;
+export type AppointmentFormData = z.infer<typeof appointmentSchema>;
 
 export function BookAppointmentForm() {
   const {

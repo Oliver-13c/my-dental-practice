@@ -1,7 +1,7 @@
 import { createServerClient } from '@/shared/api/supabase-server';
-import { Database } from '@/shared/api/supabase-types';
+import type { Database } from '@/shared/api/supabase-types';
 
-const supabase = createServerClient<Database>();
+const supabase = createServerClient<Database>() as any;
 
 export async function cancelBooking(appointmentId: string) {
   const { error } = await supabase.from('appointments').delete().eq('id', appointmentId);
