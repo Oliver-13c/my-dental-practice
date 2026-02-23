@@ -1,0 +1,15 @@
+{
+  "site": {
+    "title": "Consulta Dental",
+    "language": "Español"
+  },
+  "header": {
+    "bookAppointment": "Reservar cita",
+    "myAppointments": "Mis citas",
+    "languageToggle": "English"
+  },
+  "auth": {
+    "signIn": "Iniciar sesión",
+    "signUp": "Registrarse"
+  }
+}
