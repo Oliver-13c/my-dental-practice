@@ -12,11 +12,14 @@ export const metadata: Metadata = {
   },
 };
 
+import { setRequestLocale } from 'next-intl/server';
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  setRequestLocale('en');
   return (
     <html lang="en">
       <body>
