@@ -1,4 +1,20 @@
 {
+  "auth": {
+    "login": {
+      "loginTitle": "Login",
+      "email": "Email",
+      "password": "Password",
+      "login": "Sign In",
+      "loginError": "Invalid email or password. Please try again."
+    },
+    "signup": {
+      "signupTitle": "Sign Up",
+      "email": "Email",
+      "password": "Password",
+      "signup": "Create Account",
+      "signupError": "Failed to create account. Please try again."
+    }
+  },
   "patient": {
     "registration": {
       "patient_registration_title": "Patient Registration",

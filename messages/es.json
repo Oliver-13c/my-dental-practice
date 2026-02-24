@@ -1,4 +1,20 @@
 {
+  "auth": {
+    "login": {
+      "loginTitle": "Iniciar Sesión",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "login": "Iniciar Sesión",
+      "loginError": "Correo o contraseña incorrecta. Intente de nuevo."
+    },
+    "signup": {
+      "signupTitle": "Registrarse",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "signup": "Crear Cuenta",
+      "signupError": "Error al crear la cuenta. Intente de nuevo."
+    }
+  },
   "patient": {
     "registration": {
       "patient_registration_title": "Registro de Paciente",
