@@ -5,5 +5,15 @@
       "patient_registration_submit": "Submit",
       "form_placeholder": "The registration form will be here."
     }
+  },
+  "staff": {
+    "login": {
+      "title": "Staff Login",
+      "email": "Email",
+      "password": "Password",
+      "login": "Sign In",
+      "loading": "Signing in...",
+      "invalidCredentials": "Invalid email or password. Please try again."
+    }
   }
 }

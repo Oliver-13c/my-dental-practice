@@ -3,7 +3,17 @@
     "registration": {
       "patient_registration_title": "Registro de Paciente",
       "patient_registration_submit": "Enviar",
-      "form_placeholder": "Aquí estará el formulario de registro."
+      "form_placeholder": "El formulario de registro estará aquí."
+    }
+  },
+  "staff": {
+    "login": {
+      "title": "Inicio de Sesión del Personal",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "login": "Iniciar Sesión",
+      "loading": "Iniciando sesión...",
+      "invalidCredentials": "Correo o contraseña incorrecta. Intente de nuevo."
     }
   }
 }

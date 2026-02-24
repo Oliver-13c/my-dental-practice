@@ -12,16 +12,14 @@ export const metadata: Metadata = {
   },
 };
 
-import { setRequestLocale, getMessages } from 'next-intl/server';
 import { NextIntlClientProvider } from 'next-intl';
+import messages from '../../messages/en.json';
 
 export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  setRequestLocale('en');
-  const messages = await getMessages();
 
   return (
     <html lang="en" suppressHydrationWarning>
