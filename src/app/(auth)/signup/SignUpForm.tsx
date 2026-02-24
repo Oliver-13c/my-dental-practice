@@ -1,10 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
 import { supabase } from '@/shared/api/supabase-client';
-import { useRouter } from 'next/navigation';
 
 interface SignUpFormInputs {
   email: string;
@@ -18,23 +17,39 @@ export function SignUpForm() {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<SignUpFormInputs>();
-  const router = useRouter();
+  const [submitted, setSubmitted] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   async function onSubmit(data: SignUpFormInputs) {
+    setErrorMessage(null);
     const { error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
     });
     if (error) {
-      alert(t('signupError'));
+      setErrorMessage(t('signupError'));
     } else {
-      router.refresh();
+      setSubmitted(true);
     }
+  }
+
+  if (submitted) {
+    return (
+      <div className="space-y-4 max-w-md mx-auto p-4 text-center">
+        <h2 className="text-2xl font-bold mb-4">{t('signupTitle')}</h2>
+        <p className="text-green-600">{t('checkEmail')}</p>
+      </div>
+    );
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-md mx-auto p-4">
       <h2 className="text-2xl font-bold mb-4">{t('signupTitle')}</h2>
+
+      {errorMessage && <p className="text-red-600">{errorMessage}</p>}
 
       <div>
         <label htmlFor="email" className="block font-semibold mb-1">

@@ -1,10 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
 import { supabase } from '@/shared/api/supabase-client';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 interface LoginFormInputs {
   email: string;
@@ -19,14 +19,24 @@ export function LoginForm() {
     formState: { errors, isSubmitting },
   } = useForm<LoginFormInputs>();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackError = searchParams.get('error');
+  const [errorMessage, setErrorMessage] = useState<string | null>(
+    callbackError === 'confirmation_failed' ? t('confirmationFailed') : null,
+  );
 
   async function onSubmit(data: LoginFormInputs) {
+    setErrorMessage(null);
     const { error } = await supabase.auth.signInWithPassword({
       email: data.email,
       password: data.password,
     });
     if (error) {
-      alert(t('loginError'));
+      if (error.message.toLowerCase().includes('email not confirmed')) {
+        setErrorMessage(t('emailNotConfirmed'));
+      } else {
+        setErrorMessage(t('loginError'));
+      }
     } else {
       router.refresh();
     }
@@ -35,6 +45,8 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-md mx-auto p-4">
       <h2 className="text-2xl font-bold mb-4">{t('loginTitle')}</h2>
+
+      {errorMessage && <p className="text-red-600">{errorMessage}</p>}
 
       <div>
         <label htmlFor="email" className="block font-semibold mb-1">

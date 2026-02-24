@@ -5,14 +5,17 @@
       "email": "Email",
       "password": "Password",
       "login": "Log In",
-      "loginError": "Failed to login. Please check your credentials."
+      "loginError": "Failed to login. Please check your credentials.",
+      "emailNotConfirmed": "Please confirm your email address before logging in. Check your inbox for a confirmation link.",
+      "confirmationFailed": "The confirmation link has expired or is invalid. Please sign up again or request a new confirmation email."
     },
     "signup": {
       "signupTitle": "Sign Up",
       "email": "Email",
       "password": "Password",
       "signup": "Sign Up",
-      "signupError": "Failed to sign up. Please try again."
+      "signupError": "Failed to sign up. Please try again.",
+      "checkEmail": "Account created! Please check your email and click the confirmation link to activate your account."
     }
   },
   "AppointmentBooking": {

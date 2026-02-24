@@ -5,14 +5,17 @@
       "email": "Correo electrónico",
       "password": "Contraseña",
       "login": "Iniciar",
-      "loginError": "Error al iniciar sesión. Por favor, verifique sus credenciales."
+      "loginError": "Error al iniciar sesión. Por favor, verifique sus credenciales.",
+      "emailNotConfirmed": "Por favor, confirme su dirección de correo electrónico antes de iniciar sesión. Revise su bandeja de entrada para encontrar el enlace de confirmación.",
+      "confirmationFailed": "El enlace de confirmación ha expirado o no es válido. Por favor, regístrese nuevamente o solicite un nuevo correo de confirmación."
     },
     "signup": {
       "signupTitle": "Regístrate",
       "email": "Correo electrónico",
       "password": "Contraseña",
       "signup": "Regístrate",
-      "signupError": "Error al registrarse. Inténtalo de nuevo."
+      "signupError": "Error al registrarse. Inténtalo de nuevo.",
+      "checkEmail": "¡Cuenta creada! Por favor, revise su correo electrónico y haga clic en el enlace de confirmación para activar su cuenta."
     }
   },
   "AppointmentBooking": {
