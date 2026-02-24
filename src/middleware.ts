@@ -12,8 +12,8 @@ const protectedRoutesByRole: Record<string, string[]> = {
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Only protect staff pages
-  if (!Object.keys(protectedRoutesByRole).some((key) => pathname.startsWith(key))) {
+  // Pass through non-protected routes
+  if (!Object.keys(protectedRoutesByRole).some((key) => pathname.includes(key))) {
     return NextResponse.next();
   }
 
@@ -24,7 +24,7 @@ export async function middleware(req: NextRequest) {
   }
 
   const allowedRoles = Object.entries(protectedRoutesByRole)
-    .filter(([path]) => pathname.startsWith(path))
+    .filter(([path]) => pathname.includes(path))
     .flatMap(([, roles]) => roles);
 
   if (!allowedRoles.includes(session.role)) {
@@ -36,5 +36,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/staff/:path*'],
+  matcher: ['/((?!_next|api|.*\\..*).*)'],
 };
