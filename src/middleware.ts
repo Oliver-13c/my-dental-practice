@@ -1,64 +1,45 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { auth } from '@/auth';
 import type { StaffRole } from '@/entities/staff/model/staff.types';
 
-const protectedRoutesByRole: Record<string, string[]> = {
+const protectedRoutesByRole: Record<string, StaffRole[]> = {
   '/staff/dashboard': ['receptionist', 'hygienist', 'dentist', 'admin'],
   '/staff/admin': ['admin'],
   '/staff/dentist': ['dentist', 'admin'],
   '/staff/hygienist': ['hygienist', 'admin'],
 };
 
-const VALID_ROLES: StaffRole[] = ['receptionist', 'hygienist', 'dentist', 'admin'];
-
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Pass through non-protected routes
-  if (!Object.keys(protectedRoutesByRole).some((key) => pathname.includes(key))) {
+  const matchedPaths = Object.keys(protectedRoutesByRole).filter(
+    (key) => pathname === key || pathname.startsWith(key + '/'),
+  );
+
+  if (matchedPaths.length === 0) {
     return NextResponse.next();
   }
 
-  const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req, res });
+  const session = await auth();
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session) {
-    const loginUrl = new URL('/staff/login', req.url);
-    return NextResponse.redirect(loginUrl);
+  if (!session?.user) {
+    return NextResponse.redirect(new URL('/staff/login', req.url));
   }
 
-  const { data: profileData } = await supabase
-    .from('staff_profiles')
-    .select('role')
-    .eq('id', session.user.id)
-    .single();
+  const role = session.user.role;
 
-  if (!profileData) {
-    const loginUrl = new URL('/staff/login', req.url);
-    return NextResponse.redirect(loginUrl);
+  if (!role) {
+    return NextResponse.redirect(new URL('/staff/login', req.url));
   }
 
-  const role = profileData.role;
-  if (!VALID_ROLES.includes(role as StaffRole)) {
-    const loginUrl = new URL('/staff/login', req.url);
-    return NextResponse.redirect(loginUrl);
-  }
-
-  const allowedRoles = Object.entries(protectedRoutesByRole)
-    .filter(([path]) => pathname.includes(path))
-    .flatMap(([, roles]) => roles);
+  const allowedRoles = matchedPaths.flatMap((path) => protectedRoutesByRole[path]);
 
   if (!allowedRoles.includes(role)) {
-    const forbiddenUrl = new URL('/403', req.url);
-    return NextResponse.redirect(forbiddenUrl);
+    return NextResponse.redirect(new URL('/403', req.url));
   }
 
-  return res;
+  return NextResponse.next();
 }
 
 export const config = {

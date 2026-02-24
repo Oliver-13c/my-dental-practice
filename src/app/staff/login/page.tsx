@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { signInStaff } from '@/shared/api/supabase-auth';
+import { signIn } from 'next-auth/react';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,29 +19,13 @@ export default function StaffLoginPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const staffSession = await signInStaff(email, password);
+    const result = await signIn('credentials', { email, password, redirect: false });
     setLoading(false);
-    if (!staffSession) {
+    if (!result || result.error) {
       setError(t('invalidCredentials'));
       return;
     }
-    // Redirect based on role
-    switch (staffSession.role) {
-      case 'admin':
-        router.push('/staff/admin');
-        break;
-      case 'dentist':
-        router.push('/staff/dentist');
-        break;
-      case 'hygienist':
-        router.push('/staff/hygienist');
-        break;
-      case 'receptionist':
-        router.push('/staff/dashboard');
-        break;
-      default:
-        router.push('/staff/login');
-    }
+    router.push('/staff/dashboard');
   }
 
   return (

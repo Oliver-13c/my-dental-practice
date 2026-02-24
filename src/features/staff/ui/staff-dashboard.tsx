@@ -1,26 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { getStaffSession, signOutStaff } from '@/shared/api/supabase-auth';
+import { useSession, signOut } from 'next-auth/react';
 import { DentistDashboard } from './dentist-dashboard';
 import { ReceptionistDashboard } from './receptionist-dashboard';
 
 export function StaffDashboard() {
-  const [role, setRole] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: session, status } = useSession();
+  const role = session?.user?.role ?? null;
 
-  useEffect(() => {
-    async function fetchSession() {
-      const session = await getStaffSession();
-      if (session) {
-        setRole(session.role);
-      }
-      setLoading(false);
-    }
-    fetchSession();
-  }, []);
-
-  if (loading) return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading dashboard...</div>;
+  if (status === 'loading') return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading dashboard...</div>;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -38,7 +26,7 @@ export function StaffDashboard() {
             <span className="text-sm font-medium text-gray-500 capitalize px-3 py-1 bg-gray-100 rounded-full">{role}</span>
             <button
               className="text-sm font-medium text-red-600 hover:text-red-500"
-              onClick={() => signOutStaff()}
+              onClick={() => signOut({ callbackUrl: '/staff/login' })}
             >
               Sign Out
             </button>
