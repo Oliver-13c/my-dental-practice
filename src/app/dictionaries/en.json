@@ -1,4 +1,9 @@
 {
+  "nav": {
+    "home": "Home",
+    "book": "Book Appointment",
+    "login": "Login"
+  },
   "booking": {
     "title": "Book Appointment",
     "select_slot": "Select Slot",

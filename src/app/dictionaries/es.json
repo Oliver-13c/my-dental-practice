@@ -1,4 +1,9 @@
 {
+  "nav": {
+    "home": "Inicio",
+    "book": "Reservar Cita",
+    "login": "Iniciar Sesión"
+  },
   "booking": {
     "title": "Reservar cita",
     "select_slot": "Seleccionar horario",
