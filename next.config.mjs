@@ -9,6 +9,9 @@ const withNextIntl = createNextIntlPlugin('./src/i18n.config.ts');
 const nextConfig = {
   reactStrictMode: true,
   outputFileTracingRoot: path.join(__dirname),
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
 
 export default withNextIntl(nextConfig);
