@@ -35,15 +35,25 @@ export function StaffDashboard() {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-8">
         {role === 'receptionist' && <ReceptionistDashboard />}
         {role === 'dentist' && <DentistDashboard />}
         {role === 'hygienist' && <DentistDashboard /> /* Reuse dentist for now as clinical placeholder */}
         {role === 'admin' && (
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4 text-gray-800">System Administration</h2>
-            <p className="text-sm text-gray-600">Admin controls will be provisioned here.</p>
-          </div>
+          <>
+            <section className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold mb-4 text-gray-800">System Administration</h2>
+              <p className="text-sm text-gray-600">Admin controls will be provisioned here.</p>
+            </section>
+            <section className="space-y-4">
+              <h2 className="text-lg font-semibold text-gray-800">Front Desk</h2>
+              <ReceptionistDashboard />
+            </section>
+            <section className="space-y-4">
+              <h2 className="text-lg font-semibold text-gray-800">Clinical</h2>
+              <DentistDashboard />
+            </section>
+          </>
         )}
         {!role && <p className="text-red-500">Error: Unrecognized role</p>}
       </main>
