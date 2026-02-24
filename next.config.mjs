@@ -9,6 +9,15 @@ const withNextIntl = createNextIntlPlugin('./src/i18n.config.ts');
 const nextConfig = {
   reactStrictMode: true,
   outputFileTracingRoot: path.join(__dirname),
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/staff/login',
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default withNextIntl(nextConfig);
