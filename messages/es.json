@@ -14,6 +14,118 @@
       "login": "Iniciar Sesión",
       "loading": "Iniciando sesión...",
       "invalidCredentials": "Correo o contraseña incorrecta. Intente de nuevo."
+    },
+    "dashboard": {
+      "title": "Panel del Personal",
+      "frontDesk": "Recepción",
+      "doctorPortal": "Portal del Médico",
+      "hygienePortal": "Portal de Higiene",
+      "adminSettings": "Administración",
+      "loading": "Cargando panel...",
+      "unrecognizedRole": "Error: Rol no reconocido",
+      "signOut": "Cerrar Sesión"
+    }
+  },
+  "auth": {
+    "login": {
+      "loginTitle": "Iniciar Sesión",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "login": "Iniciar Sesión",
+      "loginError": "Credenciales inválidas. Intente de nuevo.",
+      "loginFirst": "Por favor inicie sesión para continuar."
+    },
+    "signup": {
+      "signupTitle": "Crear Cuenta",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "signup": "Crear Cuenta",
+      "signupError": "No se pudo crear la cuenta. Intente de nuevo."
+    }
+  },
+  "booking": {
+    "form": {
+      "title": "Reservar una Cita",
+      "patientName": "Nombre del Paciente",
+      "loading": "Reservando...",
+      "book": "Reservar Cita",
+      "error": {
+        "noSlotSelected": "Por favor seleccione un horario.",
+        "bookingFailed": "No se pudo reservar la cita. Intente de nuevo."
+      }
+    },
+    "selectSlot": {
+      "title": "Seleccionar Horario",
+      "loading": "Verificando disponibilidad...",
+      "error": {
+        "checkAvailability": "No se pudo verificar la disponibilidad. Intente de nuevo."
+      }
+    }
+  },
+  "AppointmentBooking": {
+    "step1Title": "Seleccionar Fecha y Hora",
+    "nextButton": "Siguiente",
+    "patientInfoMissing": "Falta información del paciente.",
+    "bookingSuccessMessage": "¡Su cita ha sido reservada exitosamente!",
+    "loading": "Procesando...",
+    "auth": {
+      "login": {
+        "loginFirst": "Por favor inicie sesión para reservar una cita."
+      }
+    }
+  },
+  "patientIntake": {
+    "form": {
+      "title": "Formulario de Ingreso del Paciente",
+      "fullName": "Nombre Completo",
+      "dateOfBirth": "Fecha de Nacimiento",
+      "contactNumber": "Número de Contacto",
+      "email": "Correo Electrónico",
+      "medicalHistory": "Historial Médico",
+      "insuranceProvider": "Proveedor de Seguro",
+      "insurancePolicyNumber": "Número de Póliza de Seguro",
+      "submit": "Enviar",
+      "submitting": "Enviando...",
+      "success": "Formulario de ingreso del paciente enviado correctamente.",
+      "error": "No se pudo enviar el formulario. Intente nuevamente.",
+      "errors": {
+        "fullNameRequired": "El nombre completo es obligatorio",
+        "dateOfBirthRequired": "La fecha de nacimiento es obligatoria",
+        "contactNumberRequired": "El número de contacto es obligatorio",
+        "invalidEmail": "Correo electrónico inválido"
+      }
+    },
+    "staffView": {
+      "title": "Datos de Ingreso del Paciente",
+      "loading": "Cargando datos...",
+      "fetchError": "Error al cargar los datos de ingreso.",
+      "confirmDelete": "¿Está seguro de eliminar esta entrada?",
+      "deleteError": "Error al eliminar la entrada.",
+      "fullName": "Nombre Completo",
+      "dateOfBirth": "Fecha de Nacimiento",
+      "contactNumber": "Número de Contacto",
+      "email": "Correo Electrónico",
+      "medicalHistory": "Historial Médico",
+      "insuranceProvider": "Proveedor de Seguro",
+      "insurancePolicyNumber": "Número de Póliza de Seguro",
+      "actions": "Acciones",
+      "delete": "Eliminar"
+    }
+  },
+  "appointments": {
+    "title": "Mis Citas",
+    "loading": "Cargando citas...",
+    "noAppointments": "No tiene citas próximas.",
+    "past": "Pasada",
+    "upcoming": "Próxima",
+    "reschedule": "Reagendar",
+    "cancel": "Cancelar",
+    "confirmCancel": "¿Está seguro de que desea cancelar esta cita?",
+    "confirmReschedule": "¿Desea cancelar y volver a reservar esta cita?",
+    "infoReschedule": "Su cita ha sido cancelada. Por favor reserve una nueva.",
+    "error": {
+      "fetch": "Error al cargar las citas. Intente de nuevo.",
+      "action": "La acción falló. Intente de nuevo."
     }
   }
 }
