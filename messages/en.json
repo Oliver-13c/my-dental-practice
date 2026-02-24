@@ -14,6 +14,118 @@
       "login": "Sign In",
       "loading": "Signing in...",
       "invalidCredentials": "Invalid email or password. Please try again."
+    },
+    "dashboard": {
+      "title": "Staff Dashboard",
+      "frontDesk": "Front Desk",
+      "doctorPortal": "Doctor Portal",
+      "hygienePortal": "Hygiene Portal",
+      "adminSettings": "Admin Settings",
+      "loading": "Loading dashboard...",
+      "unrecognizedRole": "Error: Unrecognized role",
+      "signOut": "Sign Out"
+    }
+  },
+  "auth": {
+    "login": {
+      "loginTitle": "Sign In",
+      "email": "Email",
+      "password": "Password",
+      "login": "Sign In",
+      "loginError": "Invalid credentials. Please try again.",
+      "loginFirst": "Please sign in to continue."
+    },
+    "signup": {
+      "signupTitle": "Create Account",
+      "email": "Email",
+      "password": "Password",
+      "signup": "Create Account",
+      "signupError": "Could not create account. Please try again."
+    }
+  },
+  "booking": {
+    "form": {
+      "title": "Book an Appointment",
+      "patientName": "Patient Name",
+      "loading": "Booking...",
+      "book": "Book Appointment",
+      "error": {
+        "noSlotSelected": "Please select a time slot.",
+        "bookingFailed": "Failed to book the appointment. Please try again."
+      }
+    },
+    "selectSlot": {
+      "title": "Select a Time Slot",
+      "loading": "Checking availability...",
+      "error": {
+        "checkAvailability": "Failed to check availability. Please try again."
+      }
+    }
+  },
+  "AppointmentBooking": {
+    "step1Title": "Select Date & Time",
+    "nextButton": "Next",
+    "patientInfoMissing": "Patient information is missing.",
+    "bookingSuccessMessage": "Your appointment has been booked successfully!",
+    "loading": "Processing...",
+    "auth": {
+      "login": {
+        "loginFirst": "Please sign in to book an appointment."
+      }
+    }
+  },
+  "patientIntake": {
+    "form": {
+      "title": "Patient Intake Form",
+      "fullName": "Full Name",
+      "dateOfBirth": "Date of Birth",
+      "contactNumber": "Contact Number",
+      "email": "Email",
+      "medicalHistory": "Medical History",
+      "insuranceProvider": "Insurance Provider",
+      "insurancePolicyNumber": "Insurance Policy Number",
+      "submit": "Submit",
+      "submitting": "Submitting...",
+      "success": "Patient intake form submitted successfully.",
+      "error": "Failed to submit the patient intake form. Please try again.",
+      "errors": {
+        "fullNameRequired": "Full Name is required",
+        "dateOfBirthRequired": "Date of Birth is required",
+        "contactNumberRequired": "Contact Number is required",
+        "invalidEmail": "Invalid email address"
+      }
+    },
+    "staffView": {
+      "title": "Patient Intake Data",
+      "loading": "Loading data...",
+      "fetchError": "Failed to load patient intake data.",
+      "confirmDelete": "Are you sure you want to delete this entry?",
+      "deleteError": "Failed to delete the entry.",
+      "fullName": "Full Name",
+      "dateOfBirth": "Date of Birth",
+      "contactNumber": "Contact Number",
+      "email": "Email",
+      "medicalHistory": "Medical History",
+      "insuranceProvider": "Insurance Provider",
+      "insurancePolicyNumber": "Insurance Policy Number",
+      "actions": "Actions",
+      "delete": "Delete"
+    }
+  },
+  "appointments": {
+    "title": "My Appointments",
+    "loading": "Loading appointments...",
+    "noAppointments": "You have no upcoming appointments.",
+    "past": "Past",
+    "upcoming": "Upcoming",
+    "reschedule": "Reschedule",
+    "cancel": "Cancel",
+    "confirmCancel": "Are you sure you want to cancel this appointment?",
+    "confirmReschedule": "Do you want to cancel and rebook this appointment?",
+    "infoReschedule": "Your appointment has been cancelled. Please book a new one.",
+    "error": {
+      "fetch": "Failed to load appointments. Please try again.",
+      "action": "Action failed. Please try again."
     }
   }
 }

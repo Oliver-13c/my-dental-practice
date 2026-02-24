@@ -3,10 +3,13 @@
 import { useSession, signOut } from 'next-auth/react';
 import { DentistDashboard } from './dentist-dashboard';
 import { ReceptionistDashboard } from './receptionist-dashboard';
+import { useSessionExpiry } from '@/features/session-management/hooks/use-session-expiry';
 
 export function StaffDashboard() {
   const { data: session, status } = useSession();
   const role = session?.user?.role ?? null;
+
+  useSessionExpiry();
 
   if (status === 'loading') return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading dashboard...</div>;
 
