@@ -1,4 +1,4 @@
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClientComponentClient, createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import type { Session, User } from '@supabase/supabase-js';
 import type { StaffRole, StaffSession } from '@/entities/staff/model/staff.types';
 
@@ -73,7 +73,8 @@ export async function signOutStaff(): Promise<void> {
 
 export async function getServerSession(): Promise<Session | null> {
   try {
-    const sb = getSupabase();
+    const { cookies } = await import('next/headers');
+    const sb = createServerComponentClient({ cookies });
     const { data, error } = await sb.auth.getSession();
     if (error || !data.session) return null;
     return data.session;
