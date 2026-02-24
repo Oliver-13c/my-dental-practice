@@ -14,15 +14,13 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'pnpm'
-      - name: Install pnpm
-        run: npm install -g pnpm
+          node-version: '18'
+          cache: 'npm'
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
       - name: Typecheck
-        run: pnpm run -w tsc --noEmit
+        run: npx tsc --noEmit
       - name: Lint
-        run: pnpm run -w lint
+        run: npm run lint
       - name: Build
-        run: pnpm build
+        run: npm run build
