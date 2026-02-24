@@ -1,6 +1,7 @@
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getStaffSession } from '@/shared/api/supabase-auth';
+import type { StaffRole } from '@/entities/staff/model/staff.types';
 
 const protectedRoutesByRole: Record<string, string[]> = {
   '/staff/dashboard': ['receptionist', 'hygienist', 'dentist', 'admin'],
@@ -8,6 +9,8 @@ const protectedRoutesByRole: Record<string, string[]> = {
   '/staff/dentist': ['dentist', 'admin'],
   '/staff/hygienist': ['hygienist', 'admin'],
 };
+
+const VALID_ROLES: StaffRole[] = ['receptionist', 'hygienist', 'dentist', 'admin'];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -17,8 +20,31 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const session = await getStaffSession();
+  const res = NextResponse.next();
+  const supabase = createMiddlewareClient({ req, res });
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
   if (!session) {
+    const loginUrl = new URL('/staff/login', req.url);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  const { data: profileData } = await supabase
+    .from('staff_profiles')
+    .select('role')
+    .eq('id', session.user.id)
+    .single();
+
+  if (!profileData) {
+    const loginUrl = new URL('/staff/login', req.url);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  const role = profileData.role;
+  if (!VALID_ROLES.includes(role as StaffRole)) {
     const loginUrl = new URL('/staff/login', req.url);
     return NextResponse.redirect(loginUrl);
   }
@@ -27,12 +53,12 @@ export async function middleware(req: NextRequest) {
     .filter(([path]) => pathname.includes(path))
     .flatMap(([, roles]) => roles);
 
-  if (!allowedRoles.includes(session.role)) {
+  if (!allowedRoles.includes(role)) {
     const forbiddenUrl = new URL('/403', req.url);
     return NextResponse.redirect(forbiddenUrl);
   }
 
-  return NextResponse.next();
+  return res;
 }
 
 export const config = {
