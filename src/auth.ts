@@ -1,6 +1,5 @@
 import NextAuth, { type DefaultSession } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
-import { createClient } from '@supabase/supabase-js';
 import type { StaffRole } from '@/entities/staff/model/staff.types';
 
 declare module 'next-auth' {
@@ -27,32 +26,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const password = credentials?.password as string | undefined;
         if (!email || !password) return null;
 
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-        if (!supabaseUrl || !supabaseAnonKey) return null;
-
-        const sb = createClient(supabaseUrl, supabaseAnonKey, {
-          auth: { persistSession: false },
-        });
-
-        const { data, error } = await sb.auth.signInWithPassword({ email, password });
-        if (error || !data.user) return null;
-
-        const { data: profile, error: profileError } = await sb
-          .from('staff_profiles')
-          .select('role')
-          .eq('id', data.user.id)
-          .single();
-
-        // Clean up the Supabase session — NextAuth manages its own session
-        await sb.auth.signOut();
-
-        if (profileError || !profile) return null;
+        const adminEmail = process.env.AUTH_ADMIN_EMAIL;
+        const adminPassword = process.env.AUTH_ADMIN_PASSWORD;
+        if (!adminEmail || !adminPassword) return null;
+        if (email !== adminEmail || password !== adminPassword) return null;
 
         return {
-          id: data.user.id,
-          email: data.user.email ?? email,
-          role: profile.role as StaffRole,
+          id: 'admin',
+          email,
+          role: 'admin' as StaffRole,
         };
       },
     }),
