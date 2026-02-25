@@ -55,7 +55,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   events: {
     async signIn({ user }) {
-      await logAudit(user.id, 'login', 'user', user.id, { email: user.email });
+      // Only log if user.id exists
+      if (user.id) {
+        await logAudit(user.id, 'login', 'user', user.id, { email: user.email });
+      }
     },
     async signOut(message) {
       const token = 'token' in message ? message.token : null;
