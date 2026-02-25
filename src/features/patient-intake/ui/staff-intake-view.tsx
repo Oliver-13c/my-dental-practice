@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table';
 import { Button } from '@/shared/ui/button';
+import { useCsrfToken } from '@/shared/hooks/useCsrfToken';
 
 interface PatientIntakeData {
   patient_id: string;
@@ -16,6 +17,7 @@ interface PatientIntakeData {
 
 export function StaffIntakeView() {
   const t = useTranslations('patientIntake.staffView');
+  const getCsrfHeaders = useCsrfToken();
   const [data, setData] = useState<PatientIntakeData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +44,11 @@ export function StaffIntakeView() {
   async function handleDelete(patientId: string) {
     if (!confirm(t('confirmDelete'))) return;
     try {
-      const response = await fetch(`/api/patient-intake?patientId=${patientId}`, { method: 'DELETE' });
+      const csrfHeaders = await getCsrfHeaders();
+      const response = await fetch(`/api/patient-intake?patientId=${patientId}`, {
+        method: 'DELETE',
+        headers: csrfHeaders,
+      });
       if (!response.ok) throw new Error('Delete failed');
       setData((d) => d.filter((item) => item.patient_id !== patientId));
     } catch (err) {
