@@ -4,6 +4,7 @@ import { auth } from '@/auth';
 import type { StaffRole } from '@/entities/staff/model/staff.types';
 import { checkRateLimit } from '@/shared/lib/rate-limiter';
 import { ApiErrors } from '@/shared/lib/api-error';
+import { CSRF_COOKIE_NAME, CSRF_HEADER_NAME, validateCsrfTokens } from '@/shared/lib/csrf';
 
 const protectedRoutesByRole: Record<string, StaffRole[]> = {
   '/staff/dashboard': ['receptionist', 'hygienist', 'dentist', 'admin'],
@@ -16,8 +17,34 @@ const protectedRoutesByRole: Record<string, StaffRole[]> = {
 const LOGIN_RATE_LIMIT = { maxRequests: 5, windowMs: 5 * 60 * 1000 };
 const LOGIN_PATH = '/api/auth/callback/credentials';
 
+/**
+ * HTTP methods that mutate server state and therefore require a CSRF token.
+ * GET and HEAD are safe methods (read-only) and are exempted.
+ */
+const CSRF_PROTECTED_METHODS = new Set(['POST', 'PUT', 'DELETE', 'PATCH']);
+
+/**
+ * Route prefixes excluded from CSRF validation.
+ * `/api/auth` is managed by NextAuth which has its own CSRF protection.
+ * `/api/csrf` is the token-issuance endpoint itself.
+ */
+const CSRF_EXEMPT_PREFIXES = ['/api/auth', '/api/csrf'];
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  // Validate CSRF token for state-changing API requests
+  if (
+    CSRF_PROTECTED_METHODS.has(req.method) &&
+    !CSRF_EXEMPT_PREFIXES.some((prefix) => pathname.startsWith(prefix))
+  ) {
+    const headerToken = req.headers.get(CSRF_HEADER_NAME);
+    const cookieToken = req.cookies.get(CSRF_COOKIE_NAME)?.value ?? null;
+
+    if (!validateCsrfTokens(headerToken, cookieToken)) {
+      return ApiErrors.forbidden('Invalid or missing CSRF token');
+    }
+  }
 
   // Rate-limit login attempts
   if (pathname === LOGIN_PATH && req.method === 'POST') {

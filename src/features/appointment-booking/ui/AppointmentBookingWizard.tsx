@@ -3,6 +3,7 @@ import { useTranslations } from 'next-intl';
 import { EnterPatientInfo } from './steps/EnterPatientInfo';
 import { Confirmation } from './steps/Confirmation';
 import { useAuth } from '@/shared/hooks/useAuth';
+import { useCsrfToken } from '@/shared/hooks/useCsrfToken';
 
 function SelectDateTimeStep({ onNext, onDataChange, selectedDate, selectedTime }: { onNext: () => void; onDataChange: (data: { date: string; time: string }) => void; selectedDate: string; selectedTime: string }) {
   const t = useTranslations('AppointmentBooking');
@@ -68,6 +69,7 @@ interface BookingData {
 export function AppointmentBookingWizard() {
   const t = useTranslations('AppointmentBooking');
   const { user, isLoading } = useAuth();
+  const getCsrfHeaders = useCsrfToken();
 
   const [step, setStep] = React.useState<1 | 2 | 3>(1);
   const [bookingData, setBookingData] = React.useState<BookingData>({ date: '', time: '', patientInfo: null });
@@ -119,9 +121,10 @@ export function AppointmentBookingWizard() {
     setLoading(true);
     setError(null);
     try {
+      const csrfHeaders = await getCsrfHeaders();
       const res = await fetch('/api/appointments', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders },
         body: JSON.stringify({
           patient_id: user.id,
           appointment_date: bookingData.date,
@@ -136,7 +139,7 @@ export function AppointmentBookingWizard() {
       // send confirmation email
       await fetch('/api/send-confirmation-email', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders },
         body: JSON.stringify({
           email: bookingData.patientInfo.email,
           patientInfo: bookingData.patientInfo,
