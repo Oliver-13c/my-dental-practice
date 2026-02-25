@@ -1,6 +1,7 @@
 import { supabase } from '@/shared/api/supabase-client';
 import { resend } from '@/shared/api/resend-client';
 import { appointmentReminderEmail } from '@/email/templates/appointment-reminder';
+import { logAudit } from '@/shared/lib/audit';
 
 export async function checkAndSendReminders() {
   try {
@@ -55,6 +56,13 @@ export async function checkAndSendReminders() {
           html,
         });
         console.log(`Sent reminder email to ${patientInfo.email} for appointment ${appointment.id}`);
+        await logAudit(
+          appointment.patient_id,
+          'reminder.sent',
+          'appointment',
+          appointment.id,
+          { email: patientInfo.email },
+        );
       } catch (emailError) {
         console.error(`Failed to send reminder email for appointment ${appointment.id}:`, emailError);
       }

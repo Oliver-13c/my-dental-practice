@@ -1,6 +1,7 @@
 import NextAuth, { type DefaultSession } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import type { StaffRole } from '@/entities/staff/model/staff.types';
+import { logAudit } from '@/shared/lib/audit';
 
 declare module 'next-auth' {
   interface Session {
@@ -51,5 +52,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   pages: {
     signIn: '/staff/login',
+  },
+  events: {
+    async signIn({ user }) {
+      // Only log if user.id exists
+      if (user.id) {
+        await logAudit(user.id, 'login', 'user', user.id, { email: user.email });
+      }
+    },
+    async signOut(message) {
+      const token = 'token' in message ? message.token : null;
+      const userId = token?.sub ?? 'unknown';
+      await logAudit(userId, 'logout', 'user', userId);
+    },
   },
 });

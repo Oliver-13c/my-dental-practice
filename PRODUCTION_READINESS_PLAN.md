@@ -24,8 +24,8 @@ No patient access or external scheduling in this phase.
 - [ ] Alert on 5xx errors
 
 ### 1.3 Security Hardening
-- [ ] Add CSP (Content-Security-Policy) headers
-- [ ] Enable HSTS, X-Frame-Options
+- [x] Add CSP (Content-Security-Policy) headers
+- [x] Enable HSTS, X-Frame-Options
 - [ ] Implement rate limiting on `/staff/login` (e.g., 5 attempts/5min)
 - [ ] Validate all form inputs server-side
 - [ ] Add CSRF token to sensitive mutations

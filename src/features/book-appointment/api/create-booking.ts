@@ -1,5 +1,6 @@
 import { createServerClient } from '@/shared/api/supabase-server';
 import type { Database } from '@/shared/api/supabase-types';
+import { logAudit } from '@/shared/lib/audit';
 
 const supabase = createServerClient<Database>() as any;
 
@@ -7,9 +8,10 @@ interface CreateBookingParams {
   startTime: string;
   endTime: string;
   patientName: string;
+  userId?: string;
 }
 
-export async function createBooking({ startTime, endTime, patientName }: CreateBookingParams) {
+export async function createBooking({ startTime, endTime, patientName, userId }: CreateBookingParams) {
   // Check if user is authenticated and allowed to book (patients can only book own)
   // This can be expanded later for role-based permissions
 
@@ -32,14 +34,22 @@ export async function createBooking({ startTime, endTime, patientName }: CreateB
     throw new Error('Selected slot is no longer available');
   }
 
-  const { error } = await supabase.from('appointments').insert({
+  const { data: inserted, error } = await supabase.from('appointments').insert({
     start_time: startTime,
     end_time: endTime,
     patient_name: patientName,
-  });
+  }).select('id').single();
 
   if (error) {
     console.error('Error creating booking:', error.message);
     throw new Error('Failed to create booking');
+  }
+
+  if (userId) {
+    await logAudit(userId, 'appointment.create', 'appointment', inserted?.id, {
+      start_time: startTime,
+      end_time: endTime,
+      patient_name: patientName,
+    });
   }
 }
