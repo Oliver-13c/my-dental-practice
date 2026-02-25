@@ -12,7 +12,7 @@ const protectedRoutesByRole: Record<string, StaffRole[]> = {
   '/staff/hygienist': ['hygienist', 'admin'],
 };
 
-/** Rate-limit the credentials sign-in endpoint: 5 attempts per 5 minutes per IP. */
+/** Rate-limit the credentials sign-in endpoint: 5 attempts per 5 minutes per IP and per account. */
 const LOGIN_RATE_LIMIT = { maxRequests: 5, windowMs: 5 * 60 * 1000 };
 const LOGIN_PATH = '/api/auth/callback/credentials';
 
@@ -25,9 +25,36 @@ export async function middleware(req: NextRequest) {
       req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
       req.headers.get('x-real-ip') ??
       'unknown';
-    const result = checkRateLimit(`login:${ip}`, LOGIN_RATE_LIMIT);
-    if (!result.allowed) {
-      return ApiErrors.tooManyRequests('Too many login attempts. Please try again later.');
+    const ipResult = checkRateLimit(`login:ip:${ip}`, LOGIN_RATE_LIMIT);
+
+    // Also rate-limit per account (email) to prevent credential stuffing
+    let accountResult: ReturnType<typeof checkRateLimit> | null = null;
+    try {
+      const cloned = req.clone();
+      const contentType = req.headers.get('content-type') ?? '';
+      let email: string | null = null;
+      if (contentType.includes('application/json')) {
+        const body = await cloned.json();
+        email = body?.email ?? null;
+      } else {
+        const body = await cloned.formData();
+        email = body.get('email') as string | null;
+      }
+      if (email) {
+        accountResult = checkRateLimit(`login:account:${email}`, LOGIN_RATE_LIMIT);
+      }
+    } catch {
+      // If body cannot be parsed, fall back to IP-only limiting
+    }
+
+    const blocked = !ipResult.allowed || (accountResult !== null && !accountResult.allowed);
+    if (blocked) {
+      const resetAt = !ipResult.allowed ? ipResult.resetAt : (accountResult?.resetAt ?? ipResult.resetAt);
+      const retryAfter = Math.ceil((resetAt - Date.now()) / 1000);
+      console.warn(`[rate-limit] Login blocked – ip=${ip} retryAfter=${retryAfter}s`);
+      const response = ApiErrors.tooManyRequests('Too many login attempts. Please try again later.');
+      response.headers.set('Retry-After', String(retryAfter));
+      return response;
     }
   }
 
