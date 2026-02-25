@@ -76,6 +76,35 @@ export interface Database {
           created_at?: string;
         };
       };
+      audit_logs: {
+        Row: {
+          id: string;
+          user_id: string;
+          action: string;
+          resource_type: string | null;
+          resource_id: string | null;
+          metadata: Record<string, unknown> | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          action: string;
+          resource_type?: string | null;
+          resource_id?: string | null;
+          metadata?: Record<string, unknown> | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          action?: string;
+          resource_type?: string | null;
+          resource_id?: string | null;
+          metadata?: Record<string, unknown> | null;
+          created_at?: string;
+        };
+      };
     };
     Views: Record<string, unknown>;
     Functions: Record<string, unknown>;
