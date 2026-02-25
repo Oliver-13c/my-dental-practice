@@ -7,6 +7,7 @@ import { Input } from '@/shared/ui/input';
 import { Button } from '@/shared/ui/button';
 import { Textarea } from '@/shared/ui/textarea';
 import { Card } from '@/shared/ui/card';
+import { useCsrfToken } from '@/shared/hooks/useCsrfToken';
 
 const patientIntakeSchema = z.object({
   fullName: z.string().min(2, 'patientIntake.errors.fullNameRequired'),
@@ -22,6 +23,7 @@ type PatientIntakeFormData = z.infer<typeof patientIntakeSchema>;
 
 export function PatientIntakeForm({ patientId }: { patientId: string }) {
   const t = useTranslations('patientIntake.form');
+  const getCsrfHeaders = useCsrfToken();
   const {
     register,
     handleSubmit,
@@ -30,9 +32,10 @@ export function PatientIntakeForm({ patientId }: { patientId: string }) {
 
   async function onSubmit(data: PatientIntakeFormData) {
     try {
+      const csrfHeaders = await getCsrfHeaders();
       const response = await fetch('/api/patient-intake', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...csrfHeaders },
         body: JSON.stringify({ ...data, patientId }),
       });
       if (!response.ok) {
