@@ -28,6 +28,7 @@ export const ApiErrors = {
   unauthorized: (message = 'Unauthorized') => apiError(message, 401, 'UNAUTHORIZED'),
   forbidden: (message = 'Forbidden') => apiError(message, 403, 'FORBIDDEN'),
   notFound: (message = 'Not Found') => apiError(message, 404, 'NOT_FOUND'),
+  conflict: (message = 'Conflict') => apiError(message, 409, 'CONFLICT'),
   tooManyRequests: (message = 'Too Many Requests') => apiError(message, 429, 'RATE_LIMITED'),
   internal: (message = 'Internal Server Error', cause?: unknown) =>
     apiError(message, 500, 'INTERNAL_ERROR', cause),
