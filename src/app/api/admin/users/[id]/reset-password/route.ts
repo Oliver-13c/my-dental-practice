@@ -3,14 +3,13 @@ import type { NextRequest } from 'next/server';
 import { sendPasswordReset } from '@/features/admin-dashboard/api/admin-users';
 import { ApiErrors } from '@/shared/lib/api-error';
 
-type Params = {
-  id: string;
-};
-
 /**
  * POST /api/admin/users/:id/reset-password - Send password reset email
  */
-export async function POST(request: NextRequest, { params }: { params: Params }) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     const result = await sendPasswordReset(params.id);
 

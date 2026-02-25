@@ -7,14 +7,13 @@ import {
 } from '@/features/admin-dashboard/api/admin-users';
 import { ApiErrors } from '@/shared/lib/api-error';
 
-type Params = {
-  id: string;
-};
-
 /**
  * GET /api/admin/users/:id - Get staff member details
  */
-export async function GET(request: NextRequest, { params }: { params: Params }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     const result = await getStaffMember(params.id);
 
@@ -42,7 +41,10 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
 /**
  * PATCH /api/admin/users/:id - Update staff member
  */
-export async function PATCH(request: NextRequest, { params }: { params: Params }) {
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     const body = await request.json();
 
@@ -68,7 +70,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Params }
 /**
  * DELETE /api/admin/users/:id - Delete (deactivate) staff member
  */
-export async function DELETE(request: NextRequest, { params }: { params: Params }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     const result = await deleteStaffMember(params.id);
 
