@@ -34,11 +34,11 @@ export async function createBooking({ startTime, endTime, patientName, userId }:
     throw new Error('Selected slot is no longer available');
   }
 
-  const { error } = await supabase.from('appointments').insert({
+  const { data: inserted, error } = await supabase.from('appointments').insert({
     start_time: startTime,
     end_time: endTime,
     patient_name: patientName,
-  });
+  }).select('id').single();
 
   if (error) {
     console.error('Error creating booking:', error.message);
@@ -46,7 +46,7 @@ export async function createBooking({ startTime, endTime, patientName, userId }:
   }
 
   if (userId) {
-    await logAudit(userId, 'appointment.create', 'appointment', undefined, {
+    await logAudit(userId, 'appointment.create', 'appointment', inserted?.id, {
       start_time: startTime,
       end_time: endTime,
       patient_name: patientName,
