@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { createBrowserClient } from '@/shared/api/supabase-browser';
+import { supabase } from '@/shared/api/supabase-client';
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -13,15 +13,20 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-
-  const token = searchParams.get('token');
+  const [invalidToken, setInvalidToken] = useState(false);
 
   useEffect(() => {
-    // Verify token exists
-    if (!token) {
-      setError('Invalid or missing reset token');
-    }
-  }, [token]);
+    // Check if user has an active recovery session
+    // This validates the token was accepted by Supabase
+    const checkSession = async () => {
+      const { data, error } = await supabase.auth.getSession();
+      if (error || !data.session) {
+        // No valid session means invalid/expired token
+        setInvalidToken(true);
+      }
+    };
+    checkSession();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,13 +53,10 @@ export default function ResetPasswordPage() {
     }
 
     try {
-      const supabase = createBrowserClient();
-
-      // Update password using the token
-      const { error: resetError } = await (supabase as any).auth.updateUser(
-        { password },
-        { session: { access_token: token } }
-      );
+      // Update password using the current recovery session
+      const { error: resetError } = await supabase.auth.updateUser({
+        password,
+      });
 
       if (resetError) {
         throw resetError;
@@ -77,13 +79,13 @@ export default function ResetPasswordPage() {
     }
   };
 
-  if (error && error.includes('Invalid or missing')) {
+  if (error && (error.includes('Invalid or missing') || invalidToken)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="bg-white p-8 rounded-lg border border-gray-200 max-w-md w-full">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Reset Password</h1>
           <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-            {error}
+            {error || 'Invalid or expired reset token'}
           </div>
           <p className="text-sm text-gray-600 mt-4">
             Please request a new password reset email from your admin.
