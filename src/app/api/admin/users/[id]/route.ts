@@ -22,7 +22,7 @@ export async function GET(request: NextRequest, context: any) {
       if (result.error.includes('Forbidden')) {
         return ApiErrors.forbidden(result.error);
       }
-      return ApiErrors.internalServerError(result.error);
+      return ApiErrors.internal(result.error);
     }
 
     if (!result.data) {
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest, context: any) {
     return NextResponse.json({ success: true, data: result.data });
   } catch (error) {
     console.error('[admin/users/:id GET]', error);
-    return ApiErrors.internalServerError('Failed to fetch staff member');
+    return ApiErrors.internal('Failed to fetch staff member');
   }
 }
 
@@ -53,13 +53,13 @@ export async function PATCH(request: NextRequest, context: any) {
       if (result.error.includes('Forbidden')) {
         return ApiErrors.forbidden(result.error);
       }
-      return ApiErrors.internalServerError(result.error);
+      return ApiErrors.internal(result.error);
     }
 
     return NextResponse.json({ success: true, data: result.data });
   } catch (error) {
     console.error('[admin/users/:id PATCH]', error);
-    return ApiErrors.internalServerError('Failed to update staff member');
+    return ApiErrors.internal('Failed to update staff member');
   }
 }
 
@@ -78,12 +78,12 @@ export async function DELETE(request: NextRequest, context: any) {
       if (result.error.includes('Forbidden')) {
         return ApiErrors.forbidden(result.error);
       }
-      return ApiErrors.internalServerError(result.error);
+      return ApiErrors.internal(result.error);
     }
 
     return NextResponse.json({ success: true, data: result.data });
   } catch (error) {
     console.error('[admin/users/:id DELETE]', error);
-    return ApiErrors.internalServerError('Failed to delete staff member');
+    return ApiErrors.internal('Failed to delete staff member');
   }
 }

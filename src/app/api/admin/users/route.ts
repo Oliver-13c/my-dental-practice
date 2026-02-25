@@ -26,13 +26,13 @@ export async function GET(request: NextRequest) {
       if (result.error.includes('Forbidden')) {
         return ApiErrors.forbidden(result.error);
       }
-      return ApiErrors.internalServerError(result.error);
+      return ApiErrors.internal(result.error);
     }
 
     return NextResponse.json({ success: true, data: result.data });
   } catch (error) {
     console.error('[admin/users GET]', error);
-    return ApiErrors.internalServerError('Failed to fetch staff members');
+    return ApiErrors.internal('Failed to fetch staff members');
   }
 }
 
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
       if (result.error.includes('already registered')) {
         return ApiErrors.conflict('Email already exists');
       }
-      return ApiErrors.internalServerError(result.error);
+      return ApiErrors.internal(result.error);
     }
 
     return NextResponse.json(
@@ -88,6 +88,6 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error('[admin/users POST]', error);
-    return ApiErrors.internalServerError('Failed to create staff member');
+    return ApiErrors.internal('Failed to create staff member');
   }
 }

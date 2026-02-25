@@ -18,12 +18,12 @@ export async function POST(request: NextRequest, context: any) {
       if (result.error.includes('Forbidden')) {
         return ApiErrors.forbidden(result.error);
       }
-      return ApiErrors.internalServerError(result.error);
+      return ApiErrors.internal(result.error);
     }
 
     return NextResponse.json({ success: true, data: result.data });
   } catch (error) {
     console.error('[admin/users/:id/reset-password POST]', error);
-    return ApiErrors.internalServerError('Failed to send password reset email');
+    return ApiErrors.internal('Failed to send password reset email');
   }
 }
