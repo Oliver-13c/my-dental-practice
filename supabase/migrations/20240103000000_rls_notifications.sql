@@ -19,6 +19,10 @@ CREATE POLICY "Staff can update own notifications"
   ON public.notifications FOR UPDATE
   USING (auth.uid() = user_id);
 
+-- NOTE: INSERT on notifications is intentionally restricted to the service role.
+-- Application code must use the service-role key (SUPABASE_SERVICE_KEY) to create
+-- notifications. Authenticated users cannot INSERT directly (GAP-003 in RLS_TEST_REPORT.md).
+
 -- Admins can read all notifications
 CREATE POLICY "Admins can view all notifications"
   ON public.notifications FOR SELECT
