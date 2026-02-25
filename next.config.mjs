@@ -38,8 +38,11 @@ const nextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
           },
+          // CSP runs in report-only mode first to detect violations without blocking.
+          // Once violations are reviewed and resolved, replace this header key with
+          // 'Content-Security-Policy' to switch to enforcement mode.
           {
-            key: 'Content-Security-Policy',
+            key: 'Content-Security-Policy-Report-Only',
             value: [
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline'",
@@ -48,6 +51,7 @@ const nextConfig = {
               "font-src 'self'",
               "connect-src 'self' https://*.supabase.co https://api.resend.com",
               "frame-ancestors 'none'",
+              "report-uri /api/csp-report",
             ].join('; '),
           },
         ],

@@ -70,7 +70,7 @@ Track progress on production launch. Convert each task to a GitHub issue if need
 
 ### Security Hardening
 
-- [ ] **Task 1.3.1:** Add security headers
+- [x] **Task 1.3.1:** Add security headers
   - CSP (Content-Security-Policy)
   - HSTS (Strict-Transport-Security)
   - X-Frame-Options: DENY
