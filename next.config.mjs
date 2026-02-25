@@ -1,3 +1,4 @@
+import { withSentryConfig } from '@sentry/nextjs';
 import createNextIntlPlugin from 'next-intl/plugin';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -45,7 +46,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob:",
               "font-src 'self'",
-              "connect-src 'self' https://*.supabase.co https://api.resend.com",
+              "connect-src 'self' https://*.supabase.co https://api.resend.com https://*.sentry.io https://sentry.io",
               "frame-ancestors 'none'",
             ].join('; '),
           },
@@ -55,4 +56,21 @@ const nextConfig = {
   },
 };
 
-export default withNextIntl(nextConfig);
+export default withSentryConfig(withNextIntl(nextConfig), {
+  // Sentry organisation and project (set in CI / Vercel env vars)
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+
+  // Auth token for uploading source maps (set as SENTRY_AUTH_TOKEN secret)
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+
+  // Only upload source maps when an auth token is present (skips local dev)
+  silent: !process.env.SENTRY_AUTH_TOKEN,
+
+  // Tree-shake Sentry debug code from production bundles
+  webpack: {
+    treeshake: {
+      removeDebugLogging: true,
+    },
+  },
+});
