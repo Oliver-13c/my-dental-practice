@@ -1,3 +1,4 @@
+import { withSentryConfig } from '@sentry/nextjs';
 import createNextIntlPlugin from 'next-intl/plugin';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -55,4 +56,23 @@ const nextConfig = {
   },
 };
 
-export default withNextIntl(nextConfig);
+export default withSentryConfig(
+  withNextIntl(nextConfig),
+  {
+    // Sentry organisation / project (set via env or hardcode after creating a project)
+    org: process.env.SENTRY_ORG,
+    project: process.env.SENTRY_PROJECT,
+
+    // Auth token for source-map upload (SENTRY_AUTH_TOKEN env var)
+    authToken: process.env.SENTRY_AUTH_TOKEN,
+
+    // Upload source maps to Sentry for readable stack traces
+    silent: true,
+
+    // Automatically tree-shake Sentry logger statements to reduce bundle size
+    disableLogger: true,
+
+    // Hides source maps from the browser bundle (good for production)
+    hideSourceMaps: true,
+  }
+);
