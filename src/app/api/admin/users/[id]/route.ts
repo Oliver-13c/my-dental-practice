@@ -1,0 +1,90 @@
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import {
+  getStaffMember,
+  updateStaffMember,
+  deleteStaffMember,
+} from '@/features/admin-dashboard/api/admin-users';
+import { ApiErrors } from '@/shared/lib/api-error';
+
+type Params = {
+  id: string;
+};
+
+/**
+ * GET /api/admin/users/:id - Get staff member details
+ */
+export async function GET(request: NextRequest, { params }: { params: Params }) {
+  try {
+    const result = await getStaffMember(params.id);
+
+    if (result.error) {
+      if (result.error.includes('Unauthorized')) {
+        return ApiErrors.unauthorized(result.error);
+      }
+      if (result.error.includes('Forbidden')) {
+        return ApiErrors.forbidden(result.error);
+      }
+      return ApiErrors.internalServerError(result.error);
+    }
+
+    if (!result.data) {
+      return ApiErrors.notFound('Staff member not found');
+    }
+
+    return NextResponse.json({ success: true, data: result.data });
+  } catch (error) {
+    console.error('[admin/users/:id GET]', error);
+    return ApiErrors.internalServerError('Failed to fetch staff member');
+  }
+}
+
+/**
+ * PATCH /api/admin/users/:id - Update staff member
+ */
+export async function PATCH(request: NextRequest, { params }: { params: Params }) {
+  try {
+    const body = await request.json();
+
+    const result = await updateStaffMember(params.id, body);
+
+    if (result.error) {
+      if (result.error.includes('Unauthorized')) {
+        return ApiErrors.unauthorized(result.error);
+      }
+      if (result.error.includes('Forbidden')) {
+        return ApiErrors.forbidden(result.error);
+      }
+      return ApiErrors.internalServerError(result.error);
+    }
+
+    return NextResponse.json({ success: true, data: result.data });
+  } catch (error) {
+    console.error('[admin/users/:id PATCH]', error);
+    return ApiErrors.internalServerError('Failed to update staff member');
+  }
+}
+
+/**
+ * DELETE /api/admin/users/:id - Delete (deactivate) staff member
+ */
+export async function DELETE(request: NextRequest, { params }: { params: Params }) {
+  try {
+    const result = await deleteStaffMember(params.id);
+
+    if (result.error) {
+      if (result.error.includes('Unauthorized')) {
+        return ApiErrors.unauthorized(result.error);
+      }
+      if (result.error.includes('Forbidden')) {
+        return ApiErrors.forbidden(result.error);
+      }
+      return ApiErrors.internalServerError(result.error);
+    }
+
+    return NextResponse.json({ success: true, data: result.data });
+  } catch (error) {
+    console.error('[admin/users/:id DELETE]', error);
+    return ApiErrors.internalServerError('Failed to delete staff member');
+  }
+}
