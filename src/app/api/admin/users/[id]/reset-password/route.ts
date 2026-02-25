@@ -6,10 +6,8 @@ import { ApiErrors } from '@/shared/lib/api-error';
 /**
  * POST /api/admin/users/:id/reset-password - Send password reset email
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: NextRequest, context: any) {
+  const params = context.params as { id: string };
   try {
     const result = await sendPasswordReset(params.id);
 
