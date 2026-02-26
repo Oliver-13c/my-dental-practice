@@ -19,6 +19,7 @@ export default function StaffLoginPage() {
   const [loading, setLoading] = useState(false);
   const [authMode, setAuthMode] = useState<'password' | 'magic'>('password');
   const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   async function handlePasswordSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -54,6 +55,29 @@ export default function StaffLoginPage() {
       }
     } catch (err) {
       setError('Failed to send magic link. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleForgotPassword() {
+    if (!email.trim()) {
+      setError('Enter your email address first, then click Forgot Password.');
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
+      });
+      if (error) {
+        setError(error.message);
+      } else {
+        setResetSent(true);
+      }
+    } catch {
+      setError('Failed to send reset email. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -104,6 +128,13 @@ export default function StaffLoginPage() {
           </div>
         )}
 
+        {/* Password Reset Sent Message */}
+        {resetSent && (
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded text-green-700 text-sm">
+            ✓ Password reset email sent! Check your inbox and click the link to set a new password.
+          </div>
+        )}
+
         {/* Magic Link Success Message */}
         {magicLinkSent && authMode === 'magic' && (
           <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded text-green-700 text-sm">
@@ -146,6 +177,14 @@ export default function StaffLoginPage() {
               className="w-full rounded bg-blue-600 text-white py-2 font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
               {loading ? 'Signing in...' : t('login')}
+            </button>
+            <button
+              type="button"
+              onClick={handleForgotPassword}
+              disabled={loading}
+              className="w-full text-sm text-blue-600 hover:text-blue-700 disabled:opacity-50"
+            >
+              Forgot Password?
             </button>
           </form>
         )}

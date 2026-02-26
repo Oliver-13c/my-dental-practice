@@ -2,15 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { supabase } from '@/shared/api/supabase-client';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 export default function ResetPasswordPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const supabase = createClientComponentClient();
   
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [invalidToken, setInvalidToken] = useState(false);
@@ -24,9 +26,25 @@ export default function ResetPasswordPage() {
         // No valid session means invalid/expired token
         setInvalidToken(true);
       }
+      setChecking(false);
     };
     checkSession();
-  }, []);
+
+    // Also listen for PASSWORD_RECOVERY in case the session is established
+    // via hash fragments after a redirect
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setInvalidToken(false);
+        setChecking(false);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,7 +97,18 @@ export default function ResetPasswordPage() {
     }
   };
 
-  if (error && (error.includes('Invalid or missing') || invalidToken)) {
+  // Show loading state while checking session validity
+  if (checking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="bg-white p-8 rounded-lg border border-gray-200 max-w-md w-full text-center">
+          <p className="text-gray-600">Verifying reset token…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if ((!checking && invalidToken) || (error && error.includes('Invalid or missing'))) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="bg-white p-8 rounded-lg border border-gray-200 max-w-md w-full">

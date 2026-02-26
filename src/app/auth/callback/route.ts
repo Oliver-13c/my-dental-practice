@@ -1,17 +1,20 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { cookies } from 'next/headers';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import type { Database } from '@/shared/api/supabase-types';
+import { createServerClient } from '@supabase/ssr';
 
 /**
  * Email confirmation callback handler
  * Supabase redirects here after user clicks email link
  * Handles: email_confirmation, password_reset, magic_link
+ *
+ * Uses @supabase/ssr (not the deprecated auth-helpers) so cookies
+ * are written directly onto the redirect response — required for Next.js 15
+ * where cookies() is async.
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
 
+  /* ── Handle error params from Supabase ──────────────────────── */
   const error = searchParams.get('error');
   const errorCode = searchParams.get('error_code');
   const errorDescription = searchParams.get('error_description');
@@ -25,72 +28,123 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(redirect);
   }
 
+  /* ── Extract params ─────────────────────────────────────────── */
   const token = searchParams.get('token');
-  const type = searchParams.get('type') as 
+  const type = searchParams.get('type') as
     | 'signup'
     | 'recovery'
     | 'invite'
     | 'email_change'
+    | 'magiclink'
     | undefined;
   const code = searchParams.get('code');
   const next =
     searchParams.get('next') ||
     (type === 'recovery' ? '/auth/reset-password' : '/staff/dashboard');
 
-  const supabase = createRouteHandlerClient<Database>({ cookies });
+  /* ── Build the redirect response FIRST so we can set cookies on it ── */
+  const redirectUrl = new URL(next, request.url);
+  redirectUrl.searchParams.set('confirmed', 'true');
+  const response = NextResponse.redirect(redirectUrl);
 
+  /**
+   * Create a Supabase client that reads cookies from the incoming request
+   * and writes cookies onto the outgoing redirect response.
+   * This is the officially recommended pattern from Supabase for Next.js 15.
+   */
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options);
+          });
+        },
+      },
+    },
+  );
+
+  /* ── PKCE code flow (modern — used by magic links) ──────────── */
   if (code) {
     try {
-      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      const { error: exchangeError } =
+        await supabase.auth.exchangeCodeForSession(code);
 
-      if (error) {
-        console.error('[auth/callback] Code exchange error:', error.message);
+      if (exchangeError) {
+        console.error(
+          '[auth/callback] Code exchange error:',
+          exchangeError.message,
+        );
         return NextResponse.redirect(
-          new URL('/auth/error?error=invalid_token', request.url)
+          new URL(
+            `/auth/error?error=invalid_token&message=${encodeURIComponent(exchangeError.message)}`,
+            request.url,
+          ),
         );
       }
 
-      const redirectUrl = new URL(next, request.url);
-      redirectUrl.searchParams.set('confirmed', 'true');
-      return NextResponse.redirect(redirectUrl);
+      // Check if this was a recovery flow — the session will have aal1 + recovery
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (
+        session?.user?.recovery_sent_at ||
+        session?.user?.app_metadata?.provider === 'email' &&
+          type === 'recovery'
+      ) {
+        // Recovery PKCE flow → redirect to reset-password
+        const recoveryUrl = new URL('/auth/reset-password', request.url);
+        return NextResponse.redirect(recoveryUrl, {
+          headers: response.headers,
+        });
+      }
+
+      return response;
     } catch (err) {
       console.error('[auth/callback] Code exchange error:', err);
       return NextResponse.redirect(
-        new URL('/auth/error?error=callback_failed', request.url)
+        new URL('/auth/error?error=callback_failed', request.url),
       );
     }
   }
 
+  /* ── Legacy token-hash flow ─────────────────────────────────── */
   if (!token || !type) {
     return NextResponse.redirect(
-      new URL('/auth/error?error=missing_token', request.url)
+      new URL('/auth/error?error=missing_token', request.url),
     );
   }
 
   try {
-    // Verify the token with Supabase
-    const { data, error } = await supabase.auth.verifyOtp({
+    const { data, error: verifyError } = await supabase.auth.verifyOtp({
       token_hash: token,
       type,
     });
 
-    if (error || !data) {
-      console.error('[auth/callback] Verification error:', error?.message);
+    if (verifyError || !data) {
+      console.error(
+        '[auth/callback] Verification error:',
+        verifyError?.message,
+      );
       return NextResponse.redirect(
-        new URL('/auth/error?error=invalid_token', request.url)
+        new URL(
+          `/auth/error?error=invalid_token&message=${encodeURIComponent(verifyError?.message ?? 'Token verification failed')}`,
+          request.url,
+        ),
       );
     }
 
-    // Success - redirect to next page
-    // The session cookie is automatically set by Supabase
-    const redirectUrl = new URL(next, request.url);
-    redirectUrl.searchParams.set('confirmed', 'true');
-
-    return NextResponse.redirect(redirectUrl);
+    return response;
   } catch (err) {
     console.error('[auth/callback] Error:', err);
     return NextResponse.redirect(
-      new URL('/auth/error?error=callback_failed', request.url)
+      new URL('/auth/error?error=callback_failed', request.url),
     );
   }
 }
