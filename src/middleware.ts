@@ -27,8 +27,9 @@ const CSRF_PROTECTED_METHODS = new Set(['POST', 'PUT', 'DELETE', 'PATCH']);
  * Route prefixes excluded from CSRF validation.
  * `/api/auth` is managed by NextAuth which has its own CSRF protection.
  * `/api/csrf` is the token-issuance endpoint itself.
+ * `/api/csp-report` receives reports from the browser without CSRF tokens.
  */
-const CSRF_EXEMPT_PREFIXES = ['/api/auth', '/api/csrf'];
+const CSRF_EXEMPT_PREFIXES = ['/api/auth', '/api/csrf', '/api/csp-report'];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
