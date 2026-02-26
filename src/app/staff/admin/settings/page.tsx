@@ -29,6 +29,8 @@ function SettingToggle({ label, description, value, onChange }: { label: string;
       </div>
       <button
         onClick={() => onChange(!value)}
+        aria-label={`Toggle ${label} ${value ? 'on' : 'off'}`}
+        title={`Toggle ${label}`}
         className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
           value ? 'bg-blue-600' : 'bg-gray-200'
         }`}

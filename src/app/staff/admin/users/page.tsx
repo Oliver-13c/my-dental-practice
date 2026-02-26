@@ -151,6 +151,7 @@ export default function UsersPage() {
                 setRoleFilter(e.target.value);
                 setLoading(true);
               }}
+              aria-label="Filter users by role"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm"
             >
               <option value="all">All Roles</option>
@@ -170,6 +171,7 @@ export default function UsersPage() {
                 setStatusFilter(e.target.value);
                 setLoading(true);
               }}
+              aria-label="Filter users by status"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm"
             >
               <option value="all">All Status</option>

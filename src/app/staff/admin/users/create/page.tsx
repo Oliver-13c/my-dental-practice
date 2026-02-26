@@ -253,7 +253,9 @@ export default function CreateUserPage() {
                   <div className="flex-1 bg-gray-200 h-1.5 rounded-full overflow-hidden">
                     <div
                       className={`h-full ${passwordStrength.color} transition-all`}
-                      style={{ width: `${(passwordStrength.score + 1) * 20}%` }}
+                      style={{
+                        width: `${(passwordStrength.score + 1) * 20}%`,
+                      }}
                     />
                   </div>
                   <span className="text-xs font-medium text-gray-600">{passwordStrength.label}</span>
