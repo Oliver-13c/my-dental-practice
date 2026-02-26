@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { ReceptionistCalendar } from './receptionist-calendar';
 
 type AppointmentStatus = 'scheduled' | 'arrived' | 'in-room' | 'complete' | 'no-show';
 
@@ -277,6 +278,9 @@ export function ReceptionistDashboard() {
                     <p className="text-xs text-slate-500">Patients awaiting a slot</p>
                 </div>
             </div>
+
+            {/* Calendar Grid - New Section */}
+            <ReceptionistCalendar viewMode={viewMode} selectedDate={selectedDate} onDateChange={setSelectedDate} />
 
             <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)]">
                 <div className="space-y-6">
