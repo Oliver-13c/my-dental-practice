@@ -247,6 +247,7 @@ export function ReceptionistDashboard() {
                         value={providerFilter}
                         onChange={(event) => setProviderFilter(event.target.value)}
                         className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 shadow-sm"
+                        aria-label="Filter appointments by provider"
                     >
                         <option value="all">All Providers</option>
                         <option value="Dr. Patel">Dr. Patel</option>
@@ -403,6 +404,7 @@ export function ReceptionistDashboard() {
                                     value={createForm.provider}
                                     onChange={(event) => setCreateForm((prev) => ({ ...prev, provider: event.target.value }))}
                                     className="rounded-xl border border-slate-200 px-3 py-2"
+                                    aria-label="Select provider for appointment"
                                 >
                                     <option value="Dr. Patel">Dr. Patel</option>
                                     <option value="Dr. Ross">Dr. Ross</option>
@@ -412,6 +414,7 @@ export function ReceptionistDashboard() {
                                     value={createForm.duration}
                                     onChange={(event) => setCreateForm((prev) => ({ ...prev, duration: Number(event.target.value) }))}
                                     className="rounded-xl border border-slate-200 px-3 py-2"
+                                    aria-label="Select appointment duration"
                                 >
                                     <option value={30}>30 min</option>
                                     <option value={45}>45 min</option>
@@ -449,6 +452,7 @@ export function ReceptionistDashboard() {
                                 value={blockForm.provider}
                                 onChange={(event) => setBlockForm((prev) => ({ ...prev, provider: event.target.value }))}
                                 className="w-full rounded-xl border border-slate-200 px-3 py-2"
+                                aria-label="Select provider to block time"
                             >
                                 <option value="Dr. Patel">Dr. Patel</option>
                                 <option value="Dr. Ross">Dr. Ross</option>

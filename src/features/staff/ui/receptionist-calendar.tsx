@@ -260,6 +260,7 @@ export function ReceptionistCalendar({
             value={selectedProvider || 'all'}
             onChange={(e) => setSelectedProvider(e.target.value === 'all' ? null : e.target.value)}
             className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm shadow-sm"
+            aria-label="Filter calendar by provider"
           >
             <option value="all">All Providers</option>
             {PROVIDERS.map((provider) => (
