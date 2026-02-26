@@ -6,6 +6,8 @@ import Link from 'next/link';
 const errorMessages: Record<string, string> = {
   missing_token: 'Missing confirmation token. Please check the email link.',
   invalid_token: 'Invalid or expired confirmation token. Please request a new one.',
+  otp_expired: 'This link is invalid or has expired. Please request a new one.',
+  access_denied: 'This link is invalid or has expired. Please request a new one.',
   callback_failed: 'Confirmation failed. Please try again or contact support.',
   unknown: 'An error occurred during confirmation.',
 };
@@ -13,7 +15,8 @@ const errorMessages: Record<string, string> = {
 export default function AuthErrorPage() {
   const searchParams = useSearchParams();
   const error = searchParams.get('error') || 'unknown';
-  const message = errorMessages[error] || errorMessages.unknown;
+  const customMessage = searchParams.get('message');
+  const message = customMessage || errorMessages[error] || errorMessages.unknown;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-50 flex items-center justify-center px-4">

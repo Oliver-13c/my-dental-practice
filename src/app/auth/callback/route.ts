@@ -11,6 +11,19 @@ import type { Database } from '@/shared/api/supabase-types';
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
 
+  const error = searchParams.get('error');
+  const errorCode = searchParams.get('error_code');
+  const errorDescription = searchParams.get('error_description');
+
+  if (error || errorCode) {
+    const redirect = new URL('/auth/error', request.url);
+    redirect.searchParams.set('error', errorCode ?? error ?? 'unknown');
+    if (errorDescription) {
+      redirect.searchParams.set('message', errorDescription);
+    }
+    return NextResponse.redirect(redirect);
+  }
+
   const token = searchParams.get('token');
   const type = searchParams.get('type') as
     | 'signup'
