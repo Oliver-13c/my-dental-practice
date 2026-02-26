@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 import { auth } from '@/auth';
 import type { StaffRole } from '@/entities/staff/model/staff.types';
+import type { Database } from '@/shared/api/supabase-types';
 import { checkRateLimit } from '@/shared/lib/rate-limiter';
 import { ApiErrors } from '@/shared/lib/api-error';
 import { CSRF_COOKIE_NAME, CSRF_HEADER_NAME, validateCsrfTokens } from '@/shared/lib/csrf';
@@ -95,12 +97,38 @@ export async function middleware(req: NextRequest) {
   }
 
   const session = await auth();
+  let role: StaffRole | null = session?.user?.role ?? null;
 
-  if (!session?.user) {
-    return NextResponse.redirect(new URL('/staff/login', req.url));
+  if (!role) {
+    const response = NextResponse.next();
+    const supabase = createMiddlewareClient<Database>({ req, res: response });
+    const {
+      data: { session: supabaseSession },
+    } = await supabase.auth.getSession();
+
+    if (!supabaseSession?.user) {
+      return NextResponse.redirect(new URL('/staff/login', req.url));
+    }
+
+    const { data: profile } = await supabase
+      .from('staff_profiles')
+      .select('role, is_active')
+      .eq('id', supabaseSession.user.id)
+      .single();
+
+    if (!profile?.is_active) {
+      return NextResponse.redirect(new URL('/staff/login', req.url));
+    }
+
+    role = profile.role as StaffRole;
+
+    const allowedRoles = matchedPaths.flatMap((path) => protectedRoutesByRole[path]);
+    if (!allowedRoles.includes(role)) {
+      return NextResponse.redirect(new URL('/403', req.url));
+    }
+
+    return response;
   }
-
-  const role = session.user.role;
 
   if (!role) {
     return NextResponse.redirect(new URL('/staff/login', req.url));

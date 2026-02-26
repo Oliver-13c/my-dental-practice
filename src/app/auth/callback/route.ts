@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createServerClient } from '@/shared/api/supabase-server';
+import { cookies } from 'next/headers';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import type { Database } from '@/shared/api/supabase-types';
 
 /**
@@ -25,21 +26,46 @@ export async function GET(request: NextRequest) {
   }
 
   const token = searchParams.get('token');
-  const type = searchParams.get('type') as
+  const type = searchParams.get('type') as 
     | 'signup'
     | 'recovery'
     | 'invite'
     | 'email_change'
     | undefined;
-  const next = searchParams.get('next') || '/staff/dashboard';
+  const code = searchParams.get('code');
+  const next =
+    searchParams.get('next') ||
+    (type === 'recovery' ? '/auth/reset-password' : '/staff/dashboard');
+
+  const supabase = createRouteHandlerClient<Database>({ cookies });
+
+  if (code) {
+    try {
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
+
+      if (error) {
+        console.error('[auth/callback] Code exchange error:', error.message);
+        return NextResponse.redirect(
+          new URL('/auth/error?error=invalid_token', request.url)
+        );
+      }
+
+      const redirectUrl = new URL(next, request.url);
+      redirectUrl.searchParams.set('confirmed', 'true');
+      return NextResponse.redirect(redirectUrl);
+    } catch (err) {
+      console.error('[auth/callback] Code exchange error:', err);
+      return NextResponse.redirect(
+        new URL('/auth/error?error=callback_failed', request.url)
+      );
+    }
+  }
 
   if (!token || !type) {
     return NextResponse.redirect(
       new URL('/auth/error?error=missing_token', request.url)
     );
   }
-
-  const supabase = createServerClient<Database>();
 
   try {
     // Verify the token with Supabase
