@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@/shared/api/supabase-browser';
 
 /**
  * Global auth-state listener mounted in the root layout.
@@ -20,7 +20,7 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 export default function SupabaseAuthListener() {
   const router = useRouter();
   const pathname = usePathname();
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
 
   useEffect(() => {
     const {

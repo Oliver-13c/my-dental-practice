@@ -4,14 +4,14 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { signIn } from 'next-auth/react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@/shared/api/supabase-browser';
 
 export const dynamic = 'force-dynamic';
 
 export default function StaffLoginPage() {
   const t = useTranslations('staff.login');
   const router = useRouter();
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

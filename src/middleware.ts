@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 import { auth } from '@/auth';
 import type { StaffRole } from '@/entities/staff/model/staff.types';
-import type { Database } from '@/shared/api/supabase-types';
+import { createMiddlewareSupabaseClient } from '@/shared/api/supabase-middleware';
 import { checkRateLimit } from '@/shared/lib/rate-limiter';
 import { ApiErrors } from '@/shared/lib/api-error';
 import { CSRF_COOKIE_NAME, CSRF_HEADER_NAME, validateCsrfTokens } from '@/shared/lib/csrf';
@@ -101,7 +100,7 @@ export async function middleware(req: NextRequest) {
 
   if (!role) {
     const response = NextResponse.next();
-    const supabase = createMiddlewareClient<Database>({ req, res: response });
+    const supabase = createMiddlewareSupabaseClient(req, response);
     const {
       data: { session: supabaseSession },
     } = await supabase.auth.getSession();
