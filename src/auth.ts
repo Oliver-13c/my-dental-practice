@@ -1,5 +1,7 @@
 import NextAuth, { type DefaultSession } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
+import { createServerClient } from '@/shared/api/supabase-server';
+import type { Database } from '@/shared/api/supabase-types';
 import type { StaffRole } from '@/entities/staff/model/staff.types';
 import { logAudit } from '@/shared/lib/audit';
 
@@ -27,22 +29,55 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const password = credentials?.password as string | undefined;
         if (!email || !password) return null;
 
-        const adminEmail = process.env.AUTH_ADMIN_EMAIL;
-        const adminPassword = process.env.AUTH_ADMIN_PASSWORD;
-        if (!adminEmail || !adminPassword) return null;
-        if (email !== adminEmail || password !== adminPassword) return null;
+        try {
+          const supabase = createServerClient<Database>();
 
-        return {
-          id: 'admin',
-          email,
-          role: 'admin' as StaffRole,
-        };
+          // Sign in with Supabase Auth
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+
+          if (error || !data.user) {
+            console.error('[auth] Supabase signin error:', error?.message);
+            return null;
+          }
+
+          // Get staff profile with role
+          const { data: profile, error: profileError } = await (supabase as any)
+            .from('staff_profiles')
+            .select('role, is_active')
+            .eq('id', data.user.id)
+            .single();
+
+          if (profileError || !profile) {
+            console.error('[auth] Staff profile not found:', profileError?.message);
+            return null;
+          }
+
+          if (!profile.is_active) {
+            console.error('[auth] User account is inactive');
+            return null;
+          }
+
+          return {
+            id: data.user.id,
+            email: data.user.email,
+            role: profile.role,
+          };
+        } catch (err) {
+          console.error('[auth] Authorization error:', err);
+          return null;
+        }
       },
     }),
   ],
   callbacks: {
     jwt({ token, user }) {
-      if (user) (token as typeof token & { role: StaffRole }).role = user.role;
+      if (user) {
+        token.sub = user.id;
+        (token as typeof token & { role: StaffRole }).role = user.role;
+      }
       return token;
     },
     session({ session, token }) {
