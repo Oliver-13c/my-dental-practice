@@ -114,7 +114,7 @@ export async function middleware(req: NextRequest) {
       .from('staff_profiles')
       .select('role, is_active')
       .eq('id', supabaseSession.user.id)
-      .single();
+      .single<{ role: StaffRole; is_active: boolean }>();
 
     if (!profile?.is_active) {
       return NextResponse.redirect(new URL('/staff/login', req.url));
