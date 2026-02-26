@@ -242,6 +242,7 @@ export function ReceptionistDashboard() {
                             setCreateForm((prev) => ({ ...prev, date: event.target.value }));
                         }}
                         className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 shadow-sm"
+                        aria-label="Select schedule date"
                     />
                     <select
                         value={providerFilter}
@@ -375,6 +376,7 @@ export function ReceptionistDashboard() {
                                 value={createForm.patient}
                                 onChange={(event) => setCreateForm((prev) => ({ ...prev, patient: event.target.value }))}
                                 className="w-full rounded-xl border border-slate-200 px-3 py-2"
+                                aria-label="Enter patient name"
                                 required
                             />
                             <input
@@ -383,6 +385,7 @@ export function ReceptionistDashboard() {
                                 value={createForm.phone}
                                 onChange={(event) => setCreateForm((prev) => ({ ...prev, phone: event.target.value }))}
                                 className="w-full rounded-xl border border-slate-200 px-3 py-2"
+                                aria-label="Enter phone number"
                             />
                             <div className="grid grid-cols-2 gap-2">
                                 <input
@@ -390,12 +393,14 @@ export function ReceptionistDashboard() {
                                     value={createForm.date}
                                     onChange={(event) => setCreateForm((prev) => ({ ...prev, date: event.target.value }))}
                                     className="rounded-xl border border-slate-200 px-3 py-2"
+                                    aria-label="Select appointment date"
                                 />
                                 <input
                                     type="time"
                                     value={createForm.time}
                                     onChange={(event) => setCreateForm((prev) => ({ ...prev, time: event.target.value }))}
                                     className="rounded-xl border border-slate-200 px-3 py-2"
+                                    aria-label="Select appointment time"
                                     required
                                 />
                             </div>
@@ -428,6 +433,7 @@ export function ReceptionistDashboard() {
                                 value={createForm.reason}
                                 onChange={(event) => setCreateForm((prev) => ({ ...prev, reason: event.target.value }))}
                                 className="w-full rounded-xl border border-slate-200 px-3 py-2"
+                                aria-label="Enter reason for visit"
                                 required
                             />
                             <button
@@ -464,12 +470,14 @@ export function ReceptionistDashboard() {
                                     value={blockForm.start}
                                     onChange={(event) => setBlockForm((prev) => ({ ...prev, start: event.target.value }))}
                                     className="rounded-xl border border-slate-200 px-3 py-2"
+                                    aria-label="Select block start time"
                                 />
                                 <input
                                     type="time"
                                     value={blockForm.end}
                                     onChange={(event) => setBlockForm((prev) => ({ ...prev, end: event.target.value }))}
                                     className="rounded-xl border border-slate-200 px-3 py-2"
+                                    aria-label="Select block end time"
                                 />
                             </div>
                             <input
@@ -478,6 +486,7 @@ export function ReceptionistDashboard() {
                                 value={blockForm.reason}
                                 onChange={(event) => setBlockForm((prev) => ({ ...prev, reason: event.target.value }))}
                                 className="w-full rounded-xl border border-slate-200 px-3 py-2"
+                                aria-label="Enter reason for blocking time"
                                 required
                             />
                             <button

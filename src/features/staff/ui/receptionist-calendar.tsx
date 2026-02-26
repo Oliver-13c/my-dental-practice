@@ -274,6 +274,7 @@ export function ReceptionistCalendar({
             value={selectedDate}
             onChange={(e) => onDateChange(e.target.value)}
             className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm shadow-sm"
+            aria-label="Select calendar date"
           />
         </div>
       </div>
