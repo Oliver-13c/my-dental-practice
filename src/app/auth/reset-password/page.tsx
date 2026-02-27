@@ -80,9 +80,12 @@ export default function ResetPasswordPage() {
         throw resetError;
       }
 
+      // Sign out the recovery session so the user starts fresh
+      await supabase.auth.signOut();
+
       setSuccess(true);
       
-      // Redirect to login after success
+      // Redirect to login after a short delay
       setTimeout(() => {
         router.push('/staff/login');
       }, 2000);

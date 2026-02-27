@@ -69,9 +69,11 @@ export async function GET(request: NextRequest) {
     },
   );
 
-  /* ── PKCE code flow (modern — used by magic links) ──────────── */
+  /* ── PKCE code flow (modern — used by magic links & recovery) ── */
   if (code) {
     try {
+      console.log('[auth/callback] Exchanging PKCE code, type:', type);
+
       const { error: exchangeError } =
         await supabase.auth.exchangeCodeForSession(code);
 
@@ -88,23 +90,27 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      // Check if this was a recovery flow — the session will have aal1 + recovery
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (
-        session?.user?.recovery_sent_at ||
-        session?.user?.app_metadata?.provider === 'email' &&
-          type === 'recovery'
-      ) {
-        // Recovery PKCE flow → redirect to reset-password
+      // Recovery flow: only redirect to reset-password when the caller
+      // explicitly passed ?type=recovery (set by handleForgotPassword).
+      // Do NOT check recovery_sent_at — it persists on the user forever
+      // and would incorrectly capture regular magic-link logins.
+      if (type === 'recovery') {
+        console.log('[auth/callback] Recovery flow → /auth/reset-password');
         const recoveryUrl = new URL('/auth/reset-password', request.url);
-        return NextResponse.redirect(recoveryUrl, {
-          headers: response.headers,
+        const recoveryResponse = NextResponse.redirect(recoveryUrl);
+        // Forward all cookies set during the PKCE exchange
+        response.cookies.getAll().forEach((cookie) => {
+          recoveryResponse.cookies.set(cookie.name, cookie.value, {
+            path: '/',
+            httpOnly: true,
+            sameSite: 'lax',
+            secure: true,
+          });
         });
+        return recoveryResponse;
       }
 
+      console.log('[auth/callback] Magic-link login → redirecting to', next);
       return response;
     } catch (err) {
       console.error('[auth/callback] Code exchange error:', err);
