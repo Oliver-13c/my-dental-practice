@@ -94,50 +94,65 @@ export async function GET(request: NextRequest) {
       /* ── Auto-provision staff_profiles row if missing ────────── */
       // Uses service-role key to bypass RLS.
       // Without a staff_profiles row the middleware will bounce back to login.
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const admin = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!,
-            { auth: { persistSession: false } },
-          );
-          const { data: existingProfile } = await admin
-            .from('staff_profiles')
-            .select('id')
-            .eq('id', user.id)
-            .single();
-
-          if (!existingProfile) {
-            // Check if any admin exists already
-            const { count } = await admin
-              .from('staff_profiles')
-              .select('id', { count: 'exact', head: true })
-              .eq('role', 'admin');
-            const defaultRole = (count ?? 0) === 0 ? 'admin' : 'receptionist';
-
-            const { error: insertErr } = await admin
-              .from('staff_profiles')
-              .insert({
-                id: user.id,
-                role: defaultRole,
-                first_name: user.email?.split('@')[0] ?? '',
-                last_name: '',
-                is_active: true,
-                is_admin: defaultRole === 'admin',
-              });
-            console.log(
-              '[auth/callback] Auto-provisioned staff_profiles:',
-              defaultRole,
-              insertErr ? `error=${insertErr.message}` : 'OK',
+      const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (!serviceKey) {
+        console.warn(
+          '[auth/callback] SUPABASE_SERVICE_ROLE_KEY not set — skipping auto-provision.',
+          'Add it in Vercel → Settings → Environment Variables.',
+        );
+      } else {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          console.log('[auth/callback] getUser for provision:', user?.id ?? 'null');
+          if (user) {
+            const admin = createClient(
+              process.env.NEXT_PUBLIC_SUPABASE_URL!,
+              serviceKey,
+              { auth: { persistSession: false } },
             );
-          } else {
-            console.log('[auth/callback] staff_profiles row exists for', user.id);
+            const { data: existingProfile, error: selectErr } = await admin
+              .from('staff_profiles')
+              .select('id')
+              .eq('id', user.id)
+              .single();
+
+            console.log(
+              '[auth/callback] existing profile:',
+              existingProfile ? 'yes' : 'no',
+              selectErr ? `selectErr=${selectErr.message}` : '',
+            );
+
+            if (!existingProfile) {
+              // Check if any admin exists already
+              const { count } = await admin
+                .from('staff_profiles')
+                .select('id', { count: 'exact', head: true })
+                .eq('role', 'admin');
+              const defaultRole = (count ?? 0) === 0 ? 'admin' : 'receptionist';
+
+              const { error: insertErr } = await admin
+                .from('staff_profiles')
+                .insert({
+                  id: user.id,
+                  role: defaultRole,
+                  first_name: user.email?.split('@')[0] ?? '',
+                  last_name: '',
+                  is_active: true,
+                  is_admin: defaultRole === 'admin',
+                });
+              console.log(
+                '[auth/callback] Auto-provisioned staff_profiles:',
+                defaultRole,
+                insertErr ? `error=${insertErr.message}` : 'OK',
+              );
+            } else {
+              console.log('[auth/callback] staff_profiles row exists for', user.id);
+            }
           }
+        } catch (provisionErr) {
+          console.error('[auth/callback] Profile provision error:', provisionErr);
+          // Non-fatal — continue with redirect; dashboard will retry via API
         }
-      } catch (provisionErr) {
-        console.error('[auth/callback] Profile provision error:', provisionErr);
-        // Non-fatal — continue with redirect
       }
 
       // Recovery flow: only redirect to reset-password when the caller

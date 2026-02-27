@@ -149,7 +149,19 @@ export async function middleware(req: NextRequest) {
       );
 
       if (!fallback) {
-        console.log('[middleware] No profile at all → redirect /staff/login');
+        // User is authenticated in Supabase but has no staff_profiles row.
+        // Allow through to /staff/dashboard so the app can auto-provision.
+        // Block access to admin-only routes.
+        const isDashboard = matchedPaths.some(
+          (p) => p === '/staff/dashboard',
+        );
+        if (isDashboard) {
+          console.log(
+            '[middleware] No profile but authenticated → allow to dashboard',
+          );
+          return response;
+        }
+        console.log('[middleware] No profile + restricted route → redirect /staff/login');
         return NextResponse.redirect(new URL('/staff/login', req.url));
       }
       // Profile exists but is_active column may not exist; treat as active
