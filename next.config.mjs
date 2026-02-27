@@ -12,6 +12,14 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Map Vercel-Supabase native integration env vars to NEXT_PUBLIC_ names
+  // so the browser client can access them at build time.
+  env: {
+    NEXT_PUBLIC_SUPABASE_URL:
+      process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY:
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY,
+  },
   outputFileTracingRoot: path.join(__dirname),
   async headers() {
     return [

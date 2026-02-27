@@ -54,8 +54,8 @@ export async function GET(request: NextRequest) {
    * This is the officially recommended pattern from Supabase for Next.js 15.
    */
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY ?? '',
     {
       cookies: {
         getAll() {
@@ -106,7 +106,7 @@ export async function GET(request: NextRequest) {
           console.log('[auth/callback] getUser for provision:', user?.id ?? 'null');
           if (user) {
             const admin = createClient(
-              process.env.NEXT_PUBLIC_SUPABASE_URL!,
+              process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '',
               serviceKey,
               { auth: { persistSession: false } },
             );
