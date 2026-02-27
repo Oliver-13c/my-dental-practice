@@ -98,24 +98,43 @@ export async function middleware(req: NextRequest) {
   const session = await auth();
   let role: StaffRole | null = session?.user?.role ?? null;
 
+  console.log('[middleware]', pathname, '→ NextAuth role:', role);
+
   if (!role) {
     const response = NextResponse.next();
     const supabase = createMiddlewareSupabaseClient(req, response);
-    const {
-      data: { session: supabaseSession },
-    } = await supabase.auth.getSession();
 
-    if (!supabaseSession?.user) {
+    // Use getUser() instead of deprecated getSession() — validates JWT server-side
+    const {
+      data: { user: supabaseUser },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    console.log(
+      '[middleware] Supabase getUser:',
+      supabaseUser ? supabaseUser.id : 'null',
+      userError ? `error=${userError.message}` : '',
+    );
+
+    if (!supabaseUser) {
+      console.log('[middleware] No Supabase user → redirect /staff/login');
       return NextResponse.redirect(new URL('/staff/login', req.url));
     }
 
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('staff_profiles')
       .select('role, is_active')
-      .eq('id', supabaseSession.user.id)
+      .eq('id', supabaseUser.id)
       .single<{ role: StaffRole; is_active: boolean }>();
 
+    console.log(
+      '[middleware] staff_profiles:',
+      profile ? JSON.stringify(profile) : 'null',
+      profileError ? `error=${profileError.message}` : '',
+    );
+
     if (!profile?.is_active) {
+      console.log('[middleware] No active profile → redirect /staff/login');
       return NextResponse.redirect(new URL('/staff/login', req.url));
     }
 

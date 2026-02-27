@@ -110,7 +110,10 @@ export async function GET(request: NextRequest) {
         return recoveryResponse;
       }
 
+      // Log cookies that were set during the session exchange
+      const cookieNames = response.cookies.getAll().map(c => c.name).join(', ');
       console.log('[auth/callback] Magic-link login → redirecting to', next);
+      console.log('[auth/callback] Cookies set on response:', cookieNames || '(none)');
       return response;
     } catch (err) {
       console.error('[auth/callback] Code exchange error:', err);
