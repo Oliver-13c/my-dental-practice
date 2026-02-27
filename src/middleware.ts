@@ -133,12 +133,33 @@ export async function middleware(req: NextRequest) {
       profileError ? `error=${profileError.message}` : '',
     );
 
-    if (!profile?.is_active) {
-      console.log('[middleware] No active profile → redirect /staff/login');
-      return NextResponse.redirect(new URL('/staff/login', req.url));
-    }
+    if (!profile) {
+      // No profile found — the callback auto-provisioner may not have run yet,
+      // or the is_active column may be missing. Try a fallback query for role only.
+      const { data: fallback, error: fbError } = await supabase
+        .from('staff_profiles')
+        .select('role')
+        .eq('id', supabaseUser.id)
+        .single<{ role: StaffRole }>();
 
-    role = profile.role as StaffRole;
+      console.log(
+        '[middleware] fallback query:',
+        fallback ? JSON.stringify(fallback) : 'null',
+        fbError ? `error=${fbError.message}` : '',
+      );
+
+      if (!fallback) {
+        console.log('[middleware] No profile at all → redirect /staff/login');
+        return NextResponse.redirect(new URL('/staff/login', req.url));
+      }
+      // Profile exists but is_active column may not exist; treat as active
+      role = fallback.role as StaffRole;
+    } else if (!profile.is_active) {
+      console.log('[middleware] Profile inactive → redirect /staff/login');
+      return NextResponse.redirect(new URL('/staff/login', req.url));
+    } else {
+      role = profile.role as StaffRole;
+    }
 
     const allowedRoles = matchedPaths.flatMap((path) => protectedRoutesByRole[path]);
     if (!allowedRoles.includes(role)) {
