@@ -82,20 +82,13 @@ export function StaffDashboard() {
         {effectiveRole === 'dentist' && <DentistDashboard />}
         {effectiveRole === 'hygienist' && <DentistDashboard /> /* Reuse dentist for now as clinical placeholder */}
         {effectiveRole === 'admin' && (
-          <>
-            <section className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold mb-4 text-gray-800">System Administration</h2>
-              <p className="text-sm text-gray-600">Admin controls will be provisioned here.</p>
-            </section>
-            <section className="space-y-4">
-              <h2 className="text-lg font-semibold text-gray-800">Front Desk</h2>
-              <ReceptionistDashboard />
-            </section>
-            <section className="space-y-4">
-              <h2 className="text-lg font-semibold text-gray-800">Clinical</h2>
-              <DentistDashboard />
-            </section>
-          </>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+            <h2 className="text-xl font-semibold text-blue-900 mb-2">Admin Panel</h2>
+            <p className="text-blue-700 mb-4">Use the dedicated admin panel for system administration tasks.</p>
+            <a href="/admin" className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+              Go to Admin Panel →
+            </a>
+          </div>
         )}
         {!effectiveRole && <p className="text-red-500">Error: Unrecognized role</p>}
       </main>
