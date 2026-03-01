@@ -6,7 +6,95 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { UserForm } from './UserForm';
 import { Button } from '@/shared/ui/button';
+import { Card } from '@/shared/ui/card';
 import { csrfFetch } from '@/shared/lib/csrf-fetch';
+
+interface CreateUserData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: 'admin' | 'staff';
+  isActive: boolean;
+}
+
+interface PasswordModalProps {
+  email: string;
+  tempPassword: string;
+  firstName: string;
+  onClose: () => void;
+}
+
+function TemporaryPasswordModal({ email, tempPassword, firstName, onClose }: PasswordModalProps) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(tempPassword);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <Card className="max-w-md w-full p-6 space-y-4">
+        <h2 className="text-2xl font-bold text-gray-900">✓ User Created Successfully</h2>
+        
+        <div className="bg-blue-50 border border-blue-200 rounded p-4 space-y-2">
+          <p className="text-sm font-medium text-gray-700">
+            <strong>Staff member:</strong> {firstName}
+          </p>
+          <p className="text-sm font-medium text-gray-700">
+            <strong>Email:</strong> {email}
+          </p>
+        </div>
+
+        <div className="bg-amber-50 border border-amber-200 rounded p-4 space-y-3">
+          <p className="text-sm font-medium text-amber-900">Temporary Password:</p>
+          <div className="flex gap-2">
+            <code className="flex-1 bg-white border border-amber-300 rounded px-3 py-2 text-sm font-mono text-gray-900 break-all">
+              {tempPassword}
+            </code>
+            <button
+              onClick={handleCopy}
+              className={`px-3 py-2 rounded font-medium text-sm transition ${
+                copied
+                  ? 'bg-green-600 text-white'
+                  : 'bg-amber-600 text-white hover:bg-amber-700'
+              }`}
+            >
+              {copied ? '✓ Copied' : 'Copy'}
+            </button>
+          </div>
+          <p className="text-xs text-amber-800">
+            ⚠️ This password will be displayed only once. Copy it now and store it securely.
+          </p>
+        </div>
+
+        <div className="bg-green-50 border border-green-200 rounded p-4">
+          <p className="text-sm text-green-800">
+            ℹ️ A password reset email has also been sent to <strong>{email}</strong>. 
+            The user can use either method to sign in.
+          </p>
+        </div>
+
+        <div className="flex gap-3">
+          <Button
+            variant="outline"
+            className="flex-1"
+            onClick={() => {
+              navigator.clipboard.writeText(tempPassword);
+              setCopied(true);
+            }}
+          >
+            Copy & Continue
+          </Button>
+          <Button className="flex-1" onClick={onClose}>
+            Done
+          </Button>
+        </div>
+      </Card>
+    </div>
+  );
+}
 
 interface CreateUserData {
   firstName: string;
@@ -21,6 +109,8 @@ export function CreateUserClient() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [modalData, setModalData] = useState<{ email: string; tempPassword: string; firstName: string } | null>(null);
 
   const handleSubmit = async (data: CreateUserData) => {
     setIsLoading(true);
@@ -55,23 +145,26 @@ export function CreateUserClient() {
         throw new Error(result.error || 'Failed to create user');
       }
 
-      // Show professional success message
-      alert(
-        `✓ User created successfully!\n\n` +
-        `Email: ${data.email}\n` +
-        `A secure password setup email has been sent to ${data.email}.\n\n` +
-        `The user will receive a link to set their own password.`
-      );
-      
-      // Redirect to users list
-      router.push('/admin/users');
-      router.refresh();
+      // Show temporary password in secure modal + email was sent by backend
+      setModalData({
+        email: data.email,
+        tempPassword: tempPassword,
+        firstName: data.firstName,
+      });
+      setShowPasswordModal(true);
     } catch (err) {
       console.error('Failed to create user:', err);
       setError(err instanceof Error ? err.message : 'Failed to create user');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleModalClose = () => {
+    setShowPasswordModal(false);
+    setModalData(null);
+    router.push('/admin/users');
+    router.refresh();
   };
 
   return (
@@ -99,6 +192,15 @@ export function CreateUserClient() {
         isLoading={isLoading}
         submitLabel={t('createUser') || 'Create User'}
       />
+
+      {showPasswordModal && modalData && (
+        <TemporaryPasswordModal
+          email={modalData.email}
+          tempPassword={modalData.tempPassword}
+          firstName={modalData.firstName}
+          onClose={handleModalClose}
+        />
+      )}
     </div>
   );
 }
