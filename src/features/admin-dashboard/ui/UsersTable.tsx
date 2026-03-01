@@ -21,9 +21,10 @@ interface UsersTableProps {
   isLoading?: boolean;
   onEdit?: (user: User) => void;
   onDelete?: (user: User) => void;
+  onRefresh?: () => void;
 }
 
-export function UsersTable({ users, isLoading = false, onEdit, onDelete }: UsersTableProps) {
+export function UsersTable({ users, isLoading = false, onEdit, onDelete, onRefresh }: UsersTableProps) {
   const t = useTranslations('admin.users');
   const [sortBy, setSortBy] = useState<keyof User>('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
