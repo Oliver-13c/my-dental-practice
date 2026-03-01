@@ -1,6 +1,6 @@
 import { createServerClient } from '@/shared/api/supabase-server';
 import type { Database } from '@/shared/api/supabase-types';
-import { auth } from '@/auth';
+import { getCurrentUser, getCurrentAdminProfile } from './admin-auth';
 import { ApiErrors } from '@/shared/lib/api-error';
 
 /**
@@ -11,24 +11,13 @@ export async function getStaffMembers(filters?: {
   role?: string;
   search?: string;
 }) {
-  const session = await auth();
-  if (!session?.user?.email) {
-    return { error: 'Unauthorized', data: null };
-  }
-
-  // Verify admin role
-  const supabase = createServerClient<Database>();
-  const { data: adminProfile } = await (supabase as any)
-    .from('staff_profiles')
-    .select('is_admin')
-    .eq('email', session.user.email)
-    .single();
-
-  if (!adminProfile?.is_admin) {
-    return { error: 'Forbidden: Admin access required', data: null };
+  const { profile, error: authError } = await getCurrentAdminProfile();
+  if (!profile) {
+    return { error: authError || 'Unauthorized', data: null };
   }
 
   // Get staff members
+  const supabase = createServerClient<Database>();
   let query = (supabase as any).from('staff_profiles').select('*');
 
   if (filters?.active !== undefined) {
@@ -58,23 +47,12 @@ export async function getStaffMembers(filters?: {
  * Get single staff member
  */
 export async function getStaffMember(staffId: string) {
-  const session = await auth();
-  if (!session?.user?.email) {
-    return { error: 'Unauthorized', data: null };
+  const { profile, error: authError } = await getCurrentAdminProfile();
+  if (!profile) {
+    return { error: authError || 'Unauthorized', data: null };
   }
 
   const supabase = createServerClient<Database>();
-
-  // Verify admin role
-  const { data: adminProfile } = await (supabase as any)
-    .from('staff_profiles')
-    .select('is_admin')
-    .eq('email', session.user.email)
-    .single();
-
-  if (!adminProfile?.is_admin) {
-    return { error: 'Forbidden: Admin access required', data: null };
-  }
 
   const { data, error } = await (supabase as any)
     .from('staff_profiles')
@@ -101,34 +79,23 @@ export async function createStaffMember(
     role: 'receptionist' | 'hygienist' | 'dentist' | 'admin';
   }
 ) {
-  const session = await auth();
-  if (!session?.user?.email) {
-    return { error: 'Unauthorized', data: null };
+  const { profile: adminProfile, error: authError } = await getCurrentAdminProfile();
+  if (!adminProfile) {
+    return { error: authError || 'Unauthorized', data: null };
   }
 
   const supabase = createServerClient<Database>();
 
-  // Verify admin role
-  const { data: adminProfile } = await (supabase as any)
-    .from('staff_profiles')
-    .select('id, is_admin')
-    .eq('email', session.user.email)
-    .single();
-
-  if (!adminProfile?.is_admin) {
-    return { error: 'Forbidden: Admin access required', data: null };
-  }
-
   // Create user in auth
-  const { data: authData, error: authError } = await (supabase as any).auth.admin
+  const { data: authData, error: createAuthError } = await (supabase as any).auth.admin
     .createUser({
       email: userData.email,
       password: userData.password,
       email_confirm: true,
     });
 
-  if (authError) {
-    return { error: `Failed to create auth user: ${authError.message}`, data: null };
+  if (createAuthError) {
+    return { error: `Failed to create auth user: ${createAuthError.message}`, data: null };
   }
 
   // Create staff profile
@@ -183,23 +150,12 @@ export async function updateStaffMember(
     is_admin?: boolean;
   }
 ) {
-  const session = await auth();
-  if (!session?.user?.email) {
-    return { error: 'Unauthorized', data: null };
+  const { profile: adminProfile, error: authError } = await getCurrentAdminProfile();
+  if (!adminProfile) {
+    return { error: authError || 'Unauthorized', data: null };
   }
 
   const supabase = createServerClient<Database>();
-
-  // Verify admin role
-  const { data: adminProfile } = await (supabase as any)
-    .from('staff_profiles')
-    .select('id, is_admin')
-    .eq('email', session.user.email)
-    .single();
-
-  if (!adminProfile?.is_admin) {
-    return { error: 'Forbidden: Admin access required', data: null };
-  }
 
   // Get current staff data for audit trail
   const { data: currentData } = await (supabase as any)
@@ -249,23 +205,12 @@ export async function updateStaffMember(
  * Delete (deactivate) staff member
  */
 export async function deleteStaffMember(staffId: string) {
-  const session = await auth();
-  if (!session?.user?.email) {
-    return { error: 'Unauthorized', data: null };
+  const { profile: adminProfile, error: authError } = await getCurrentAdminProfile();
+  if (!adminProfile) {
+    return { error: authError || 'Unauthorized', data: null };
   }
 
   const supabase = createServerClient<Database>();
-
-  // Verify admin role
-  const { data: adminProfile } = await (supabase as any)
-    .from('staff_profiles')
-    .select('id, is_admin')
-    .eq('email', session.user.email)
-    .single();
-
-  if (!adminProfile?.is_admin) {
-    return { error: 'Forbidden: Admin access required', data: null };
-  }
 
   // Get staff data for audit trail
   const { data: staffData } = await (supabase as any)
@@ -303,23 +248,12 @@ export async function deleteStaffMember(staffId: string) {
  * Send password reset email
  */
 export async function sendPasswordReset(staffId: string) {
-  const session = await auth();
-  if (!session?.user?.email) {
-    return { error: 'Unauthorized', data: null };
+  const { profile: adminProfile, error: authError } = await getCurrentAdminProfile();
+  if (!adminProfile) {
+    return { error: authError || 'Unauthorized', data: null };
   }
 
   const supabase = createServerClient<Database>();
-
-  // Verify admin role
-  const { data: adminProfile } = await (supabase as any)
-    .from('staff_profiles')
-    .select('id, is_admin')
-    .eq('email', session.user.email)
-    .single();
-
-  if (!adminProfile?.is_admin) {
-    return { error: 'Forbidden: Admin access required', data: null };
-  }
 
   // Get staff email
   const { data: staffData } = await (supabase as any)
