@@ -77,6 +77,7 @@ export async function createStaffMember(
     first_name: string;
     last_name: string;
     role: 'receptionist' | 'hygienist' | 'dentist' | 'admin';
+    sendWelcomeEmail?: boolean;
   }
 ) {
   const { profile: adminProfile, error: authError } = await getCurrentAdminProfile();
@@ -133,6 +134,31 @@ export async function createStaffMember(
       last_name: userData.last_name,
     },
   });
+
+  // Send welcome email with password reset link if requested
+  if (userData.sendWelcomeEmail) {
+    const { error: emailError } = await (supabase as any).auth.resetPasswordForEmail(
+      userData.email,
+      {
+        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password`,
+      }
+    );
+
+    if (emailError) {
+      console.warn(`[createStaffMember] Warning: Failed to send welcome email to ${userData.email}:`, emailError.message);
+      // Don't fail the entire operation—user is created, email just didn't send
+    } else {
+      // Log that welcome email was sent
+      await (supabase as any).rpc('log_admin_action', {
+        p_admin_id: adminProfile.id,
+        p_action: 'send_welcome_email',
+        p_target_type: 'staff',
+        p_target_id: staffData.id,
+        p_target_name: `${userData.first_name} ${userData.last_name}`,
+        p_changes: { action: 'welcome_email_sent' },
+      });
+    }
+  }
 
   return { data: staffData, error: null };
 }

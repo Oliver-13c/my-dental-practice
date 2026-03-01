@@ -74,6 +74,7 @@ export async function POST(request: NextRequest) {
       first_name: body.first_name,
       last_name: body.last_name,
       role: body.role,
+      sendWelcomeEmail: body.sendWelcomeEmail || false,
     });
 
     if (result.error) {

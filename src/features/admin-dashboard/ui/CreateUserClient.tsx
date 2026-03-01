@@ -33,7 +33,7 @@ export function CreateUserClient() {
         staff: 'receptionist',
       };
 
-      // Generate a temporary password (in production, email this to the user)
+      // Generate a temporary password (server-side only, not shown to user)
       const tempPassword = `Temp${Math.random().toString(36).slice(-8)}!`;
 
       const response = await csrfFetch('/api/admin/users', {
@@ -45,6 +45,7 @@ export function CreateUserClient() {
           first_name: data.firstName,
           last_name: data.lastName,
           role: roleMap[data.role] || 'receptionist',
+          sendWelcomeEmail: true, // Signal to backend to send password reset email
         }),
       });
 
@@ -54,8 +55,13 @@ export function CreateUserClient() {
         throw new Error(result.error || 'Failed to create user');
       }
 
-      // Show success message
-      alert(`User created successfully!\nTemporary password: ${tempPassword}\n\nPlease share this with the user securely.`);
+      // Show professional success message
+      alert(
+        `✓ User created successfully!\n\n` +
+        `Email: ${data.email}\n` +
+        `A secure password setup email has been sent to ${data.email}.\n\n` +
+        `The user will receive a link to set their own password.`
+      );
       
       // Redirect to users list
       router.push('/admin/users');
