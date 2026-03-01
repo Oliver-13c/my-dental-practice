@@ -78,6 +78,7 @@ export async function createStaffMember(
     last_name: string;
     role: 'receptionist' | 'hygienist' | 'dentist' | 'admin';
     sendWelcomeEmail?: boolean;
+    recoveryRedirectTo?: string;
   }
 ) {
   const { profile: adminProfile, error: authError } = await getCurrentAdminProfile();
@@ -137,10 +138,16 @@ export async function createStaffMember(
 
   // Send welcome email with password reset link if requested
   if (userData.sendWelcomeEmail) {
+    const recoveryRedirectTo =
+      userData.recoveryRedirectTo ||
+      (process.env.NEXT_PUBLIC_APP_URL
+        ? `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?type=recovery`
+        : undefined);
+
     const { error: emailError } = await (supabase as any).auth.resetPasswordForEmail(
       userData.email,
       {
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password`,
+        ...(recoveryRedirectTo ? { redirectTo: recoveryRedirectTo } : {}),
       }
     );
 
@@ -273,7 +280,7 @@ export async function deleteStaffMember(staffId: string) {
 /**
  * Send password reset email
  */
-export async function sendPasswordReset(staffId: string) {
+export async function sendPasswordReset(staffId: string, recoveryRedirectTo?: string) {
   const { profile: adminProfile, error: authError } = await getCurrentAdminProfile();
   if (!adminProfile) {
     return { error: authError || 'Unauthorized', data: null };
@@ -293,10 +300,16 @@ export async function sendPasswordReset(staffId: string) {
   }
 
   // Send reset email via Supabase auth
+  const resolvedRecoveryRedirectTo =
+    recoveryRedirectTo ||
+    (process.env.NEXT_PUBLIC_APP_URL
+      ? `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?type=recovery`
+      : undefined);
+
   const { error } = await (supabase as any).auth.resetPasswordForEmail(
     staffData.email,
     {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password`,
+      ...(resolvedRecoveryRedirectTo ? { redirectTo: resolvedRecoveryRedirectTo } : {}),
     }
   );
 

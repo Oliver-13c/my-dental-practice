@@ -44,6 +44,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const recoveryRedirectTo = `${request.nextUrl.origin}/auth/callback?type=recovery`;
 
     // Validate required fields
     if (!body.email || !body.password || !body.first_name || !body.last_name || !body.role) {
@@ -75,6 +76,7 @@ export async function POST(request: NextRequest) {
       last_name: body.last_name,
       role: body.role,
       sendWelcomeEmail: body.sendWelcomeEmail || false,
+      recoveryRedirectTo,
     });
 
     if (result.error) {

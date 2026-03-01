@@ -9,7 +9,8 @@ import { ApiErrors } from '@/shared/lib/api-error';
 export async function POST(request: NextRequest, context: any) {
   const params = context.params as { id: string };
   try {
-    const result = await sendPasswordReset(params.id);
+    const recoveryRedirectTo = `${request.nextUrl.origin}/auth/callback?type=recovery`;
+    const result = await sendPasswordReset(params.id, recoveryRedirectTo);
 
     if (result.error) {
       if (result.error.includes('Unauthorized')) {
