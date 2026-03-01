@@ -13,7 +13,7 @@ const userFormSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
   email: z.string().email('Invalid email address'),
-  role: z.enum(['admin', 'staff', 'patient'], { errorMap: () => ({ message: 'Invalid role' }) }),
+  role: z.enum(['admin', 'staff'], { errorMap: () => ({ message: 'Invalid role' }) }),
   isActive: z.boolean(),
 });
 
@@ -101,7 +101,6 @@ export function UserForm({
           >
             <option value="staff">Staff</option>
             <option value="admin">Admin</option>
-            <option value="patient">Patient</option>
           </select>
           {errors.role && (
             <p className="text-red-500 text-sm mt-1">{errors.role.message}</p>

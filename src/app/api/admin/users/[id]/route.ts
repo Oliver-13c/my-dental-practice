@@ -7,6 +7,8 @@ import {
 } from '@/features/admin-dashboard/api/admin-users';
 import { ApiErrors } from '@/shared/lib/api-error';
 
+const ALLOWED_STAFF_ROLES = new Set(['receptionist', 'hygienist', 'dentist', 'admin']);
+
 /**
  * GET /api/admin/users/:id - Get staff member details
  */
@@ -43,6 +45,10 @@ export async function PATCH(request: NextRequest, context: any) {
   const params = context.params as { id: string };
   try {
     const body = await request.json();
+
+    if (body.role && !ALLOWED_STAFF_ROLES.has(body.role)) {
+      return ApiErrors.badRequest('Invalid role. Allowed roles: receptionist, hygienist, dentist, admin');
+    }
 
     const result = await updateStaffMember(params.id, body);
 

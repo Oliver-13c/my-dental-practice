@@ -12,7 +12,7 @@ interface CreateUserData {
   firstName: string;
   lastName: string;
   email: string;
-  role: 'admin' | 'staff' | 'patient';
+  role: 'admin' | 'staff';
   isActive: boolean;
 }
 
@@ -31,7 +31,6 @@ export function CreateUserClient() {
       const roleMap: Record<string, string> = {
         admin: 'admin',
         staff: 'receptionist',
-        patient: 'patient',
       };
 
       // Generate a temporary password (in production, email this to the user)

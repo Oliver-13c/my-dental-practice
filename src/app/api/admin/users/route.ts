@@ -6,6 +6,8 @@ import {
 } from '@/features/admin-dashboard/api/admin-users';
 import { ApiErrors } from '@/shared/lib/api-error';
 
+const ALLOWED_STAFF_ROLES = new Set(['receptionist', 'hygienist', 'dentist', 'admin']);
+
 /**
  * GET /api/admin/users - Get all staff members
  */
@@ -59,6 +61,11 @@ export async function POST(request: NextRequest) {
     // Validate password strength
     if (body.password.length < 8) {
       return ApiErrors.badRequest('Password must be at least 8 characters');
+    }
+
+    // Validate role value
+    if (!ALLOWED_STAFF_ROLES.has(body.role)) {
+      return ApiErrors.badRequest('Invalid role. Allowed roles: receptionist, hygienist, dentist, admin');
     }
 
     const result = await createStaffMember({

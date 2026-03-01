@@ -10,7 +10,7 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
-  role: 'admin' | 'staff' | 'patient';
+  role: 'admin' | 'staff';
   isActive: boolean;
   lastLogin?: string;
   createdAt: string;
@@ -66,7 +66,6 @@ export function UsersTable({ users, isLoading = false, onEdit, onDelete, onRefre
           <option value="">{t('filterByRole')}</option>
           <option value="admin">Admin</option>
           <option value="staff">Staff</option>
-          <option value="patient">Patient</option>
         </select>
 
         <select

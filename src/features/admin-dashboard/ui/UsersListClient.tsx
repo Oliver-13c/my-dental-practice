@@ -33,7 +33,7 @@ export function UsersListClient() {
         email: staff.email,
         firstName: staff.first_name,
         lastName: staff.last_name,
-        role: staff.is_admin ? 'admin' : staff.role === 'receptionist' ? 'staff' : staff.role,
+        role: staff.is_admin ? 'admin' : 'staff',
         isActive: staff.is_active,
         lastLogin: staff.last_login,
         createdAt: staff.created_at,

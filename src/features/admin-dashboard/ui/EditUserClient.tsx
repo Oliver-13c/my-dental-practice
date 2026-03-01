@@ -13,7 +13,7 @@ interface EditUserData {
   firstName: string;
   lastName: string;
   email: string;
-  role: 'admin' | 'staff' | 'patient';
+  role: 'admin' | 'staff';
   isActive: boolean;
 }
 
@@ -48,7 +48,7 @@ export function EditUserClient({ userId }: EditUserClientProps) {
         firstName: result.data.first_name,
         lastName: result.data.last_name,
         email: result.data.email,
-        role: result.data.is_admin ? 'admin' : result.data.role === 'receptionist' ? 'staff' : result.data.role,
+        role: result.data.is_admin ? 'admin' : 'staff',
         isActive: result.data.is_active,
       });
     } catch (err) {
@@ -68,7 +68,6 @@ export function EditUserClient({ userId }: EditUserClientProps) {
       const roleMap: Record<string, string> = {
         admin: 'admin',
         staff: 'receptionist',
-        patient: 'patient',
       };
 
       const response = await csrfFetch(`/api/admin/users/${userId}`, {
