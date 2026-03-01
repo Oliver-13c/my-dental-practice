@@ -1,5 +1,7 @@
 import { createServerClient } from '@/shared/api/supabase-server';
 import type { Database } from '@/shared/api/supabase-types';
+import { createServerClient as createSsrServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 
 /**
  * Get the current authenticated user from Supabase
@@ -7,13 +9,35 @@ import type { Database } from '@/shared/api/supabase-types';
  */
 export async function getCurrentUser() {
   try {
-    const supabase = createServerClient<Database>();
+    const cookieStore = await cookies();
+    const supabaseUrl =
+      process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
+    const supabaseAnonKey =
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return { user: null, error: 'Supabase configuration missing' };
+    }
+
+    const supabase = createSsrServerClient<Database>(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll().map((cookie) => ({
+            name: cookie.name,
+            value: cookie.value,
+          }));
+        },
+        setAll(_cookiesToSet) {
+          return;
+        },
+      },
+    });
     
     // Get current user from Supabase auth
     const { data: { user }, error } = await (supabase as any).auth.getUser();
     
     if (error || !user?.email) {
-      return { user: null, error: 'Unauthorized' };
+      return { user: null, error: error?.message || 'Unauthorized' };
     }
 
     return { user, error: null };
