@@ -65,15 +65,19 @@ function TemporaryPasswordModal({ email, tempPassword, firstName, onClose }: Pas
             </button>
           </div>
           <p className="text-xs text-amber-800">
-            ⚠️ This password will be displayed only once. Copy it now and store it securely.
+            ⚠️ This password will be displayed only once. Copy it now and share it securely with {firstName}.
           </p>
         </div>
 
-        <div className="bg-green-50 border border-green-200 rounded p-4">
-          <p className="text-sm text-green-800">
-            ℹ️ A password reset email has also been sent to <strong>{email}</strong>. 
-            The user can use either method to sign in.
+        <div className="bg-blue-50 border border-blue-200 rounded p-4">
+          <p className="text-sm text-blue-800">
+            <strong>Next steps:</strong>
           </p>
+          <ol className="text-xs text-blue-700 mt-2 space-y-1 list-decimal list-inside">
+            <li>Share the temporary password with {firstName}</li>
+            <li>Ask them to visit <strong>my-dental-practice.vercel.app/staff/login</strong></li>
+            <li>They can change their password after first login</li>
+          </ol>
         </div>
 
         <div className="flex gap-3">

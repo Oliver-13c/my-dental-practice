@@ -144,25 +144,34 @@ export async function createStaffMember(
         ? `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?type=recovery`
         : undefined);
 
-    const { error: emailError } = await (supabase as any).auth.resetPasswordForEmail(
-      userData.email,
-      {
-        ...(recoveryRedirectTo ? { redirectTo: recoveryRedirectTo } : {}),
-      }
-    );
+    // Use admin.generateLink() instead of resetPasswordForEmail() to avoid PKCE issues.
+    // Server-side recovery emails can't store PKCE verifiers in user's browser.
+    const { data: linkData, error: emailError } = await (supabase as any).auth.admin.generateLink({
+      type: 'recovery',
+      email: userData.email,
+      options: {
+        redirectTo: recoveryRedirectTo,
+      },
+    });
 
-    if (emailError) {
-      console.warn(`[createStaffMember] Warning: Failed to send welcome email to ${userData.email}:`, emailError.message);
-      // Don't fail the entire operation—user is created, email just didn't send
+    if (emailError || !linkData) {
+      console.warn(`[createStaffMember] Warning: Failed to generate recovery link for ${userData.email}:`, emailError?.message);
+      // Don't fail the entire operation—user is created, temp password shown in modal
     } else {
-      // Log that welcome email was sent
+      // NOTE: admin.generateLink() does NOT automatically send emails.
+      // To send the recovery email, integrate with an email service (Resend, SendGrid, etc.)
+      // and send linkData.properties.action_link to the user's email.
+      // For now, the temp password modal is the primary onboarding method.
+      console.log(`[createStaffMember] Recovery link generated for ${userData.email}:`, linkData.properties.action_link);
+      
+      // Log that recovery link was generated
       await (supabase as any).rpc('log_admin_action', {
         p_admin_id: adminProfile.id,
-        p_action: 'send_welcome_email',
+        p_action: 'generate_recovery_link',
         p_target_type: 'staff',
         p_target_id: staffData.id,
         p_target_name: `${userData.first_name} ${userData.last_name}`,
-        p_changes: { action: 'welcome_email_sent' },
+        p_changes: { action: 'recovery_link_generated', note: 'Email sending requires integration' },
       });
     }
   }
@@ -299,23 +308,29 @@ export async function sendPasswordReset(staffId: string, recoveryRedirectTo?: st
     return { error: 'Staff member not found', data: null };
   }
 
-  // Send reset email via Supabase auth
+  // Generate recovery link using admin API (avoids PKCE verifier requirement)
   const resolvedRecoveryRedirectTo =
     recoveryRedirectTo ||
     (process.env.NEXT_PUBLIC_APP_URL
       ? `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?type=recovery`
       : undefined);
 
-  const { error } = await (supabase as any).auth.resetPasswordForEmail(
-    staffData.email,
-    {
-      ...(resolvedRecoveryRedirectTo ? { redirectTo: resolvedRecoveryRedirectTo } : {}),
-    }
-  );
+  const { data: linkData, error } = await (supabase as any).auth.admin.generateLink({
+    type: 'recovery',
+    email: staffData.email,
+    options: {
+      redirectTo: resolvedRecoveryRedirectTo,
+    },
+  });
 
-  if (error) {
-    return { error: error.message, data: null };
+  if (error || !linkData) {
+    return { error: error?.message || 'Failed to generate recovery link', data: null };
   }
+
+  // NOTE: admin.generateLink() does NOT automatically send emails.
+  // To send the reset email, integrate with an email service and send
+  // linkData.properties.action_link to the user's email.
+  console.log(`[sendPasswordReset] Recovery link generated for ${staffData.email}:`, linkData.properties.action_link);
 
   // Log admin action
   await (supabase as any).rpc('log_admin_action', {
