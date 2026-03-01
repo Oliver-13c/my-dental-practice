@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-This plan covers creating a `patients` table in the existing Supabase Postgres database, connecting it to the already-built patient intake form and appointment booking flow, adding RLS policies, implementing CRUD API routes, and building a patient portal. The app already has a `Patient` TypeScript interface, a validated intake form (with i18n), and an `appointments` table with a `patient_id` column — but **no `patients` database table exists yet**.
+This plan covers creating a `patients` table in the existing Supabase Postgres database, connecting it to the already-built patient intake form and appointment booking flow, adding RLS policies, and implementing CRUD API routes. The app already has a `Patient` TypeScript interface, a validated intake form (with i18n), and an `appointments` table with a `patient_id` column — but **no `patients` database table exists yet**.
 
 ---
 
@@ -18,18 +18,22 @@ This plan covers creating a `patients` table in the existing Supabase Postgres d
 | Intake form i18n (EN + ES) | `messages/en.json`, `messages/es.json` | ✅ Complete |
 | `appointments` table | `db/schema/appointments.sql` | ✅ Has `patient_id uuid NOT NULL` — **but no FK** |
 | RLS policies on appointments | `supabase/migrations/20240102000000_rls_appointments.sql` | ✅ Staff-role based |
-| Patient registration page | `src/app/(patient)/register/page.tsx` | 🟡 Placeholder only |
-| Register patient feature | `src/features/register-patient/` | 🟡 All files are placeholder stubs |
+| Patient registration page | `src/app/(patient)/register/page.tsx` | ❌ DEPRECATED/REMOVED (Out of scope) |
+| Register patient feature | `src/features/register-patient/` | ❌ DEPRECATED/REMOVED (Out of scope) |
 | `/api/patient-intake` route | Does not exist | ❌ Missing |
 | `patients` database table | Does not exist | ❌ **Major gap** |
 
-### Key Gaps
+### Key Gaps (In Scope)
 
 1. **No `patients` table** — the intake form posts to `/api/patient-intake` which doesn't exist
 2. **No FK constraint** — `appointments.patient_id` references nothing
-3. **No patient authentication** — patients have no Supabase Auth accounts
-4. **No CRUD API** — no server-side routes for patient create/read/update/delete
-5. **Register-patient feature** — all files are stubs
+3. **No CRUD API** — no server-side routes for patient create/read/update/delete
+
+### Intentional Out-of-Scope Decisions
+
+- **No Patient Authentication** — Patients are data records managed by staff, not system users
+- **No Patient Portal** — No client-side dashboard for patients; all access is staff-facing
+- **New Requirement** — Staff-side UI (admin/reception) to create/edit/manage patient records
 
 ---
 
@@ -42,8 +46,6 @@ This plan covers creating a `patients` table in the existing Supabase Postgres d
 
 CREATE TABLE public.patients (
   id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  -- If patient has a Supabase Auth account (patient portal):
-  auth_user_id  uuid UNIQUE REFERENCES auth.users(id) ON DELETE SET NULL,
 
   -- Core demographics
   first_name    text        NOT NULL,
@@ -72,7 +74,6 @@ CREATE TABLE public.patients (
 -- Index for common lookups
 CREATE INDEX idx_patients_email ON public.patients (email);
 CREATE INDEX idx_patients_name ON public.patients (last_name, first_name);
-CREATE INDEX idx_patients_auth_user ON public.patients (auth_user_id) WHERE auth_user_id IS NOT NULL;
 
 -- Auto-update updated_at
 CREATE OR REPLACE FUNCTION public.set_updated_at()
@@ -130,47 +131,26 @@ ALTER TABLE public.patient_intake_submissions ENABLE ROW LEVEL SECURITY;
 
 ### 3a. Patients Table Policies
 
+**Note:** Since the patient portal is out of scope, patients are data records managed by staff only. All RLS policies enforce staff-only access.
+
 ```sql
 -- Migration: 20240110000000_rls_patients.sql
 
--- Staff (receptionist, admin) can CRUD all patients
-CREATE POLICY "Staff can manage patients"
+-- Staff (any authenticated staff member) can manage all patient data
+CREATE POLICY "Staff can manage all patient data"
   ON public.patients FOR ALL
   USING (
     EXISTS (
       SELECT 1 FROM public.staff_profiles sp
       WHERE sp.id = auth.uid()
-        AND sp.role IN ('receptionist', 'admin')
     )
   )
   WITH CHECK (
     EXISTS (
       SELECT 1 FROM public.staff_profiles sp
       WHERE sp.id = auth.uid()
-        AND sp.role IN ('receptionist', 'admin')
     )
   );
-
--- Clinical staff (dentist, hygienist) can VIEW patients
-CREATE POLICY "Clinical staff can view patients"
-  ON public.patients FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.staff_profiles sp
-      WHERE sp.id = auth.uid()
-        AND sp.role IN ('dentist', 'hygienist')
-    )
-  );
-
--- Patient can view/update their own record (via patient portal)
-CREATE POLICY "Patients can view own record"
-  ON public.patients FOR SELECT
-  USING (auth_user_id = auth.uid());
-
-CREATE POLICY "Patients can update own record"
-  ON public.patients FOR UPDATE
-  USING (auth_user_id = auth.uid())
-  WITH CHECK (auth_user_id = auth.uid());
 ```
 
 ### 3b. Intake Submissions Policies (if using audit table)
@@ -186,10 +166,7 @@ CREATE POLICY "Staff can view all intake submissions"
     )
   );
 
--- Anyone authenticated can insert (patient submitting their own form)
-CREATE POLICY "Authenticated users can submit intake"
-  ON public.patient_intake_submissions FOR INSERT
-  WITH CHECK (auth.uid() IS NOT NULL);
+-- Note: Public intake form submissions bypass RLS via Service Role Key (see Section 5b)
 ```
 
 ---
@@ -203,7 +180,6 @@ Update the existing `Patient` interface to align with the database schema:
 
 export interface Patient {
   id: string;
-  authUserId?: string | null;
   firstName: string;
   lastName: string;
   dateOfBirth: string;         // ISO date string
@@ -254,21 +230,24 @@ DELETE /api/patients/[id]      → Soft-delete (set is_active = false)
 
 ### 5b. Patient Intake — `src/app/api/patient-intake/route.ts`
 
+**Important:** Since public patients cannot authenticate, this endpoint uses the **Supabase Service Role Key** to bypass RLS and write to the database directly. This is safe because the endpoint itself validates input and enforces rate-limiting/CSRF protection.
+
 ```
-POST   /api/patient-intake     → Submit intake form → upsert patient + log submission
-GET    /api/patient-intake     → Staff: list submissions
-DELETE /api/patient-intake     → Staff: delete submission
+POST   /api/patient-intake     → Submit intake form → create/upsert patient + log submission (public, via Service Role)
+GET    /api/patient-intake     → Staff only: list submissions
+DELETE /api/patient-intake     → Staff only: delete submission
 ```
 
 ### 5c. Implementation Outline
 
 ```typescript
 // src/app/api/patient-intake/route.ts
-import { createServerClient } from '@/shared/api/supabase-server';
+import { createServerClient, createAdminClient } from '@/shared/api/supabase-server';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
-  const supabase = createServerClient();
+  // Use admin client for public intake form (bypasses RLS)
+  const supabase = createAdminClient();
   const body = await request.json();
 
   // 1. Validate with Zod
@@ -295,7 +274,8 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ data });
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Staff only: Use regular server client with RLS
   const supabase = createServerClient();
   const { data, error } = await supabase
     .from('patients')
@@ -339,18 +319,9 @@ export async function GET() {
 |---|------|----------|
 | 12 | Wire intake form to `POST /api/patient-intake` (already posts there) | P0 |
 | 13 | Wire staff intake view to `GET /api/patient-intake` (already fetches there) | P0 |
-| 14 | Implement patient registration page (`/patient/register`) | P1 |
-| 15 | Build patient search/lookup in staff dashboard | P1 |
-| 16 | Update appointment booking to select from existing patients | P1 |
-
-### Phase 4: Patient Portal (Week 3–4)
-
-| # | Task | Priority |
-|---|------|----------|
-| 17 | Enable patient auth (magic-link for patients → `auth_user_id`) | P2 |
-| 18 | Patient portal: view own profile + edit contact info | P2 |
-| 19 | Patient portal: view upcoming appointments | P2 |
-| 20 | Patient portal: submit intake form pre-visit | P2 |
+| 14 | Build patient search/lookup in staff dashboard | P1 |
+| 15 | Update appointment booking to select from existing patients | P1 |
+| 16 | Build staff UI to manually create/edit patient records | P1 |
 
 ---
 
@@ -374,8 +345,8 @@ The intake form fields need to map to database columns:
 
 ## 8. Security Considerations
 
-1. **RLS enforced** — All queries go through Supabase client with user JWT; RLS policies control access
-2. **Service role key** — Only used server-side for admin operations (e.g., linking auth accounts)
+1. **RLS enforced** — All authenticated queries go through Supabase client with user JWT; RLS policies control access for staff operations
+2. **Service role key for public intake** — The `/api/patient-intake` endpoint uses the Service Role Key server-side to bypass RLS and accept public form submissions; the endpoint itself validates input and enforces CSRF protection
 3. **Email uniqueness** — Prevents duplicate patient records
 4. **Soft delete** — `is_active = false` instead of physical deletion (data retention for medical records)
 5. **CSRF protection** — Intake form already uses `useCsrfToken()` hook
@@ -422,7 +393,7 @@ Or apply directly via the Supabase Dashboard SQL Editor if not using the CLI loc
 The **minimum viable path** to get patient data flowing into Postgres:
 
 1. **Run the `patients` table migration** (Section 2a) via Supabase Dashboard SQL Editor
-2. **Create `/api/patient-intake/route.ts`** (Section 5c) — handles POST from existing form + GET for staff view
+2. **Create `/api/patient-intake/route.ts`** (Section 5c) — handles POST from existing form (via Service Role Key) + GET for staff view
 3. **Done** — the intake form already posts to `/api/patient-intake` and the staff view already reads from it
 
-Everything else (patient portal, registration page, search) builds on top of that foundation.
+Everything else (patient search, staff edit UI, appointment patient selection) builds on top of that foundation.
