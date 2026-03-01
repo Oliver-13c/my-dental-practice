@@ -35,6 +35,7 @@
     "patientInfoMissing": "Patient information is missing."
   },
   "admin": {
+    "title": "Admin",
     "dashboard": "Dashboard",
     "users": "Users",
     "appointments": "Appointments",
@@ -55,6 +56,8 @@
     "auditLogsDescription": "Review system and user activities",
     "analyticsDescription": "View system analytics and metrics",
     "users": {
+      "title": "User Management",
+      "description": "Manage staff members and their access",
       "users": "Users",
       "usersDescription": "Manage system users and permissions",
       "createUser": "Create User",

@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { UsersTable, type User } from './UsersTable';
 import { Button } from '@/shared/ui/button';
+import { csrfFetch } from '@/shared/lib/csrf-fetch';
 
 export function UsersListClient() {
   const t = useTranslations('admin.users');
@@ -19,7 +20,7 @@ export function UsersListClient() {
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/admin/users');
+      const response = await csrfFetch('/api/admin/users');
       const result = await response.json();
 
       if (!response.ok) {

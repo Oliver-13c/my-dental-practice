@@ -35,6 +35,7 @@
     "patientInfoMissing": "Falta la información del paciente."
   },
   "admin": {
+    "title": "Admin",
     "dashboard": "Panel de Control",
     "users": "Usuarios",
     "appointments": "Citas",
@@ -55,6 +56,8 @@
     "auditLogsDescription": "Revisar actividades del sistema y usuarios",
     "analyticsDescription": "Ver análisis y métricas del sistema",
     "users": {
+      "title": "Gestión de Usuarios",
+      "description": "Gestionar miembros del personal y sus accesos",
       "users": "Usuarios",
       "usersDescription": "Gestionar usuarios del sistema y permisos",
       "createUser": "Crear Usuario",

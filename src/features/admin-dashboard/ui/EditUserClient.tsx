@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { UserForm } from './UserForm';
 import { Button } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
+import { csrfFetch } from '@/shared/lib/csrf-fetch';
 
 interface EditUserData {
   firstName: string;
@@ -35,7 +36,7 @@ export function EditUserClient({ userId }: EditUserClientProps) {
   const fetchUser = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/admin/users/${userId}`);
+      const response = await csrfFetch(`/api/admin/users/${userId}`);
       const result = await response.json();
 
       if (!response.ok) {
@@ -70,7 +71,7 @@ export function EditUserClient({ userId }: EditUserClientProps) {
         patient: 'patient',
       };
 
-      const response = await fetch(`/api/admin/users/${userId}`, {
+      const response = await csrfFetch(`/api/admin/users/${userId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -105,7 +106,7 @@ export function EditUserClient({ userId }: EditUserClientProps) {
     }
 
     try {
-      const response = await fetch(`/api/admin/users/${userId}`, {
+      const response = await csrfFetch(`/api/admin/users/${userId}`, {
         method: 'DELETE',
       });
 
@@ -130,7 +131,7 @@ export function EditUserClient({ userId }: EditUserClientProps) {
     }
 
     try {
-      const response = await fetch(`/api/admin/users/${userId}/reset-password`, {
+      const response = await csrfFetch(`/api/admin/users/${userId}/reset-password`, {
         method: 'POST',
       });
 

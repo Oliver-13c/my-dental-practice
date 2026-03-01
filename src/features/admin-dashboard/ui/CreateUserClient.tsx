@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { UserForm } from './UserForm';
 import { Button } from '@/shared/ui/button';
+import { csrfFetch } from '@/shared/lib/csrf-fetch';
 
 interface CreateUserData {
   firstName: string;
@@ -36,7 +37,7 @@ export function CreateUserClient() {
       // Generate a temporary password (in production, email this to the user)
       const tempPassword = `Temp${Math.random().toString(36).slice(-8)}!`;
 
-      const response = await fetch('/api/admin/users', {
+      const response = await csrfFetch('/api/admin/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
