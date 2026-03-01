@@ -60,6 +60,7 @@ export function UsersTable({ users, isLoading = false, onEdit, onDelete }: Users
           value={filterRole}
           onChange={(e) => setFilterRole(e.target.value)}
           className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+          aria-label={t('filterByRole')}
         >
           <option value="">{t('filterByRole')}</option>
           <option value="admin">Admin</option>
@@ -71,6 +72,7 @@ export function UsersTable({ users, isLoading = false, onEdit, onDelete }: Users
           value={filterActive}
           onChange={(e) => setFilterActive(e.target.value)}
           className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+          aria-label={t('filterByStatus')}
         >
           <option value="">{t('filterByStatus')}</option>
           <option value="active">{t('active')}</option>
