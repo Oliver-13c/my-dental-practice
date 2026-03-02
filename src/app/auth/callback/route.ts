@@ -78,7 +78,40 @@ export async function GET(request: NextRequest) {
       const { error: exchangeError } =
         await supabase.auth.exchangeCodeForSession(code);
 
-      if (exchangeError) {
+      /* ── If PKCE verifier missing (e.g., fresh browser clicking recovery email), 
+             fall back to treating code as token hash for legacy OTP verification ── */
+      if (exchangeError?.message?.includes('code_verifier')) {
+        console.log('[auth/callback] PKCE verifier missing, attempting legacy OTP verification with code as token');
+        if (!type) {
+          console.error('[auth/callback] Cannot perform legacy OTP verification without type parameter');
+          return NextResponse.redirect(
+            new URL('/auth/error?error=missing_type', request.url),
+          );
+        }
+        try {
+          const { data: otpData, error: otpError } = await supabase.auth.verifyOtp({
+            token_hash: code,
+            type: type as 'recovery' | 'signup' | 'invite' | 'email_change' | 'magiclink',
+          });
+
+          if (otpError || !otpData) {
+            console.error('[auth/callback] Legacy OTP verification failed:', otpError?.message);
+            return NextResponse.redirect(
+              new URL(
+                `/auth/error?error=invalid_token&message=${encodeURIComponent(otpError?.message ?? 'Token verification failed')}`,
+                request.url,
+              ),
+            );
+          }
+          console.log('[auth/callback] Legacy OTP verification succeeded');
+          // Continue to provisioning below
+        } catch (otpErr) {
+          console.error('[auth/callback] Legacy OTP verification exception:', otpErr);
+          return NextResponse.redirect(
+            new URL('/auth/error?error=callback_failed', request.url),
+          );
+        }
+      } else if (exchangeError) {
         console.error(
           '[auth/callback] Code exchange error:',
           exchangeError.message,
