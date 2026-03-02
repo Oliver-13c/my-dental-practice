@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
   }
 
   /* ── Extract params ─────────────────────────────────────────── */
-  const token = searchParams.get('token');
+  const token = searchParams.get('token_hash') || searchParams.get('token');
   const type = searchParams.get('type') as
     | 'signup'
     | 'recovery'
@@ -78,40 +78,7 @@ export async function GET(request: NextRequest) {
       const { error: exchangeError } =
         await supabase.auth.exchangeCodeForSession(code);
 
-      /* ── If PKCE verifier missing (e.g., fresh browser clicking recovery email), 
-             fall back to treating code as token hash for legacy OTP verification ── */
-      if (exchangeError?.message?.includes('code_verifier')) {
-        console.log('[auth/callback] PKCE verifier missing, attempting legacy OTP verification with code as token');
-        if (!type) {
-          console.error('[auth/callback] Cannot perform legacy OTP verification without type parameter');
-          return NextResponse.redirect(
-            new URL('/auth/error?error=missing_type', request.url),
-          );
-        }
-        try {
-          const { data: otpData, error: otpError } = await supabase.auth.verifyOtp({
-            token_hash: code,
-            type: type as 'recovery' | 'signup' | 'invite' | 'email_change' | 'magiclink',
-          });
-
-          if (otpError || !otpData) {
-            console.error('[auth/callback] Legacy OTP verification failed:', otpError?.message);
-            return NextResponse.redirect(
-              new URL(
-                `/auth/error?error=invalid_token&message=${encodeURIComponent(otpError?.message ?? 'Token verification failed')}`,
-                request.url,
-              ),
-            );
-          }
-          console.log('[auth/callback] Legacy OTP verification succeeded');
-          // Continue to provisioning below
-        } catch (otpErr) {
-          console.error('[auth/callback] Legacy OTP verification exception:', otpErr);
-          return NextResponse.redirect(
-            new URL('/auth/error?error=callback_failed', request.url),
-          );
-        }
-      } else if (exchangeError) {
+      if (exchangeError) {
         console.error(
           '[auth/callback] Code exchange error:',
           exchangeError.message,
@@ -221,12 +188,14 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  /* ── Legacy token-hash flow ─────────────────────────────────── */
+  /* ── Legacy token-hash flow (used when email template sends token_hash directly) ── */
   if (!token || !type) {
     return NextResponse.redirect(
       new URL('/auth/error?error=missing_token', request.url),
     );
   }
+
+  console.log('[auth/callback] Legacy token-hash flow, type:', type);
 
   try {
     const { data, error: verifyError } = await supabase.auth.verifyOtp({
@@ -245,6 +214,64 @@ export async function GET(request: NextRequest) {
           request.url,
         ),
       );
+    }
+
+    console.log('[auth/callback] Token verification succeeded');
+
+    /* ── Auto-provision staff_profiles row if missing ────────── */
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (serviceKey) {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const adminClient = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '',
+            serviceKey,
+            { auth: { persistSession: false } },
+          );
+          const { data: existingProfile } = await adminClient
+            .from('staff_profiles')
+            .select('id')
+            .eq('id', user.id)
+            .single();
+
+          if (!existingProfile) {
+            const { count } = await adminClient
+              .from('staff_profiles')
+              .select('id', { count: 'exact', head: true })
+              .eq('role', 'admin');
+            const defaultRole = (count ?? 0) === 0 ? 'admin' : 'receptionist';
+
+            await adminClient.from('staff_profiles').insert({
+              id: user.id,
+              role: defaultRole,
+              first_name: user.email?.split('@')[0] ?? '',
+              last_name: '',
+              is_active: true,
+              is_admin: defaultRole === 'admin',
+            });
+            console.log('[auth/callback] Auto-provisioned staff_profiles:', defaultRole);
+          }
+        }
+      } catch (provisionErr) {
+        console.error('[auth/callback] Profile provision error:', provisionErr);
+      }
+    }
+
+    /* ── Recovery → redirect to reset-password ────────────────── */
+    if (type === 'recovery') {
+      console.log('[auth/callback] Recovery flow → /auth/reset-password');
+      const recoveryUrl = new URL('/auth/reset-password', request.url);
+      const recoveryResponse = NextResponse.redirect(recoveryUrl);
+      response.cookies.getAll().forEach((cookie) => {
+        recoveryResponse.cookies.set(cookie.name, cookie.value, {
+          path: '/',
+          httpOnly: true,
+          sameSite: 'lax',
+          secure: true,
+        });
+      });
+      return recoveryResponse;
     }
 
     return response;
