@@ -75,7 +75,7 @@ function TemporaryPasswordModal({ email, tempPassword, firstName, onClose }: Pas
           </p>
           <ol className="text-xs text-blue-700 mt-2 space-y-1 list-decimal list-inside">
             <li>Share the temporary password with {firstName}</li>
-            <li>Ask them to visit <strong>my-dental-practice.vercel.app/staff/login</strong></li>
+            <li>Ask them to visit <strong>/staff/login</strong></li>
             <li>They can change their password after first login</li>
           </ol>
         </div>
