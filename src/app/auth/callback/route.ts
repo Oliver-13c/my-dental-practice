@@ -164,10 +164,10 @@ export async function GET(request: NextRequest) {
         const recoveryUrl = new URL('/auth/reset-password', request.url);
         const recoveryResponse = NextResponse.redirect(recoveryUrl);
         // Forward all cookies set during the PKCE exchange
+        // Do NOT set httpOnly — the browser Supabase client reads via document.cookie
         response.cookies.getAll().forEach((cookie) => {
           recoveryResponse.cookies.set(cookie.name, cookie.value, {
             path: '/',
-            httpOnly: true,
             sameSite: 'lax',
             secure: true,
           });
@@ -263,10 +263,10 @@ export async function GET(request: NextRequest) {
       console.log('[auth/callback] Recovery flow → /auth/reset-password');
       const recoveryUrl = new URL('/auth/reset-password', request.url);
       const recoveryResponse = NextResponse.redirect(recoveryUrl);
+      // Do NOT set httpOnly — the browser Supabase client reads via document.cookie
       response.cookies.getAll().forEach((cookie) => {
         recoveryResponse.cookies.set(cookie.name, cookie.value, {
           path: '/',
-          httpOnly: true,
           sameSite: 'lax',
           secure: true,
         });
