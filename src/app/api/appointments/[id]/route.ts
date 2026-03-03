@@ -3,6 +3,14 @@ import type { NextRequest } from 'next/server';
 import { createServerClient } from '@/shared/api/supabase-server';
 import type { Database } from '@/shared/api/supabase-types';
 import { updateAppointmentSchema } from '@/entities/appointment/model/appointment.types';
+import {
+  sendAppointmentReschedule,
+  sendAppointmentCancellation,
+} from '@/services/notification-service';
+import {
+  updateCalendarEvent,
+  deleteCalendarEvent,
+} from '@/services/google-calendar-service';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -139,6 +147,18 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     console.log('[api/appointments/id] Updated:', id, 'changes:', Object.keys(input));
 
+    // Send reschedule notification if time was changed
+    if (input.start_time) {
+      sendAppointmentReschedule(data).catch((err) =>
+        console.error('[api/appointments/id] Reschedule notification error:', err),
+      );
+    }
+
+    // Sync changes to Google Calendar
+    updateCalendarEvent(data).catch((err) =>
+      console.error('[api/appointments/id] Calendar sync error:', err),
+    );
+
     return NextResponse.json({ data });
   } catch (err) {
     console.error('[api/appointments/id] PATCH exception:', err);
@@ -159,7 +179,12 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
       .from('appointments')
       .update({ status: 'cancelled' })
       .eq('id', id)
-      .select('id, status')
+      .select(`
+        *,
+        patient:patients!patient_id (id, first_name, last_name, email, phone),
+        provider:staff_profiles!provider_id (id, first_name, last_name, role),
+        appointment_type:appointment_types!appointment_type_id (id, name, duration_minutes, color)
+      `)
       .single();
 
     if (error) {
@@ -168,6 +193,18 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
     }
 
     console.log('[api/appointments/id] Cancelled:', id);
+
+    // Send cancellation notification
+    sendAppointmentCancellation(data).catch((err) =>
+      console.error('[api/appointments/id] Cancellation notification error:', err),
+    );
+
+    // Delete from Google Calendar
+    if (data.google_calendar_event_id) {
+      deleteCalendarEvent(data.google_calendar_event_id).catch((err) =>
+        console.error('[api/appointments/id] Calendar delete error:', err),
+      );
+    }
 
     return NextResponse.json({ data });
   } catch (err) {

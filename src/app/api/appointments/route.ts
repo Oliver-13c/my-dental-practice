@@ -3,6 +3,8 @@ import type { NextRequest } from 'next/server';
 import { createServerClient } from '@/shared/api/supabase-server';
 import type { Database } from '@/shared/api/supabase-types';
 import { createAppointmentSchema } from '@/entities/appointment/model/appointment.types';
+import { sendAppointmentConfirmation } from '@/services/notification-service';
+import { createCalendarEvent } from '@/services/google-calendar-service';
 
 /**
  * GET /api/appointments
@@ -173,6 +175,23 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('[api/appointments] Created appointment:', appointment.id);
+
+    // Fire-and-forget notification (don't block the response)
+    sendAppointmentConfirmation(appointment).catch((err) =>
+      console.error('[api/appointments] Notification error:', err),
+    );
+
+    // Sync to Google Calendar (fire-and-forget, store event ID)
+    createCalendarEvent(appointment)
+      .then(async (result) => {
+        if (result.success && result.eventId) {
+          await supabase
+            .from('appointments')
+            .update({ google_calendar_event_id: result.eventId })
+            .eq('id', appointment.id);
+        }
+      })
+      .catch((err) => console.error('[api/appointments] Calendar sync error:', err));
 
     return NextResponse.json({ data: appointment }, { status: 201 });
   } catch (err) {
