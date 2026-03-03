@@ -36,10 +36,10 @@ export async function GET(request: Request) {
     const offset = parseInt(searchParams.get('offset') || '0', 10);
     const action = searchParams.get('action');
 
-    // Build query
+    // Build query (join with staff_profiles to get admin email)
     let query = (supabase as any)
       .from('admin_actions')
-      .select('*')
+      .select('*, staff_profiles!admin_id(email)', { count: 'exact' })
       .order('created_at', { ascending: false });
 
     if (action && action !== 'all') {
@@ -60,7 +60,7 @@ export async function GET(request: Request) {
         action: log.action,
         target_type: log.target_type,
         target_name: log.target_name,
-        admin_email: log.admin_email,
+        admin_email: log.staff_profiles?.email || 'Unknown',
         timestamp: log.created_at,
         ip_address: log.ip_address || null,
         changes: log.changes,

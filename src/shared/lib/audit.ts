@@ -2,13 +2,13 @@ import { createServerClient } from '@/shared/api/supabase-server';
 import type { Database } from '@/shared/api/supabase-types';
 
 /**
- * Records an audit log entry for a staff action.
+ * Records an audit log entry for a staff action to the admin_actions table.
  *
- * @param userId       - The ID of the user performing the action.
+ * @param userId       - The ID of the user performing the action (admin_id).
  * @param action       - A short description of the action (e.g. 'login', 'appointment.create').
- * @param resourceType - The type of resource affected (e.g. 'appointment', 'note').
- * @param resourceId   - The ID of the affected resource, if applicable.
- * @param metadata     - Optional additional context to store with the log entry.
+ * @param resourceType - The type of resource affected (target_type: 'appointment', 'user', etc).
+ * @param resourceId   - The ID of the affected resource (target_id).
+ * @param metadata     - Optional additional context to store with the log (changes field).
  */
 export async function logAudit(
   userId: string,
@@ -19,12 +19,13 @@ export async function logAudit(
 ): Promise<void> {
   try {
     const supabase = createServerClient<Database>();
-    const { error } = await (supabase as any).from('audit_logs').insert({
-      user_id: userId,
+    const { error } = await (supabase as any).from('admin_actions').insert({
+      admin_id: userId,
       action,
-      resource_type: resourceType ?? null,
-      resource_id: resourceId ?? null,
-      metadata: metadata ?? null,
+      target_type: resourceType ?? 'system',
+      target_id: resourceId ?? null,
+      target_name: metadata?.name ?? metadata?.email ?? null,
+      changes: metadata ?? null,
     });
     if (error) {
       console.error('[audit] Failed to write audit log:', error.message);
