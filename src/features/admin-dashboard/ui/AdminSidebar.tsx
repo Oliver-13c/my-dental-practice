@@ -1,18 +1,26 @@
 'use client';
 
 import React from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/shared/ui/button';
 
 export function AdminSidebar() {
   const t = useTranslations('admin');
+  const locale = useLocale();
   const pathname = usePathname();
+  const router = useRouter();
 
   const isActive = (href: string) => {
     if (href === '/admin') return pathname === '/admin';
     return pathname.startsWith(href);
+  };
+
+  const toggleLocale = () => {
+    const newLocale = locale === 'es' ? 'en' : 'es';
+    document.cookie = `NEXT_LOCALE=${newLocale};path=/;max-age=31536000`;
+    router.refresh();
   };
 
   const menuItems = [
@@ -49,7 +57,22 @@ export function AdminSidebar() {
         ))}
       </nav>
 
-      <div className="p-4 border-t border-gray-700">
+      <div className="p-4 border-t border-gray-700 space-y-3">
+        <button
+          onClick={toggleLocale}
+          className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors text-sm"
+        >
+          <span>🌐 {locale === 'es' ? 'Español' : 'English'}</span>
+          <span className="text-xs text-gray-400">
+            → {locale === 'es' ? 'EN' : 'ES'}
+          </span>
+        </button>
+        <Link
+          href="/staff/dashboard"
+          className="block w-full text-center px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors text-sm text-gray-300"
+        >
+          ← {locale === 'es' ? 'Volver al Panel' : 'Back to Dashboard'}
+        </Link>
         <p className="text-xs text-gray-400">v1.0.0</p>
       </div>
     </aside>

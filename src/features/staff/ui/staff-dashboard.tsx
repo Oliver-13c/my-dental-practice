@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { DentistDashboard } from './dentist-dashboard';
 import { ReceptionistDashboard } from './receptionist-dashboard';
@@ -9,6 +10,7 @@ import { createClient } from '@/shared/api/supabase-browser';
 
 export function StaffDashboard() {
   const { data: session, status } = useSession();
+  const router = useRouter();
   const role = session?.user?.role ?? null;
   const [supabaseRole, setSupabaseRole] = useState<string | null>(null);
   const [provisioning, setProvisioning] = useState(false);
@@ -44,7 +46,14 @@ export function StaffDashboard() {
 
   const effectiveRole = role || supabaseRole;
 
-  if (status === 'loading' || provisioning) return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading dashboard...</div>;
+  // Admins go directly to the admin panel
+  useEffect(() => {
+    if (effectiveRole === 'admin') {
+      router.replace('/admin');
+    }
+  }, [effectiveRole, router]);
+
+  if (status === 'loading' || provisioning || effectiveRole === 'admin') return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading dashboard...</div>;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -55,7 +64,6 @@ export function StaffDashboard() {
             {effectiveRole === 'receptionist' && 'Front Desk'}
             {effectiveRole === 'dentist' && 'Doctor Portal'}
             {effectiveRole === 'hygienist' && 'Hygiene Portal'}
-            {effectiveRole === 'admin' && 'Admin Settings'}
             {!effectiveRole && 'Staff Dashboard'}
           </h1>
           <div className="flex items-center space-x-4">
@@ -81,15 +89,6 @@ export function StaffDashboard() {
         {effectiveRole === 'receptionist' && <ReceptionistDashboard />}
         {effectiveRole === 'dentist' && <DentistDashboard />}
         {effectiveRole === 'hygienist' && <DentistDashboard /> /* Reuse dentist for now as clinical placeholder */}
-        {effectiveRole === 'admin' && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-blue-900 mb-2">Admin Panel</h2>
-            <p className="text-blue-700 mb-4">Use the dedicated admin panel for system administration tasks.</p>
-            <a href="/admin" className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-              Go to Admin Panel →
-            </a>
-          </div>
-        )}
         {!effectiveRole && <p className="text-red-500">Error: Unrecognized role</p>}
       </main>
     </div>
