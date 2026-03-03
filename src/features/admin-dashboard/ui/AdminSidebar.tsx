@@ -10,7 +10,10 @@ export function AdminSidebar() {
   const t = useTranslations('admin');
   const pathname = usePathname();
 
-  const isActive = (href: string) => pathname.includes(href);
+  const isActive = (href: string) => {
+    if (href === '/admin') return pathname === '/admin';
+    return pathname.startsWith(href);
+  };
 
   const menuItems = [
     { href: '/admin', label: t('dashboard') || 'Dashboard', icon: '📊' },

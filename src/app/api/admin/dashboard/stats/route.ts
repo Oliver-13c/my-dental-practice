@@ -26,7 +26,7 @@ export async function GET() {
       return ApiErrors.forbidden();
     }
 
-    // Get statistics
+    // Get staff statistics
     const { data: staffData, error: staffError } = await (supabase as any)
       .from('staff_profiles')
       .select('*');
@@ -39,13 +39,38 @@ export async function GET() {
     const activeUsers = staff.filter((s: any) => s.is_active).length;
     const inactiveUsers = staff.filter((s: any) => !s.is_active).length;
 
-    // Get recent actions count
-    const { data: actionsData, error: actionsError } = await (supabase as any)
-      .from('admin_actions')
-      .select('*', { count: 'exact', head: true })
-      .limit(1);
+    // Get appointment statistics
+    const today = new Date().toISOString().split('T')[0];
 
-    const recentActionsCount = actionsData?.length || 0;
+    const { data: todayAppointments } = await (supabase as any)
+      .from('appointments')
+      .select('id, status')
+      .gte('start_time', `${today}T00:00:00.000Z`)
+      .lte('start_time', `${today}T23:59:59.999Z`);
+
+    const { data: upcomingAppointments } = await (supabase as any)
+      .from('appointments')
+      .select('id, status')
+      .gte('start_time', new Date().toISOString())
+      .in('status', ['scheduled', 'confirmed']);
+
+    const { data: allAppointments } = await (supabase as any)
+      .from('appointments')
+      .select('id, status');
+
+    const todayCount = todayAppointments?.length || 0;
+    const upcomingCount = upcomingAppointments?.length || 0;
+    const totalAppointments = allAppointments?.length || 0;
+    const activeAppointments = (allAppointments || []).filter(
+      (a: any) => ['scheduled', 'confirmed', 'in_progress'].includes(a.status)
+    ).length;
+
+    // Get recent admin actions
+    const { data: recentActions } = await (supabase as any)
+      .from('admin_actions')
+      .select('id, action, target_name, admin_email, created_at')
+      .order('created_at', { ascending: false })
+      .limit(5);
 
     return NextResponse.json({
       success: true,
@@ -53,7 +78,11 @@ export async function GET() {
         totalStaff: staff.length,
         activeUsers,
         inactiveUsers,
-        recentActions: recentActionsCount,
+        totalAppointments,
+        activeAppointments,
+        todaysAppointments: todayCount,
+        upcomingAppointments: upcomingCount,
+        recentActions: recentActions || [],
       },
     });
   } catch (error) {
