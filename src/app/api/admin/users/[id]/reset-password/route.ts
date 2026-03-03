@@ -6,11 +6,14 @@ import { ApiErrors } from '@/shared/lib/api-error';
 /**
  * POST /api/admin/users/:id/reset-password - Send password reset email
  */
-export async function POST(request: NextRequest, context: any) {
-  const params = context.params as { id: string };
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
   try {
     const recoveryRedirectTo = `${request.nextUrl.origin}/auth/callback?type=recovery`;
-    const result = await sendPasswordReset(params.id, recoveryRedirectTo);
+    const result = await sendPasswordReset(id, recoveryRedirectTo);
 
     if (result.error) {
       if (result.error.includes('Unauthorized')) {

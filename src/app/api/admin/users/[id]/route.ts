@@ -12,10 +12,13 @@ const ALLOWED_STAFF_ROLES = new Set(['receptionist', 'hygienist', 'dentist', 'ad
 /**
  * GET /api/admin/users/:id - Get staff member details
  */
-export async function GET(request: NextRequest, context: any) {
-  const params = context.params as { id: string };
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
   try {
-    const result = await getStaffMember(params.id);
+    const result = await getStaffMember(id);
 
     if (result.error) {
       if (result.error.includes('Unauthorized')) {
@@ -41,8 +44,11 @@ export async function GET(request: NextRequest, context: any) {
 /**
  * PATCH /api/admin/users/:id - Update staff member
  */
-export async function PATCH(request: NextRequest, context: any) {
-  const params = context.params as { id: string };
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
   try {
     const body = await request.json();
 
@@ -50,7 +56,7 @@ export async function PATCH(request: NextRequest, context: any) {
       return ApiErrors.badRequest('Invalid role. Allowed roles: receptionist, hygienist, dentist, admin');
     }
 
-    const result = await updateStaffMember(params.id, body);
+    const result = await updateStaffMember(id, body);
 
     if (result.error) {
       if (result.error.includes('Unauthorized')) {
@@ -72,10 +78,13 @@ export async function PATCH(request: NextRequest, context: any) {
 /**
  * DELETE /api/admin/users/:id - Delete (deactivate) staff member
  */
-export async function DELETE(request: NextRequest, context: any) {
-  const params = context.params as { id: string };
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
   try {
-    const result = await deleteStaffMember(params.id);
+    const result = await deleteStaffMember(id);
 
     if (result.error) {
       if (result.error.includes('Unauthorized')) {

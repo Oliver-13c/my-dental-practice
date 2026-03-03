@@ -1,46 +1,29 @@
 import { createServerClient } from '@/shared/api/supabase-server';
 import type { Database } from '@/shared/api/supabase-types';
-import { createServerClient as createSsrServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { auth } from '@/auth';
 
 /**
- * Get the current authenticated user from Supabase
- * This works with both NextAuth and direct Supabase authentication
+ * Get the current authenticated user from NextAuth session.
+ * Staff login uses NextAuth Credentials provider, so the session
+ * is stored in a NextAuth JWT cookie — NOT in Supabase SSR cookies.
  */
 export async function getCurrentUser() {
   try {
-    const cookieStore = await cookies();
-    const supabaseUrl =
-      process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
-    const supabaseAnonKey =
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY;
+    const session = await auth();
 
-    if (!supabaseUrl || !supabaseAnonKey) {
-      return { user: null, error: 'Supabase configuration missing' };
+    if (!session?.user?.email) {
+      return { user: null, error: 'Auth session missing' };
     }
 
-    const supabase = createSsrServerClient<Database>(supabaseUrl, supabaseAnonKey, {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll().map((cookie) => ({
-            name: cookie.name,
-            value: cookie.value,
-          }));
-        },
-        setAll(_cookiesToSet) {
-          return;
-        },
+    // Return a user-like object compatible with downstream code
+    return {
+      user: {
+        id: session.user.id ?? session.user.email,
+        email: session.user.email,
+        role: (session.user as any).role,
       },
-    });
-    
-    // Get current user from Supabase auth
-    const { data: { user }, error } = await (supabase as any).auth.getUser();
-    
-    if (error || !user?.email) {
-      return { user: null, error: error?.message || 'Unauthorized' };
-    }
-
-    return { user, error: null };
+      error: null,
+    };
   } catch (err) {
     console.error('[getCurrentUser]', err);
     return { user: null, error: 'Unauthorized' };

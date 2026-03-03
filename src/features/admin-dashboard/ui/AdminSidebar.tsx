@@ -25,7 +25,7 @@ export function AdminSidebar() {
 
   const menuItems = [
     { href: '/admin', label: t('dashboard') || 'Dashboard', icon: '📊' },
-    { href: '/admin/users', label: t('users') || 'Users', icon: '👥' },
+    { href: '/admin/users', label: t('users.users') || 'Users', icon: '👥' },
     { href: '/admin/appointments', label: t('appointments') || 'Appointments', icon: '📅' },
     { href: '/admin/staff', label: t('staff') || 'Staff', icon: '👨‍⚕️' },
     { href: '/admin/audit-logs', label: t('auditLogs') || 'Audit Logs', icon: '📋' },

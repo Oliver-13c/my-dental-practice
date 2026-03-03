@@ -131,7 +131,6 @@
   "admin": {
     "title": "Administration",
     "dashboard": "Dashboard",
-    "users": "Users",
     "appointments": "Appointments",
     "staff": "Staff",
     "auditLogs": "Audit Logs",

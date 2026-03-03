@@ -131,7 +131,6 @@
   "admin": {
     "title": "Administración",
     "dashboard": "Panel de Control",
-    "users": "Usuarios",
     "appointments": "Citas",
     "staff": "Personal",
     "auditLogs": "Registros de Auditoría",
