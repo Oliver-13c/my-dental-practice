@@ -48,6 +48,10 @@ export async function checkAndSendReminders() {
       );
 
       try {
+        if (!resend) {
+          console.warn('[check-appointment-reminders] Resend not configured — skipping email');
+          continue;
+        }
         await resend.emails.send({
           from: 'no-reply@dentalpractice.com',
           to: patientInfo.email,

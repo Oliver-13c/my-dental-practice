@@ -120,6 +120,10 @@ async function sendEmail(
   to: string,
   template: { subject: string; plainText: string; html: string },
 ): Promise<boolean> {
+  if (!resend) {
+    console.warn('[notification-service] Resend not configured — skipping email');
+    return false;
+  }
   try {
     const { error } = await resend.emails.send({
       from: FROM_EMAIL,
