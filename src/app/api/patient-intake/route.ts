@@ -1,7 +1,8 @@
-import { createServerClient } from '@/shared/api/supabase-server';
+import { createAdminClient, createServerClient } from '@/shared/api/supabase-server';
 import type { Database } from '@/shared/api/supabase-types';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { auth } from '@/auth';
 
 const patientIntakeSchema = z.object({
   fullName: z.string().optional(),
@@ -44,53 +45,38 @@ export async function POST(request: NextRequest) {
     }
 
     // Use service role client for public intake (bypasses RLS)
-    const supabase = createServerClient();
+    const supabase = createAdminClient();
 
-    const patientData = {
-      first_name: firstName,
-      last_name: lastName,
-      date_of_birth: validatedData.dateOfBirth,
-      email: validatedData.email.toLowerCase(),
-      phone: validatedData.contactNumber || validatedData.phone,
-      medical_history: validatedData.medicalHistory,
-      insurance_provider: validatedData.insuranceProvider,
-      insurance_policy_number: validatedData.insurancePolicyNumber,
+    const submission: PatientIntakeData & {
+      normalizedName: { firstName: string; lastName: string };
+      normalizedEmail: string;
+      normalizedPhone: string | undefined;
+    } = {
+      ...validatedData,
+      normalizedName: { firstName, lastName },
+      normalizedEmail: validatedData.email.toLowerCase(),
+      normalizedPhone: validatedData.contactNumber || validatedData.phone,
     };
 
-    // Upsert patient (match on email)
-    const { data: patient, error: patientError } = await (supabase
-      .from('patients')
-      .upsert(patientData as any, { onConflict: 'email' })
+    // Append-only public intake: never mutate canonical patients from anonymous input.
+    const { data: intakeSubmission, error: intakeError } = await (supabase
+      .from('patient_intake_submissions')
+      .insert({
+        patient_id: validatedData.patientId ?? null,
+        raw_data: submission,
+      } as any)
       .select()
       .single() as any);
 
-    if (patientError) {
-      console.error('Patient upsert error:', patientError);
+    if (intakeError) {
+      console.error('Patient intake insert error:', intakeError);
       return NextResponse.json(
-        { error: 'Failed to create/update patient record' },
+        { error: 'Failed to submit intake form' },
         { status: 500 }
       );
     }
 
-    // Log submission in audit table (optional)
-    if (patient?.id) {
-      await (supabase
-        .from('patient_intake_submissions')
-        .insert({
-          patient_id: patient.id,
-          raw_data: validatedData,
-        } as any)
-        .select()
-        .single() as any)
-        .then(() => {
-          // Success - don't fail the entire request if audit logging fails
-        })
-        .catch((err: any) => {
-          console.warn('Failed to log intake submission:', err);
-        });
-    }
-
-    return NextResponse.json({ data: patient });
+    return NextResponse.json({ data: intakeSubmission });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -109,6 +95,11 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     // Staff only: Use server client with RLS
     const supabase = createServerClient();
 
@@ -137,6 +128,11 @@ export async function GET(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const submissionId = searchParams.get('id');
 

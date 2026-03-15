@@ -7,3 +7,8 @@ CREATE TABLE IF NOT EXISTS appointments (
   status text NOT NULL DEFAULT 'pending',
   created_at timestamptz NOT NULL DEFAULT now()
 );
+[
+  {
+    "table_name": "patient_intake_submissions"
+  }
+]

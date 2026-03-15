@@ -123,12 +123,7 @@ export async function GET(request: NextRequest) {
             );
 
             if (!existingProfile) {
-              // Check if any admin exists already
-              const { count } = await admin
-                .from('staff_profiles')
-                .select('id', { count: 'exact', head: true })
-                .eq('role', 'admin');
-              const defaultRole = (count ?? 0) === 0 ? 'admin' : 'receptionist';
+              const defaultRole = 'receptionist';
 
               const { error: insertErr } = await admin
                 .from('staff_profiles')
@@ -138,7 +133,7 @@ export async function GET(request: NextRequest) {
                   first_name: user.email?.split('@')[0] ?? '',
                   last_name: '',
                   is_active: true,
-                  is_admin: defaultRole === 'admin',
+                  is_admin: false,
                 });
               console.log(
                 '[auth/callback] Auto-provisioned staff_profiles:',
@@ -236,11 +231,7 @@ export async function GET(request: NextRequest) {
             .single();
 
           if (!existingProfile) {
-            const { count } = await adminClient
-              .from('staff_profiles')
-              .select('id', { count: 'exact', head: true })
-              .eq('role', 'admin');
-            const defaultRole = (count ?? 0) === 0 ? 'admin' : 'receptionist';
+            const defaultRole = 'receptionist';
 
             await adminClient.from('staff_profiles').insert({
               id: user.id,
@@ -248,7 +239,7 @@ export async function GET(request: NextRequest) {
               first_name: user.email?.split('@')[0] ?? '',
               last_name: '',
               is_active: true,
-              is_admin: defaultRole === 'admin',
+              is_admin: false,
             });
             console.log('[auth/callback] Auto-provisioned staff_profiles:', defaultRole);
           }

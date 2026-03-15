@@ -55,7 +55,7 @@ CREATE POLICY "Providers can update own schedule"
 REVOKE ALL ON public.provider_schedules FROM PUBLIC, anon;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.provider_schedules TO authenticated;
 
-
+Mercado.2024
 -- ── Provider time blocks ──────────────────────────────────────
 -- Blocked-off periods: lunch, meetings, vacation, Google Calendar events, etc.
 CREATE TABLE IF NOT EXISTS public.provider_time_blocks (

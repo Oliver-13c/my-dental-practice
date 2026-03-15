@@ -36,10 +36,10 @@ export async function GET(request: Request) {
     const offset = parseInt(searchParams.get('offset') || '0', 10);
     const action = searchParams.get('action');
 
-    // Build query (join with staff_profiles to get admin email)
+    // Build query - get audit logs with count
     let query = (supabase as any)
       .from('admin_actions')
-      .select('*, staff_profiles!admin_id(email)', { count: 'exact' })
+      .select('*', { count: 'exact' })
       .order('created_at', { ascending: false });
 
     if (action && action !== 'all') {
@@ -50,7 +50,25 @@ export async function GET(request: Request) {
       .range(offset, offset + limit - 1);
 
     if (logsError) {
+      console.error('[admin/audit-logs] Query error:', logsError);
       throw logsError;
+    }
+
+    // Get unique admin IDs to fetch their emails
+    const adminIds = [...new Set((logs || []).map((log: any) => log.admin_id).filter(Boolean))];
+    const emailMap: Record<string, string> = {};
+
+    if (adminIds.length > 0) {
+      const { data: staffProfiles } = await (supabase as any)
+        .from('staff_profiles')
+        .select('id, email')
+        .in('id', adminIds);
+
+      if (staffProfiles) {
+        staffProfiles.forEach((profile: any) => {
+          emailMap[profile.id] = profile.email;
+        });
+      }
     }
 
     return NextResponse.json({
@@ -60,7 +78,7 @@ export async function GET(request: Request) {
         action: log.action,
         target_type: log.target_type,
         target_name: log.target_name,
-        admin_email: log.staff_profiles?.email || 'Unknown',
+        admin_email: emailMap[log.admin_id] || 'Unknown',
         timestamp: log.created_at,
         ip_address: log.ip_address || null,
         changes: log.changes,
