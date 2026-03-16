@@ -6,6 +6,8 @@ import {
   updateProviderScheduleSchema,
   createTimeBlockSchema,
 } from '@/entities/appointment/model/appointment.types';
+import { getCurrentAdminProfile, getCurrentStaffProfile } from '@/features/admin-dashboard/api/admin-auth';
+import { ApiErrors } from '@/shared/lib/api-error';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -17,6 +19,13 @@ interface RouteParams {
  */
 export async function GET(_request: NextRequest, { params }: RouteParams) {
   try {
+    const { profile, error: authError } = await getCurrentStaffProfile();
+    if (!profile) {
+      return authError?.includes('Forbidden')
+        ? ApiErrors.forbidden(authError)
+        : ApiErrors.unauthorized(authError || 'Unauthorized');
+    }
+
     const { id } = await params;
     const supabase = createServerClient<Database>() as any;
 
@@ -61,6 +70,13 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
  */
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
+    const { profile, error: authError } = await getCurrentAdminProfile();
+    if (!profile) {
+      return authError?.includes('Forbidden')
+        ? ApiErrors.forbidden(authError)
+        : ApiErrors.unauthorized(authError || 'Unauthorized');
+    }
+
     const { id } = await params;
     const body = await request.json();
     const parsed = updateProviderScheduleSchema.safeParse(body);
@@ -109,6 +125,13 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
  */
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
+    const { profile, error: authError } = await getCurrentAdminProfile();
+    if (!profile) {
+      return authError?.includes('Forbidden')
+        ? ApiErrors.forbidden(authError)
+        : ApiErrors.unauthorized(authError || 'Unauthorized');
+    }
+
     const { id } = await params;
     const body = await request.json();
     const parsed = createTimeBlockSchema.safeParse({ ...body, provider_id: id });

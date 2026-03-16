@@ -14,31 +14,20 @@
  */
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { auth } from '@/auth';
-import { createServerClient } from '@/shared/api/supabase-server';
-import type { Database } from '@/shared/api/supabase-types';
+import { getAdminServerContext } from '@/features/admin-dashboard/api/admin-auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    // Auth check
-    const session = await auth();
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { supabase, error: authError } = await getAdminServerContext();
 
-    const supabase = createServerClient<Database>() as any;
+    if (!supabase) {
+      if (authError?.includes('Auth session missing') || authError?.includes('Unauthorized')) {
+        return NextResponse.json({ error: authError || 'Unauthorized' }, { status: 401 });
+      }
 
-    // Verify admin or staff role
-    const { data: profile } = await supabase
-      .from('staff_profiles')
-      .select('role, is_admin')
-      .eq('email', session.user.email)
-      .single();
-
-    if (!profile) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      return NextResponse.json({ error: authError || 'Forbidden' }, { status: 403 });
     }
 
     // Date range

@@ -8,11 +8,7 @@
 				"chrome-devtools-mcp@latest"
 			]
 		},
-		"-y chrome-devtools-mcp@latest": {
-			"type": "stdio",
-			"command": "npx",
-			"args": []
-		}
+		
 	},
 	"inputs": []
 }

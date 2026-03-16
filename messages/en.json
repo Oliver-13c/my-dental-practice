@@ -243,6 +243,7 @@
     "providerPerformance": "Provider Performance",
     "dateRange": "Date Range",
     "to": "to",
+    "usersNav": "Users",
     "users": {
       "title": "User Management",
       "description": "Manage staff members and their access",

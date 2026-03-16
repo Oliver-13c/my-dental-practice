@@ -1,16 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { DentistDashboard } from './dentist-dashboard';
 import { ReceptionistDashboard } from './receptionist-dashboard';
 import { useSessionExpiry } from '@/features/session-management/hooks/use-session-expiry';
 import { createClient } from '@/shared/api/supabase-browser';
+import Link from 'next/link';
 
 export function StaffDashboard() {
   const { data: session, status } = useSession();
-  const router = useRouter();
   const role = session?.user?.role ?? null;
   const [supabaseRole, setSupabaseRole] = useState<string | null>(null);
   const [provisioning, setProvisioning] = useState(false);
@@ -46,14 +45,7 @@ export function StaffDashboard() {
 
   const effectiveRole = role || supabaseRole;
 
-  // Admins go directly to the admin panel
-  useEffect(() => {
-    if (effectiveRole === 'admin') {
-      router.replace('/admin');
-    }
-  }, [effectiveRole, router]);
-
-  if (status === 'loading' || provisioning || effectiveRole === 'admin') return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading dashboard...</div>;
+  if (status === 'loading' || provisioning) return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading dashboard...</div>;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -68,6 +60,14 @@ export function StaffDashboard() {
           </h1>
           <div className="flex items-center space-x-4">
             <span className="text-sm font-medium text-gray-500 capitalize px-3 py-1 bg-gray-100 rounded-full">{effectiveRole}</span>
+            {effectiveRole === 'admin' && (
+              <Link
+                href="/admin"
+                className="text-sm font-medium text-blue-600 hover:text-blue-500"
+              >
+                Go to Admin Panel
+              </Link>
+            )}
             <button
               className="text-sm font-medium text-red-600 hover:text-red-500"
               onClick={() => {
@@ -86,7 +86,7 @@ export function StaffDashboard() {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-8">
-        {effectiveRole === 'receptionist' && <ReceptionistDashboard />}
+        {(effectiveRole === 'receptionist' || effectiveRole === 'admin') && <ReceptionistDashboard />}
         {effectiveRole === 'dentist' && <DentistDashboard />}
         {effectiveRole === 'hygienist' && <DentistDashboard /> /* Reuse dentist for now as clinical placeholder */}
         {!effectiveRole && <p className="text-red-500">Error: Unrecognized role</p>}

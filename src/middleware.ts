@@ -8,6 +8,7 @@ import { ApiErrors } from '@/shared/lib/api-error';
 import { CSRF_COOKIE_NAME, CSRF_HEADER_NAME, validateCsrfTokens } from '@/shared/lib/csrf';
 
 const protectedRoutesByRole: Record<string, StaffRole[]> = {
+  '/admin': ['admin'],
   '/staff/dashboard': ['receptionist', 'hygienist', 'dentist', 'admin'],
   '/staff/admin': ['admin'],
   '/staff/dentist': ['dentist', 'admin'],

@@ -78,13 +78,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Determine default role: first user gets admin, rest get receptionist
-  const { count } = await admin
-    .from('staff_profiles')
-    .select('id', { count: 'exact', head: true })
-    .eq('role', 'admin');
-
-  const defaultRole = (count ?? 0) === 0 ? 'admin' : 'receptionist';
+  const defaultRole = 'receptionist';
 
   const { error: insertErr } = await admin.from('staff_profiles').insert({
     id: user.id,
@@ -92,7 +86,7 @@ export async function POST(request: NextRequest) {
     first_name: user.email?.split('@')[0] ?? '',
     last_name: '',
     is_active: true,
-    is_admin: defaultRole === 'admin',
+    is_admin: false,
   });
 
   if (insertErr) {

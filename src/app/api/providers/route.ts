@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@/shared/api/supabase-server';
 import type { Database } from '@/shared/api/supabase-types';
+import { getCurrentStaffProfile } from '@/features/admin-dashboard/api/admin-auth';
+import { ApiErrors } from '@/shared/lib/api-error';
 
 /**
  * GET /api/providers
@@ -9,6 +11,13 @@ import type { Database } from '@/shared/api/supabase-types';
  */
 export async function GET() {
   try {
+    const { profile, error: authError } = await getCurrentStaffProfile();
+    if (!profile) {
+      return authError?.includes('Forbidden')
+        ? ApiErrors.forbidden(authError)
+        : ApiErrors.unauthorized(authError || 'Unauthorized');
+    }
+
     const supabase = createServerClient<Database>() as any;
 
     const { data, error } = await supabase

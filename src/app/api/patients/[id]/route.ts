@@ -2,6 +2,8 @@ import { createServerClient } from '@/shared/api/supabase-server';
 import type { Database } from '@/shared/api/supabase-types';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { getCurrentStaffProfile } from '@/features/admin-dashboard/api/admin-auth';
+import { ApiErrors } from '@/shared/lib/api-error';
 
 const updatePatientSchema = z.object({
   firstName: z.string().min(1).optional(),
@@ -23,6 +25,13 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { profile, error: authError } = await getCurrentStaffProfile();
+    if (!profile) {
+      return authError?.includes('Forbidden')
+        ? ApiErrors.forbidden(authError)
+        : ApiErrors.unauthorized(authError || 'Unauthorized');
+    }
+
     const { id } = await params;
 
     // Staff only: Use server client with RLS
@@ -56,6 +65,13 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { profile, error: authError } = await getCurrentStaffProfile();
+    if (!profile) {
+      return authError?.includes('Forbidden')
+        ? ApiErrors.forbidden(authError)
+        : ApiErrors.unauthorized(authError || 'Unauthorized');
+    }
+
     const { id } = await params;
     const body = await request.json();
 
@@ -122,6 +138,13 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { profile, error: authError } = await getCurrentStaffProfile();
+    if (!profile) {
+      return authError?.includes('Forbidden')
+        ? ApiErrors.forbidden(authError)
+        : ApiErrors.unauthorized(authError || 'Unauthorized');
+    }
+
     const { id } = await params;
 
     // Use server client (staff only via RLS)

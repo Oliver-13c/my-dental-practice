@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
-import { createServerClient } from '@/shared/api/supabase-server';
-import type { Database } from '@/shared/api/supabase-types';
+import { getAdminAuditLogs } from '@/features/admin-dashboard/api/admin-audit';
+import { getAdminServerContext } from '@/features/admin-dashboard/api/admin-auth';
 import { ApiErrors } from '@/shared/lib/api-error';
 
 /**
@@ -9,21 +8,13 @@ import { ApiErrors } from '@/shared/lib/api-error';
  */
 export async function GET() {
   try {
-    const session = await auth();
-    if (!session?.user?.email) {
-      return ApiErrors.unauthorized();
-    }
+    const { supabase, error: authError } = await getAdminServerContext();
 
-    // Verify admin role
-    const supabase = createServerClient<Database>();
-    const { data: adminProfile } = await (supabase as any)
-      .from('staff_profiles')
-      .select('is_admin')
-      .eq('email', session.user.email)
-      .single();
-
-    if (!adminProfile?.is_admin) {
-      return ApiErrors.forbidden();
+    if (!supabase) {
+      if (authError?.includes('Auth session missing') || authError?.includes('Unauthorized')) {
+        return ApiErrors.unauthorized(authError);
+      }
+      return ApiErrors.forbidden(authError || 'Forbidden');
     }
 
     // Get staff statistics
@@ -66,11 +57,11 @@ export async function GET() {
     ).length;
 
     // Get recent admin actions
-    const { data: recentActions } = await (supabase as any)
-      .from('admin_actions')
-      .select('id, action, target_name, admin_email, created_at')
-      .order('created_at', { ascending: false })
-      .limit(5);
+    const recentActionsResult = await getAdminAuditLogs({ limit: 5, offset: 0 });
+
+    if (recentActionsResult.error) {
+      throw new Error(recentActionsResult.error);
+    }
 
     return NextResponse.json({
       success: true,
@@ -82,7 +73,13 @@ export async function GET() {
         activeAppointments,
         todaysAppointments: todayCount,
         upcomingAppointments: upcomingCount,
-        recentActions: recentActions || [],
+        recentActions: (recentActionsResult.data || []).map((action) => ({
+          id: action.id,
+          action: action.action,
+          target_name: action.target_name,
+          admin_email: action.admin_email,
+          created_at: action.created_at,
+        })),
       },
     });
   } catch (error) {

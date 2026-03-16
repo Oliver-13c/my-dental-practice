@@ -31,35 +31,69 @@ export async function getCurrentUser() {
 }
 
 /**
- * Get the current user's profile from staff_profiles table and verify admin status
+ * Get the current authenticated staff profile.
  */
-export async function getCurrentAdminProfile() {
+export async function getCurrentStaffProfile() {
   const { user, error: userError } = await getCurrentUser();
-  
+
   if (!user?.email) {
     return { profile: null, error: userError || 'Unauthorized' };
   }
 
   try {
     const supabase = createServerClient<Database>();
-    
+
     const { data: profile, error } = await (supabase as any)
       .from('staff_profiles')
       .select('*')
       .eq('email', user.email)
       .single();
 
-    if (error) {
-      return { profile: null, error: error.message };
+    if (error || !profile) {
+      return { profile: null, error: error?.message || 'Staff profile not found' };
     }
 
-    if (!profile?.is_admin) {
-      return { profile: null, error: 'Forbidden: Admin access required' };
+    if (!profile.is_active) {
+      return { profile: null, error: 'Forbidden: Staff account inactive' };
     }
 
     return { profile, error: null };
   } catch (err) {
-    console.error('[getCurrentAdminProfile]', err);
-    return { profile: null, error: 'Failed to verify admin status' };
+    console.error('[getCurrentStaffProfile]', err);
+    return { profile: null, error: 'Failed to verify staff session' };
   }
+}
+
+/**
+ * Get the current user's profile from staff_profiles table and verify admin status
+ */
+export async function getCurrentAdminProfile() {
+  const { profile, error } = await getCurrentStaffProfile();
+
+  if (!profile) {
+    return { profile: null, error: error || 'Unauthorized' };
+  }
+
+  if (!profile?.is_admin) {
+    return { profile: null, error: 'Forbidden: Admin access required' };
+  }
+
+  return { profile, error: null };
+}
+
+/**
+ * Returns a verified admin profile together with a privileged Supabase client.
+ */
+export async function getAdminServerContext() {
+  const { profile, error } = await getCurrentAdminProfile();
+
+  if (!profile) {
+    return { profile: null, supabase: null, error: error || 'Unauthorized' };
+  }
+
+  return {
+    profile,
+    supabase: createServerClient<Database>() as any,
+    error: null,
+  };
 }

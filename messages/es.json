@@ -243,6 +243,7 @@
     "providerPerformance": "Rendimiento por Proveedor",
     "dateRange": "Rango de Fechas",
     "to": "hasta",
+    "usersNav": "Usuarios",
     "users": {
       "title": "Gestión de Usuarios",
       "description": "Gestionar miembros del personal y sus accesos",

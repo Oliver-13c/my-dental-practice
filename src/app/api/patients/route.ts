@@ -3,9 +3,18 @@ import type { Database } from '@/shared/api/supabase-types';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createPatientSchema } from '@/entities/patient/model/patient';
+import { getCurrentStaffProfile } from '@/features/admin-dashboard/api/admin-auth';
+import { ApiErrors } from '@/shared/lib/api-error';
 
 export async function GET(request: NextRequest) {
   try {
+    const { profile, error: authError } = await getCurrentStaffProfile();
+    if (!profile) {
+      return authError?.includes('Forbidden')
+        ? ApiErrors.forbidden(authError)
+        : ApiErrors.unauthorized(authError || 'Unauthorized');
+    }
+
     // Staff only: Use server client with RLS
     const supabase = createServerClient();
 
@@ -35,6 +44,13 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const { profile, error: authError } = await getCurrentStaffProfile();
+    if (!profile) {
+      return authError?.includes('Forbidden')
+        ? ApiErrors.forbidden(authError)
+        : ApiErrors.unauthorized(authError || 'Unauthorized');
+    }
+
     const body = await request.json();
 
     // Validate input

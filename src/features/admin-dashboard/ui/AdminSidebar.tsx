@@ -25,7 +25,7 @@ export function AdminSidebar() {
 
   const menuItems = [
     { href: '/admin', label: t('dashboard') || 'Dashboard', icon: '📊' },
-    { href: '/admin/users', label: t('users.users') || 'Users', icon: '👥' },
+    { href: '/admin/users', label: t('usersNav') || 'Users', icon: '👥' },
     { href: '/admin/appointments', label: t('appointments') || 'Appointments', icon: '📅' },
     { href: '/admin/staff', label: t('staff') || 'Staff', icon: '👨‍⚕️' },
     { href: '/admin/audit-logs', label: t('auditLogs') || 'Audit Logs', icon: '📋' },
@@ -71,7 +71,7 @@ export function AdminSidebar() {
           href="/staff/dashboard"
           className="block w-full text-center px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors text-sm text-gray-300"
         >
-          ← {locale === 'es' ? 'Volver al Panel' : 'Back to Dashboard'}
+          ← {locale === 'es' ? 'Abrir Panel de Staff' : 'Open Staff Dashboard'}
         </Link>
         <p className="text-xs text-gray-400">v1.0.0</p>
       </div>

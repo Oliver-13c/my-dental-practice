@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
-import { createServerClient } from '@/shared/api/supabase-server';
-import type { Database } from '@/shared/api/supabase-types';
+import { getAdminAuditLogs } from '@/features/admin-dashboard/api/admin-audit';
 import { ApiErrors } from '@/shared/lib/api-error';
 
 /**
@@ -13,81 +11,26 @@ import { ApiErrors } from '@/shared/lib/api-error';
  */
 export async function GET(request: Request) {
   try {
-    const session = await auth();
-    if (!session?.user?.email) {
-      return ApiErrors.unauthorized();
-    }
-
-    // Verify admin role
-    const supabase = createServerClient<Database>();
-    const { data: adminProfile } = await (supabase as any)
-      .from('staff_profiles')
-      .select('is_admin')
-      .eq('email', session.user.email)
-      .single();
-
-    if (!adminProfile?.is_admin) {
-      return ApiErrors.forbidden();
-    }
-
-    // Parse query parameters
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '20', 10);
     const offset = parseInt(searchParams.get('offset') || '0', 10);
     const action = searchParams.get('action');
+    const result = await getAdminAuditLogs({ limit, offset, action });
 
-    // Build query - get audit logs with count
-    let query = (supabase as any)
-      .from('admin_actions')
-      .select('*', { count: 'exact' })
-      .order('created_at', { ascending: false });
-
-    if (action && action !== 'all') {
-      query = query.eq('action', action);
-    }
-
-    const { data: logs, error: logsError, count } = await query
-      .range(offset, offset + limit - 1);
-
-    if (logsError) {
-      console.error('[admin/audit-logs] Query error:', logsError);
-      throw logsError;
-    }
-
-    // Get unique admin IDs to fetch their emails
-    const adminIds = [...new Set((logs || []).map((log: any) => log.admin_id).filter(Boolean))];
-    const emailMap: Record<string, string> = {};
-
-    if (adminIds.length > 0) {
-      const { data: staffProfiles } = await (supabase as any)
-        .from('staff_profiles')
-        .select('id, email')
-        .in('id', adminIds);
-
-      if (staffProfiles) {
-        staffProfiles.forEach((profile: any) => {
-          emailMap[profile.id] = profile.email;
-        });
+    if (result.error) {
+      if (result.error.includes('Auth session missing') || result.error.includes('Unauthorized')) {
+        return ApiErrors.unauthorized(result.error);
       }
+      if (result.error.includes('Forbidden')) {
+        return ApiErrors.forbidden(result.error);
+      }
+      return ApiErrors.internal(result.error);
     }
 
     return NextResponse.json({
       success: true,
-      data: (logs || []).map((log: any) => ({
-        id: log.id,
-        action: log.action,
-        target_type: log.target_type,
-        target_name: log.target_name,
-        admin_email: emailMap[log.admin_id] || 'Unknown',
-        timestamp: log.created_at,
-        ip_address: log.ip_address || null,
-        changes: log.changes,
-      })),
-      pagination: {
-        offset,
-        limit,
-        total: count || 0,
-      },
+      data: result.data,
+      pagination: result.pagination,
     });
   } catch (error) {
     console.error('[admin/audit-logs GET]', error);

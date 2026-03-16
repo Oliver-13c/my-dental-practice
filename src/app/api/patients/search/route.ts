@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createServerClient } from '@/shared/api/supabase-server';
 import type { Database } from '@/shared/api/supabase-types';
+import { getCurrentStaffProfile } from '@/features/admin-dashboard/api/admin-auth';
+import { ApiErrors } from '@/shared/lib/api-error';
 
 /**
  * GET /api/patients/search
@@ -13,6 +15,13 @@ import type { Database } from '@/shared/api/supabase-types';
  */
 export async function GET(request: NextRequest) {
   try {
+    const { profile, error: authError } = await getCurrentStaffProfile();
+    if (!profile) {
+      return authError?.includes('Forbidden')
+        ? ApiErrors.forbidden(authError)
+        : ApiErrors.unauthorized(authError || 'Unauthorized');
+    }
+
     const { searchParams } = new URL(request.url);
     const q = searchParams.get('q')?.trim();
     const limit = Math.min(parseInt(searchParams.get('limit') ?? '10', 10), 50);

@@ -3,6 +3,8 @@ import type { NextRequest } from 'next/server';
 import { createServerClient } from '@/shared/api/supabase-server';
 import type { Database } from '@/shared/api/supabase-types';
 import { createAppointmentTypeSchema } from '@/entities/appointment/model/appointment.types';
+import { getCurrentAdminProfile, getCurrentStaffProfile } from '@/features/admin-dashboard/api/admin-auth';
+import { ApiErrors } from '@/shared/lib/api-error';
 
 /**
  * GET /api/appointment-types
@@ -10,6 +12,13 @@ import { createAppointmentTypeSchema } from '@/entities/appointment/model/appoin
  */
 export async function GET(request: NextRequest) {
   try {
+    const { profile, error: authError } = await getCurrentStaffProfile();
+    if (!profile) {
+      return authError?.includes('Forbidden')
+        ? ApiErrors.forbidden(authError)
+        : ApiErrors.unauthorized(authError || 'Unauthorized');
+    }
+
     const { searchParams } = new URL(request.url);
     const activeOnly = searchParams.get('active') !== 'false'; // default: active only
     const supabase = createServerClient<Database>() as any;
@@ -43,6 +52,13 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    const { profile, error: authError } = await getCurrentAdminProfile();
+    if (!profile) {
+      return authError?.includes('Forbidden')
+        ? ApiErrors.forbidden(authError)
+        : ApiErrors.unauthorized(authError || 'Unauthorized');
+    }
+
     const body = await request.json();
     const parsed = createAppointmentTypeSchema.safeParse(body);
 
@@ -78,6 +94,13 @@ export async function POST(request: NextRequest) {
  */
 export async function PATCH(request: NextRequest) {
   try {
+    const { profile, error: authError } = await getCurrentAdminProfile();
+    if (!profile) {
+      return authError?.includes('Forbidden')
+        ? ApiErrors.forbidden(authError)
+        : ApiErrors.unauthorized(authError || 'Unauthorized');
+    }
+
     const body = await request.json();
     const { id, ...fields } = body;
 
