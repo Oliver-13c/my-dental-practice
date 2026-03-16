@@ -4,8 +4,7 @@ import type { Database } from '@/shared/api/supabase-types';
 /**
  * Records an audit log entry for a staff action.
  *
- * Primary target: public.audit_logs (current production schema).
- * Legacy fallback: public.admin_actions (older environments).
+ * Target table: public.audit_logs (current production schema).
  *
  * @param userId       - The ID of the user performing the action (admin_id).
  * @param action       - A short description of the action (e.g. 'login', 'appointment.create').
@@ -23,7 +22,7 @@ export async function logAudit(
   try {
     const supabase = createServerClient<Database>() as any;
 
-    const { error: auditLogsError } = await supabase.from('audit_logs').insert({
+    const { error } = await supabase.from('audit_logs').insert({
       user_id: userId,
       action,
       resource_type: resourceType ?? 'system',
@@ -31,23 +30,9 @@ export async function logAudit(
       metadata: metadata ?? null,
     });
 
-    if (!auditLogsError) {
-      return;
-    }
-
-    const { error: legacyError } = await supabase.from('admin_actions').insert({
-      admin_id: userId,
-      action,
-      target_type: resourceType ?? 'system',
-      target_id: resourceId ?? null,
-      target_name: metadata?.name ?? metadata?.email ?? null,
-      changes: metadata ?? null,
-    });
-
-    if (legacyError) {
+    if (error) {
       console.error('[audit] Failed to write audit log:', {
-        audit_logs: auditLogsError.message,
-        admin_actions: legacyError.message,
+        audit_logs: error.message,
       });
     }
   } catch (err) {
