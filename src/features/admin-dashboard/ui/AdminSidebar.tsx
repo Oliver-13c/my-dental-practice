@@ -21,6 +21,7 @@ export function AdminSidebar() {
   const toggleLocale = () => {
     const newLocale = locale === 'es' ? 'en' : 'es';
     document.cookie = `NEXT_LOCALE=${newLocale};path=/;max-age=31536000`;
+    router.replace(pathname);
     router.refresh();
   };
 

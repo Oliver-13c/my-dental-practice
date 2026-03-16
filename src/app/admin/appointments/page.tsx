@@ -61,6 +61,7 @@ export default function AppointmentsPage() {
       const json = await res.json();
       setAppointments(json.data || []);
     } catch {
+      setAppointments([]);
       setError(t('error'));
     } finally {
       setLoading(false);
@@ -142,6 +143,7 @@ export default function AppointmentsPage() {
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+              aria-label={t('date')}
             />
             <div className="flex rounded-md border border-gray-300 overflow-hidden">
               {(['day', 'week', 'month'] as const).map((range) => (
@@ -162,6 +164,7 @@ export default function AppointmentsPage() {
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+              aria-label={t('status')}
             >
               <option value="all">{t('all')} — {t('status')}</option>
               <option value="scheduled">{t('pending')}</option>
@@ -175,15 +178,18 @@ export default function AppointmentsPage() {
         </Card>
 
         {/* Table */}
-        {loading ? (
-          <Card className="p-8 text-center text-gray-500">{t('loading')}</Card>
-        ) : error ? (
-          <Card className="p-8 text-center">
-            <p className="text-red-600 mb-2">{error}</p>
-            <button onClick={fetchAppointments} className="text-blue-600 hover:underline text-sm">
+        {error ? (
+          <Card className="p-6 text-center">
+            <p className="mb-3 text-sm font-medium text-red-700">{error}</p>
+            <button
+              onClick={fetchAppointments}
+              className="inline-flex items-center rounded-md border border-blue-200 px-3 py-1.5 text-sm font-medium text-blue-700 transition hover:bg-blue-50"
+            >
               {t('retry')}
             </button>
           </Card>
+        ) : loading ? (
+          <Card className="p-8 text-center text-gray-500">{t('loading')}</Card>
         ) : appointments.length === 0 ? (
           <Card className="p-8 text-center text-gray-500">{t('noData')}</Card>
         ) : (

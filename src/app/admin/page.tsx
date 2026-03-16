@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { AdminLayout } from '@/features/admin-dashboard/ui/AdminLayout';
 import { Card } from '@/shared/ui/card';
@@ -28,11 +28,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
-
-  async function fetchStats() {
+  const fetchStats = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -41,11 +37,16 @@ export default function AdminDashboard() {
       const json = await res.json();
       setStats(json.data);
     } catch {
+      setStats(null);
       setError(t('error'));
     } finally {
       setLoading(false);
     }
-  }
+  }, [t]);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
   const statCards = stats
     ? [
@@ -102,7 +103,17 @@ export default function AdminDashboard() {
         </div>
 
         {/* Stats Grid */}
-        {loading ? (
+        {error ? (
+          <Card className="p-6 text-center">
+            <p className="mb-3 text-sm font-medium text-red-700">{error}</p>
+            <button
+              onClick={fetchStats}
+              className="inline-flex items-center rounded-md border border-blue-200 px-3 py-1.5 text-sm font-medium text-blue-700 transition hover:bg-blue-50"
+            >
+              {t('retry')}
+            </button>
+          </Card>
+        ) : loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((i) => (
               <Card key={i} className="p-6 animate-pulse">
@@ -111,17 +122,7 @@ export default function AdminDashboard() {
               </Card>
             ))}
           </div>
-        ) : error ? (
-          <Card className="p-6 text-center">
-            <p className="text-red-600 mb-2">{error}</p>
-            <button
-              onClick={fetchStats}
-              className="text-blue-600 hover:underline text-sm"
-            >
-              {t('retry')}
-            </button>
-          </Card>
-        ) : (
+        ) : stats ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {statCards.map((stat, idx) => (
               <Card key={idx} className="p-6">
@@ -135,6 +136,8 @@ export default function AdminDashboard() {
               </Card>
             ))}
           </div>
+        ) : (
+          <Card className="p-6 text-center text-gray-500">{t('noData')}</Card>
         )}
 
         {/* Secondary Stats */}

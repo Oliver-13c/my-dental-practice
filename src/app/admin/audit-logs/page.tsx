@@ -43,6 +43,8 @@ export default function AuditLogsPage() {
       setLogs(data);
       setHasMore(data.length >= PAGE_SIZE);
     } catch {
+      setLogs([]);
+      setHasMore(false);
       setError(t('error'));
     } finally {
       setLoading(false);
@@ -80,6 +82,7 @@ export default function AuditLogsPage() {
                 setPage(0);
               }}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+              aria-label={t('action')}
             >
               <option value="all">{t('all')} — {t('action')}</option>
               {actionOptions.map((action) => (
@@ -92,15 +95,18 @@ export default function AuditLogsPage() {
         </Card>
 
         {/* Table */}
-        {loading ? (
-          <Card className="p-8 text-center text-gray-500">{t('loading')}</Card>
-        ) : error ? (
-          <Card className="p-8 text-center">
-            <p className="text-red-600 mb-2">{error}</p>
-            <button onClick={fetchLogs} className="text-blue-600 hover:underline text-sm">
+        {error ? (
+          <Card className="p-6 text-center">
+            <p className="mb-3 text-sm font-medium text-red-700">{error}</p>
+            <button
+              onClick={fetchLogs}
+              className="inline-flex items-center rounded-md border border-blue-200 px-3 py-1.5 text-sm font-medium text-blue-700 transition hover:bg-blue-50"
+            >
               {t('retry')}
             </button>
           </Card>
+        ) : loading ? (
+          <Card className="p-8 text-center text-gray-500">{t('loading')}</Card>
         ) : logs.length === 0 ? (
           <Card className="p-8 text-center text-gray-500">{t('noData')}</Card>
         ) : (

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import {
   useAppointments,
   useProviders,
@@ -131,7 +131,39 @@ export function ReceptionistCalendar({
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
   const [draggedAppt, setDraggedAppt] = useState<AppointmentWithDetails | null>(null);
   const [rescheduleError, setRescheduleError] = useState<string | null>(null);
+  const locale = useLocale();
   const t = useTranslations('staff');
+  const tc = useTranslations('staff.calendar');
+
+  const safe = useCallback(
+    (key: string, fallbackEn: string, fallbackEs: string) => {
+      if (tc.has(key)) return tc(key);
+      return locale === 'es' ? fallbackEs : fallbackEn;
+    },
+    [locale, tc],
+  );
+
+  const dayScheduleLabel = safe('daySchedule', 'Day Schedule', 'Agenda del dia');
+  const weeklyScheduleLabel = safe('weeklySchedule', 'Weekly Schedule', 'Agenda semanal');
+  const dragHintLabel = safe(
+    'dragHint',
+    'Drag appointments to reschedule. Click to view details.',
+    'Arrastra citas para reprogramar. Haz clic para ver detalles.',
+  );
+  const allProvidersLabel = safe('allProviders', 'All Providers', 'Todos los proveedores');
+  const loadingProvidersLabel = safe('loadingProviders', 'Loading providers...', 'Cargando proveedores...');
+  const openSlotLabel = safe('openSlot', 'Open', 'Libre');
+  const unknownPatientLabel = safe('unknownPatient', 'Unknown patient', 'Paciente desconocido');
+  const generalTypeLabel = safe('generalType', 'General', 'General');
+  const timeHeaderLabel = safe('timeHeader', 'Time', 'Hora');
+  const filterByProviderAria = safe('aria.filterByProvider', 'Filter calendar by provider', 'Filtrar calendario por proveedor');
+  const selectDateAria = safe('aria.selectDate', 'Select calendar date', 'Seleccionar fecha del calendario');
+  const releaseToRescheduleLabel = safe('releaseToReschedule', 'Release to reschedule', 'Suelta para reprogramar');
+  const couldNotRescheduleLabel = safe(
+    'couldNotReschedule',
+    'Could not reschedule - time slot may conflict.',
+    'No se pudo reprogramar. El horario puede estar ocupado.',
+  );
   const statusShort = useMemo(
     () => ({
       'in-progress': t('calendar.statusShort.inProgress'),
@@ -241,19 +273,19 @@ export function ReceptionistCalendar({
       refetch();
     } catch (err) {
       console.error('Reschedule failed:', err);
-      setRescheduleError(t('calendar.couldNotReschedule'));
+      setRescheduleError(couldNotRescheduleLabel);
     }
     setDraggedAppt(null);
-  }, [draggedAppt, refetch]);
+  }, [couldNotRescheduleLabel, draggedAppt, refetch]);
 
   return (
     <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h3 className="text-lg font-semibold text-slate-900">
-            {viewMode === 'day' ? t('calendar.daySchedule') : t('calendar.weeklySchedule')}
+            {viewMode === 'day' ? dayScheduleLabel : weeklyScheduleLabel}
           </h3>
-          <p className="text-xs text-slate-500">{t('calendar.dragHint')}</p>
+          <p className="text-xs text-slate-500">{dragHintLabel}</p>
           {rescheduleError && (
             <p className="text-xs text-rose-600 mt-1">{rescheduleError}</p>
           )}
@@ -263,9 +295,9 @@ export function ReceptionistCalendar({
             value={selectedProvider || 'all'}
             onChange={(e) => setSelectedProvider(e.target.value === 'all' ? null : e.target.value)}
             className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm shadow-sm"
-            aria-label={t('calendar.aria.filterByProvider')}
+            aria-label={filterByProviderAria}
           >
-            <option value="all">{t('calendar.allProviders')}</option>
+            <option value="all">{allProvidersLabel}</option>
             {providers.map((p) => (
               <option key={p.id} value={p.id}>Dr. {p.last_name}</option>
             ))}
@@ -275,13 +307,13 @@ export function ReceptionistCalendar({
             value={selectedDate}
             onChange={(e) => onDateChange(e.target.value)}
             className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm shadow-sm"
-            aria-label={t('calendar.aria.selectDate')}
+            aria-label={selectDateAria}
           />
         </div>
       </div>
 
       {providers.length === 0 ? (
-        <div className="mt-6 py-8 text-center text-sm text-slate-400">{t('calendar.loadingProviders')}</div>
+        <div className="mt-6 py-8 text-center text-sm text-slate-400">{loadingProvidersLabel}</div>
       ) : (
         <>
           {/* Day View */}
@@ -311,8 +343,8 @@ export function ReceptionistCalendar({
                                 onDragStart={() => handleDragStart(appt)}
                                 className={`cursor-move rounded-lg p-2 text-xs transition hover:shadow-md ${statusColor(appt.status)}`}
                               >
-                                <p className="font-semibold text-slate-900">{patientName(appt, t('calendar.unknownPatient'))}</p>
-                                <p className="text-slate-600">{appt.appointment_type?.name ?? t('calendar.generalType')}</p>
+                                <p className="font-semibold text-slate-900">{patientName(appt, unknownPatientLabel)}</p>
+                                <p className="text-slate-600">{appt.appointment_type?.name ?? generalTypeLabel}</p>
                                 <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${statusBgColor(appt.status)}`}>
                                   {statusDisplayLabel(appt.status, statusFull)}
                                 </span>
@@ -320,7 +352,7 @@ export function ReceptionistCalendar({
                             ))}
                           </div>
                         ) : (
-                          <div className="mt-2 text-xs text-slate-400">{t('calendar.openSlot')}</div>
+                          <div className="mt-2 text-xs text-slate-400">{openSlotLabel}</div>
                         )}
                       </div>
                     ))}
@@ -337,7 +369,7 @@ export function ReceptionistCalendar({
                 <thead>
                   <tr className="border-b border-slate-200">
                     <th className="sticky left-0 z-10 min-w-20 bg-white text-left text-xs font-semibold text-slate-600 p-3">
-                      {t('calendar.timeHeader')}
+                      {timeHeaderLabel}
                     </th>
                     {displayCalendars.slice(0, viewMode === 'week' ? undefined : 5).map((col) => (
                       <th
@@ -374,8 +406,8 @@ export function ReceptionistCalendar({
                                     onDragStart={() => handleDragStart(appt)}
                                     className={`cursor-move rounded-lg p-2 text-xs transition hover:shadow-md ${statusColor(appt.status)}`}
                                   >
-                                    <p className="font-semibold text-slate-900 truncate">{patientName(appt, t('calendar.unknownPatient'))}</p>
-                                    <p className="text-slate-600 truncate">{appt.appointment_type?.name ?? t('calendar.generalType')}</p>
+                                    <p className="font-semibold text-slate-900 truncate">{patientName(appt, unknownPatientLabel)}</p>
+                                    <p className="text-slate-600 truncate">{appt.appointment_type?.name ?? generalTypeLabel}</p>
                                     <div className="mt-1 flex items-center justify-between gap-1">
                                       <span className="text-xs text-slate-600">
                                         {appt.appointment_type?.duration_minutes ?? 30}m
@@ -406,7 +438,7 @@ export function ReceptionistCalendar({
       {draggedAppt && (
         <div className="fixed bottom-4 left-4 rounded-2xl border-2 border-dashed border-slate-400 bg-white p-3 shadow-lg pointer-events-none">
           <p className="text-sm font-semibold text-slate-900">{patientName(draggedAppt)}</p>
-          <p className="text-xs text-slate-500">{t('calendar.releaseToReschedule')}</p>
+          <p className="text-xs text-slate-500">{releaseToRescheduleLabel}</p>
         </div>
       )}
     </div>

@@ -121,11 +121,12 @@ export default function AnalyticsPage() {
       const json = await res.json();
       setData(json.data);
     } catch (err) {
+      setData(null);
       setError(err instanceof Error ? err.message : t('error'));
     } finally {
       setLoading(false);
     }
-  }, [startDate, endDate]);
+  }, [endDate, startDate, t]);
 
   useEffect(() => {
     fetchData();
@@ -157,19 +158,21 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        {loading && (
+        {error ? (
+          <Card className="p-6 text-center">
+            <p className="mb-3 text-sm font-medium text-red-700">{error}</p>
+            <button
+              onClick={fetchData}
+              className="inline-flex items-center rounded-md border border-blue-200 px-3 py-1.5 text-sm font-medium text-blue-700 transition hover:bg-blue-50"
+            >
+              {t('retry')}
+            </button>
+          </Card>
+        ) : loading ? (
           <Card className="p-6 text-center">
             <p className="text-gray-500">{t('loading')}</p>
           </Card>
-        )}
-
-        {error && (
-          <Card className="p-6 text-center">
-            <p className="text-red-600">{error}</p>
-          </Card>
-        )}
-
-        {data && !loading && (
+        ) : data ? (
           <>
             {/* Summary stat cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -336,6 +339,10 @@ export default function AnalyticsPage() {
               </div>
             </Card>
           </>
+        ) : (
+          <Card className="p-6 text-center">
+            <p className="text-gray-500">{t('noData')}</p>
+          </Card>
         )}
       </div>
     </AdminLayout>
