@@ -4,6 +4,16 @@ import { getCurrentAdminProfile } from './admin-auth';
 
 interface AuditLogRow {
   id: string;
+  user_id: string;
+  action: string;
+  resource_type: string | null;
+  resource_id: string | null;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+}
+
+interface LegacyAdminActionRow {
+  id: string;
   admin_id: string | null;
   action: string;
   target_type: string;
@@ -42,8 +52,8 @@ export async function getAdminAuditLogs(options: GetAdminAuditLogsOptions) {
 
   const supabase = createServerClient<Database>() as any;
   let query = supabase
-    .from('admin_actions')
-    .select('id, admin_id, action, target_type, target_id, target_name, changes, ip_address, created_at', {
+    .from('audit_logs')
+    .select('id, user_id, action, resource_type, resource_id, metadata, created_at', {
       count: 'exact',
     })
     .order('created_at', { ascending: false });
@@ -57,12 +67,23 @@ export async function getAdminAuditLogs(options: GetAdminAuditLogsOptions) {
     options.offset + options.limit - 1,
   );
 
+  let typedLogs: AuditLogRow[] = [];
+  let totalCount = count || 0;
+
   if (error) {
-    return { data: null, pagination: null, error: error.message };
+    // Backward-compatibility fallback for environments still using admin_actions.
+    const legacyResult = await fetchLegacyAdminActions(supabase, options);
+    if (legacyResult.error) {
+      return { data: null, pagination: null, error: legacyResult.error };
+    }
+
+    typedLogs = legacyResult.logs;
+    totalCount = legacyResult.count;
+  } else {
+    typedLogs = (logs || []) as AuditLogRow[];
   }
 
-  const typedLogs = (logs || []) as AuditLogRow[];
-  const adminIds = [...new Set(typedLogs.map((log) => log.admin_id).filter(Boolean))] as string[];
+  const adminIds = [...new Set(typedLogs.map((log) => log.user_id).filter(Boolean))] as string[];
   const emailMap: Record<string, string> = {};
 
   if (adminIds.length > 0) {
@@ -83,13 +104,13 @@ export async function getAdminAuditLogs(options: GetAdminAuditLogsOptions) {
   const data: AdminAuditLog[] = typedLogs.map((log) => ({
     id: log.id,
     action: log.action,
-    target_type: log.target_type,
-    target_id: log.target_id,
-    target_name: log.target_name,
-    admin_email: log.admin_id ? (emailMap[log.admin_id] || 'Unknown') : 'Unknown',
+    target_type: log.resource_type ?? 'system',
+    target_id: log.resource_id,
+    target_name: resolveTargetName(log),
+    admin_email: emailMap[log.user_id] || 'Unknown',
     timestamp: log.created_at,
-    ip_address: log.ip_address,
-    changes: log.changes,
+    ip_address: resolveIpAddress(log.metadata),
+    changes: log.metadata,
     created_at: log.created_at,
   }));
 
@@ -98,8 +119,77 @@ export async function getAdminAuditLogs(options: GetAdminAuditLogsOptions) {
     pagination: {
       offset: options.offset,
       limit: options.limit,
-      total: count || 0,
+      total: totalCount,
     },
+    error: null,
+  };
+}
+
+function resolveTargetName(log: AuditLogRow): string {
+  const metadata = log.metadata ?? {};
+  const candidate =
+    (typeof metadata.target_name === 'string' && metadata.target_name) ||
+    (typeof metadata.name === 'string' && metadata.name) ||
+    (typeof metadata.email === 'string' && metadata.email) ||
+    log.resource_id ||
+    'Unknown';
+
+  return candidate;
+}
+
+function resolveIpAddress(metadata: Record<string, unknown> | null): string | null {
+  if (!metadata) {
+    return null;
+  }
+
+  const candidate = metadata.ip_address;
+  return typeof candidate === 'string' ? candidate : null;
+}
+
+async function fetchLegacyAdminActions(
+  supabase: any,
+  options: GetAdminAuditLogsOptions,
+): Promise<{ logs: AuditLogRow[]; count: number; error: string | null }> {
+  let legacyQuery = supabase
+    .from('admin_actions')
+    .select('id, admin_id, action, target_type, target_id, target_name, changes, ip_address, created_at', {
+      count: 'exact',
+    })
+    .order('created_at', { ascending: false });
+
+  if (options.action && options.action !== 'all') {
+    legacyQuery = legacyQuery.eq('action', options.action);
+  }
+
+  const { data, error, count } = await legacyQuery.range(
+    options.offset,
+    options.offset + options.limit - 1,
+  );
+
+  if (error) {
+    return { logs: [], count: 0, error: error.message };
+  }
+
+  const legacyRows = (data || []) as LegacyAdminActionRow[];
+  const logs: AuditLogRow[] = legacyRows
+    .filter((row) => Boolean(row.admin_id))
+    .map((row) => ({
+      id: row.id,
+      user_id: row.admin_id as string,
+      action: row.action,
+      resource_type: row.target_type,
+      resource_id: row.target_id,
+      metadata: {
+        ...(row.changes ?? {}),
+        target_name: row.target_name,
+        ip_address: row.ip_address,
+      },
+      created_at: row.created_at,
+    }));
+
+  return {
+    logs,
+    count: count || 0,
     error: null,
   };
 }
