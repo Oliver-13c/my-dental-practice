@@ -551,8 +551,8 @@ export function ReceptionistDashboard() {
                                 className="w-full rounded-xl border border-slate-200 px-3 py-2"
                                 aria-label={tr('aria.selectLanguage')}
                             >
-                                <option value="es">Español</option>
-                                <option value="en">English</option>
+                                <option value="es">{tr('create.languageSpanish')}</option>
+                                <option value="en">{tr('create.languageEnglish')}</option>
                             </select>
 
                             <input

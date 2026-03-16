@@ -64,8 +64,8 @@ export function UsersTable({ users, isLoading = false, onEdit, onDelete, onRefre
           aria-label={t('filterByRole')}
         >
           <option value="">{t('filterByRole')}</option>
-          <option value="admin">Admin</option>
-          <option value="staff">Staff</option>
+          <option value="admin">{t('form.roleAdmin')}</option>
+          <option value="staff">{t('form.roleStaff')}</option>
         </select>
 
         <select
@@ -114,7 +114,7 @@ export function UsersTable({ users, isLoading = false, onEdit, onDelete, onRefre
                 </td>
                 <td className="px-6 py-4">
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {user.role}
+                    {user.role === 'admin' ? t('form.roleAdmin') : t('form.roleStaff')}
                   </span>
                 </td>
                 <td className="px-6 py-4">

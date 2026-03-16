@@ -48,11 +48,130 @@
       "unknownPatient": "Paciente desconocido",
       "unassignedProvider": "Sin asignar",
       "generalType": "General",
-      "timeHeader": "Hora"
+      "timeHeader": "Hora",
+      "statusShort": {
+        "inProgress": "En",
+        "arrived": "Llego",
+        "confirmed": "Conf",
+        "completed": "Hecha",
+        "noShow": "N/A",
+        "cancelled": "Canc",
+        "pending": "Pend"
+      },
+      "statusDisplay": {
+        "inProgress": "En progreso",
+        "arrived": "Llego",
+        "confirmed": "Confirmada",
+        "completed": "Completada",
+        "noShow": "No asistio",
+        "cancelled": "Cancelada",
+        "pending": "Pendiente"
+      },
+      "aria": {
+        "filterByProvider": "Filtrar calendario por proveedor",
+        "selectDate": "Seleccionar fecha del calendario"
+      }
     },
     "schedule": {
       "title": "Horario del dia",
       "generalType": "General"
+    },
+    "reception": {
+      "header": {
+        "kicker": "Espacio de recepcion",
+        "title": "Centro de control de recepcion",
+        "description": "Anticipa llegadas, huecos libres y disponibilidad de proveedores."
+      },
+      "view": {
+        "label": "Vista",
+        "day": "Dia",
+        "week": "Semana"
+      },
+      "providers": {
+        "all": "Todos los proveedores"
+      },
+      "stats": {
+        "appointments": "Citas",
+        "scheduledToday": "Programadas para hoy",
+        "reception": "Recepcion",
+        "inClinicNow": "En clinica ahora",
+        "upcoming": "Proximas",
+        "pendingAndConfirmed": "Pendientes y confirmadas",
+        "completed": "Completadas",
+        "completedToday": "Finalizadas del dia"
+      },
+      "schedule": {
+        "loading": "Cargando citas...",
+        "empty": "No hay citas para esta fecha."
+      },
+      "arrivals": {
+        "title": "Llegadas y registro",
+        "inReception": "En recepcion",
+        "empty": "No hay pacientes esperando"
+      },
+      "create": {
+        "title": "Crear cita rapida",
+        "description": "Selecciona paciente, proveedor y horario.",
+        "searchPatientPlaceholder": "Buscar paciente por nombre...",
+        "phonePlaceholder": "Numero de telefono",
+        "languageSpanish": "Espanol",
+        "languageEnglish": "English",
+        "providerPlaceholder": "Proveedor...",
+        "typePlaceholder": "Tipo...",
+        "timePlaceholder": "Horario...",
+        "noAvailableTimes": "No hay horarios disponibles",
+        "notesPlaceholder": "Notas (opcional)",
+        "creating": "Creando...",
+        "addAppointment": "Agregar cita",
+        "success": "Cita agregada al calendario."
+      },
+      "block": {
+        "title": "Bloquear horario",
+        "description": "Bloquea tiempo para reuniones, descansos o cambios de equipo.",
+        "providerPlaceholder": "Seleccionar proveedor...",
+        "reasonPlaceholder": "Motivo del bloqueo",
+        "blocking": "Bloqueando...",
+        "submit": "Bloquear horario",
+        "success": "Horario bloqueado correctamente."
+      },
+      "actions": {
+        "confirm": "Confirmar",
+        "checkIn": "Registrar llegada",
+        "startVisit": "Iniciar consulta",
+        "complete": "Completar",
+        "noShow": "No asistio",
+        "cancel": "Cancelar"
+      },
+      "status": {
+        "arrived": "En recepcion",
+        "inProgress": "En consulta",
+        "completed": "Completada",
+        "noShow": "No asistio",
+        "confirmed": "Confirmada",
+        "pending": "Pendiente",
+        "cancelled": "Cancelada"
+      },
+      "errors": {
+        "requiredFields": "Completa todos los campos obligatorios.",
+        "createFailed": "No se pudo crear la cita"
+      },
+      "aria": {
+        "selectDate": "Seleccionar fecha",
+        "filterByProvider": "Filtrar citas por proveedor",
+        "searchPatient": "Buscar paciente",
+        "enterPhone": "Ingresar numero de telefono",
+        "selectProvider": "Seleccionar proveedor",
+        "selectAppointmentType": "Seleccionar tipo de cita",
+        "selectAppointmentDate": "Seleccionar fecha de cita",
+        "selectAvailableTime": "Seleccionar horario disponible",
+        "selectLanguage": "Seleccionar idioma",
+        "enterNotes": "Ingresar notas",
+        "selectProviderForBlock": "Seleccionar proveedor para bloquear horario",
+        "selectStartTime": "Seleccionar hora de inicio",
+        "selectEndTime": "Seleccionar hora de fin",
+        "enterBlockReason": "Ingresar motivo del bloqueo"
+      },
+      "confirmCancel": "Cancelar esta cita?"
     },
     "clinical": {
       "stats": {
@@ -293,8 +412,17 @@
     "users": {
       "title": "Gestión de Usuarios",
       "description": "Gestionar miembros del personal y sus accesos",
+      "openStaffDashboard": "Abrir Panel de Staff",
+      "version": "v{value}",
+      "language": {
+        "english": "English",
+        "spanish": "Espanol",
+        "switchToEnglish": "EN",
+        "switchToSpanish": "ES"
+      },
       "users": "Usuarios",
       "usersDescription": "Gestionar usuarios del sistema y permisos",
+      "backToUsers": "Volver a Usuarios",
       "createUser": "Crear Usuario",
       "createNewUser": "Crear Nuevo Usuario",
       "createUserDescription": "Agregar un nuevo miembro del personal o paciente al sistema",
@@ -312,13 +440,65 @@
       "noUsers": "No se encontraron usuarios",
       "filterByRole": "Filtrar por rol",
       "filterByStatus": "Filtrar por estado",
+      "retry": "Reintentar",
+      "editUser": "Editar Usuario",
+      "editDescription": "Actualizar informacion del usuario y permisos",
+      "saveChanges": "Guardar Cambios",
+      "resetPassword": "Restablecer Contrasena",
+      "deactivateUser": "Desactivar Usuario",
+      "userInfo": "Informacion del Usuario",
+      "errors": {
+        "fetchUsers": "Error al cargar usuarios",
+        "fetchUser": "Error al cargar usuario",
+        "updateUser": "Error al actualizar usuario",
+        "deleteUser": "Error al desactivar usuario",
+        "passwordReset": "Error al enviar restablecimiento",
+        "createUser": "Error al crear usuario",
+        "userNotFound": "Usuario no encontrado"
+      },
+      "messages": {
+        "confirmDeactivate": "Esta seguro de que desea desactivar este usuario?",
+        "confirmPasswordReset": "Enviar correo de restablecimiento a este usuario?",
+        "userUpdated": "Usuario actualizado correctamente!",
+        "userDeactivated": "Usuario desactivado correctamente!",
+        "passwordResetSent": "Correo de restablecimiento enviado correctamente!"
+      },
+      "modal": {
+        "title": "Usuario creado correctamente",
+        "staffMember": "Miembro del personal",
+        "email": "Correo",
+        "temporaryPassword": "Contrasena temporal:",
+        "copied": "Copiado",
+        "copy": "Copiar",
+        "passwordWarning": "Esta contrasena se mostrara solo una vez. Copiala ahora y compartela de forma segura con {firstName}.",
+        "nextSteps": "Siguientes pasos",
+        "stepSharePassword": "Comparte la contrasena temporal con {firstName}",
+        "stepVisitLogin": "Pidele que visite /staff/login",
+        "stepChangePassword": "Puede cambiar su contrasena despues del primer acceso",
+        "copyAndContinue": "Copiar y continuar",
+        "done": "Listo"
+      },
       "form": {
         "firstName": "Nombre",
         "lastName": "Apellido",
         "email": "Correo Electrónico",
         "role": "Rol",
         "active": "Activo",
-        "saving": "Guardando..."
+        "saving": "Guardando...",
+        "save": "Guardar",
+        "roleAdmin": "Admin",
+        "roleStaff": "Personal",
+        "placeholders": {
+          "firstName": "Juan",
+          "lastName": "Perez",
+          "email": "juan@ejemplo.com"
+        },
+        "errors": {
+          "firstNameRequired": "El nombre es obligatorio",
+          "lastNameRequired": "El apellido es obligatorio",
+          "invalidEmail": "Correo electronico invalido",
+          "invalidRole": "Rol invalido"
+        }
       }
     }
   }

@@ -48,11 +48,130 @@
       "unknownPatient": "Unknown patient",
       "unassignedProvider": "Unassigned",
       "generalType": "General",
-      "timeHeader": "Time"
+      "timeHeader": "Time",
+      "statusShort": {
+        "inProgress": "In",
+        "arrived": "Arr",
+        "confirmed": "Conf",
+        "completed": "Done",
+        "noShow": "N/S",
+        "cancelled": "Can",
+        "pending": "Pend"
+      },
+      "statusDisplay": {
+        "inProgress": "In progress",
+        "arrived": "Arrived",
+        "confirmed": "Confirmed",
+        "completed": "Completed",
+        "noShow": "No-show",
+        "cancelled": "Cancelled",
+        "pending": "Pending"
+      },
+      "aria": {
+        "filterByProvider": "Filter calendar by provider",
+        "selectDate": "Select calendar date"
+      }
     },
     "schedule": {
       "title": "Schedule",
       "generalType": "General"
+    },
+    "reception": {
+      "header": {
+        "kicker": "Reception Space",
+        "title": "Reception Control Center",
+        "description": "Stay ahead of arrivals, open slots, and provider availability."
+      },
+      "view": {
+        "label": "View",
+        "day": "Day",
+        "week": "Week"
+      },
+      "providers": {
+        "all": "All providers"
+      },
+      "stats": {
+        "appointments": "Appointments",
+        "scheduledToday": "Scheduled for today",
+        "reception": "Reception",
+        "inClinicNow": "In clinic now",
+        "upcoming": "Upcoming",
+        "pendingAndConfirmed": "Pending and confirmed",
+        "completed": "Completed",
+        "completedToday": "Completed today"
+      },
+      "schedule": {
+        "loading": "Loading appointments...",
+        "empty": "No appointments for this date."
+      },
+      "arrivals": {
+        "title": "Arrivals and check-in",
+        "inReception": "Checked in",
+        "empty": "No patients waiting"
+      },
+      "create": {
+        "title": "Quick appointment",
+        "description": "Select patient, provider, and time.",
+        "searchPatientPlaceholder": "Search patient by name...",
+        "phonePlaceholder": "Phone number",
+        "languageSpanish": "Spanish",
+        "languageEnglish": "English",
+        "providerPlaceholder": "Provider...",
+        "typePlaceholder": "Type...",
+        "timePlaceholder": "Time...",
+        "noAvailableTimes": "No available time slots",
+        "notesPlaceholder": "Notes (optional)",
+        "creating": "Creating...",
+        "addAppointment": "Add appointment",
+        "success": "Appointment added to calendar."
+      },
+      "block": {
+        "title": "Block schedule",
+        "description": "Block time for meetings, breaks, or equipment changes.",
+        "providerPlaceholder": "Select provider...",
+        "reasonPlaceholder": "Blocking reason",
+        "blocking": "Blocking...",
+        "submit": "Block schedule",
+        "success": "Schedule blocked successfully."
+      },
+      "actions": {
+        "confirm": "Confirm",
+        "checkIn": "Check in",
+        "startVisit": "Start visit",
+        "complete": "Complete",
+        "noShow": "No-show",
+        "cancel": "Cancel"
+      },
+      "status": {
+        "arrived": "Checked in",
+        "inProgress": "In progress",
+        "completed": "Completed",
+        "noShow": "No-show",
+        "confirmed": "Confirmed",
+        "pending": "Pending",
+        "cancelled": "Cancelled"
+      },
+      "errors": {
+        "requiredFields": "Complete all required fields.",
+        "createFailed": "Could not create the appointment."
+      },
+      "aria": {
+        "selectDate": "Select date",
+        "filterByProvider": "Filter appointments by provider",
+        "searchPatient": "Search patient",
+        "enterPhone": "Enter phone number",
+        "selectProvider": "Select provider",
+        "selectAppointmentType": "Select appointment type",
+        "selectAppointmentDate": "Select appointment date",
+        "selectAvailableTime": "Select available time",
+        "selectLanguage": "Select language",
+        "enterNotes": "Enter notes",
+        "selectProviderForBlock": "Select provider to block schedule",
+        "selectStartTime": "Select start time",
+        "selectEndTime": "Select end time",
+        "enterBlockReason": "Enter blocking reason"
+      },
+      "confirmCancel": "Cancel this appointment?"
     },
     "clinical": {
       "stats": {
@@ -293,8 +412,17 @@
     "users": {
       "title": "User Management",
       "description": "Manage staff members and their access",
+      "openStaffDashboard": "Open Staff Dashboard",
+      "version": "v{value}",
+      "language": {
+        "english": "English",
+        "spanish": "Spanish",
+        "switchToEnglish": "EN",
+        "switchToSpanish": "ES"
+      },
       "users": "Users",
       "usersDescription": "Manage system users and permissions",
+      "backToUsers": "Back to Users",
       "createUser": "Create User",
       "createNewUser": "Create New User",
       "createUserDescription": "Add a new staff member or patient to the system",
@@ -312,13 +440,65 @@
       "noUsers": "No users found",
       "filterByRole": "Filter by role",
       "filterByStatus": "Filter by status",
+      "retry": "Retry",
+      "editUser": "Edit User",
+      "editDescription": "Update user information and permissions",
+      "saveChanges": "Save Changes",
+      "resetPassword": "Reset Password",
+      "deactivateUser": "Deactivate User",
+      "userInfo": "User Info",
+      "errors": {
+        "fetchUsers": "Failed to fetch users",
+        "fetchUser": "Failed to fetch user",
+        "updateUser": "Failed to update user",
+        "deleteUser": "Failed to deactivate user",
+        "passwordReset": "Failed to send password reset",
+        "createUser": "Failed to create user",
+        "userNotFound": "User not found"
+      },
+      "messages": {
+        "confirmDeactivate": "Are you sure you want to deactivate this user?",
+        "confirmPasswordReset": "Send password reset email to this user?",
+        "userUpdated": "User updated successfully!",
+        "userDeactivated": "User deactivated successfully!",
+        "passwordResetSent": "Password reset email sent successfully!"
+      },
+      "modal": {
+        "title": "User Created Successfully",
+        "staffMember": "Staff member",
+        "email": "Email",
+        "temporaryPassword": "Temporary Password:",
+        "copied": "Copied",
+        "copy": "Copy",
+        "passwordWarning": "This password will be displayed only once. Copy it now and share it securely with {firstName}.",
+        "nextSteps": "Next steps",
+        "stepSharePassword": "Share the temporary password with {firstName}",
+        "stepVisitLogin": "Ask them to visit /staff/login",
+        "stepChangePassword": "They can change their password after first login",
+        "copyAndContinue": "Copy and Continue",
+        "done": "Done"
+      },
       "form": {
         "firstName": "First Name",
         "lastName": "Last Name",
         "email": "Email",
         "role": "Role",
         "active": "Active",
-        "saving": "Saving..."
+        "saving": "Saving...",
+        "save": "Save",
+        "roleAdmin": "Admin",
+        "roleStaff": "Staff",
+        "placeholders": {
+          "firstName": "John",
+          "lastName": "Doe",
+          "email": "john@example.com"
+        },
+        "errors": {
+          "firstNameRequired": "First name is required",
+          "lastNameRequired": "Last name is required",
+          "invalidEmail": "Invalid email address",
+          "invalidRole": "Invalid role"
+        }
       }
     }
   }

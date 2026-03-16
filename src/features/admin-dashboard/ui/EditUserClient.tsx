@@ -162,7 +162,7 @@ export function EditUserClient({ userId }: EditUserClientProps) {
           {error || t('errors.userNotFound')}
         </div>
         <Link href="/admin/users">
-          <Button variant="ghost">&larr; Back to Users</Button>
+          <Button variant="ghost">&larr; {t('backToUsers')}</Button>
         </Link>
       </div>
     );
@@ -172,7 +172,7 @@ export function EditUserClient({ userId }: EditUserClientProps) {
     <div className="space-y-6">
       <div>
         <Link href="/admin/users">
-          <Button variant="ghost">&larr; Back to Users</Button>
+          <Button variant="ghost">&larr; {t('backToUsers')}</Button>
         </Link>
         <h1 className="text-3xl font-bold text-gray-900 mt-4">
           {t('editUser')}

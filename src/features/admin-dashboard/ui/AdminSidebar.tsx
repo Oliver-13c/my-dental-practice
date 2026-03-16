@@ -8,6 +8,7 @@ import { Button } from '@/shared/ui/button';
 
 export function AdminSidebar() {
   const t = useTranslations('admin');
+  const tu = useTranslations('admin.users');
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
@@ -62,18 +63,18 @@ export function AdminSidebar() {
           onClick={toggleLocale}
           className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors text-sm"
         >
-          <span>🌐 {locale === 'es' ? 'Español' : 'English'}</span>
+          <span>🌐 {locale === 'es' ? tu('language.spanish') : tu('language.english')}</span>
           <span className="text-xs text-gray-400">
-            → {locale === 'es' ? 'EN' : 'ES'}
+            → {locale === 'es' ? tu('language.switchToEnglish') : tu('language.switchToSpanish')}
           </span>
         </button>
         <Link
           href="/staff/dashboard"
           className="block w-full text-center px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors text-sm text-gray-300"
         >
-          ← {locale === 'es' ? 'Abrir Panel de Staff' : 'Open Staff Dashboard'}
+          ← {tu('openStaffDashboard')}
         </Link>
-        <p className="text-xs text-gray-400">v1.0.0</p>
+        <p className="text-xs text-gray-400">{tu('version', { value: '1.0.0' })}</p>
       </div>
     </aside>
   );

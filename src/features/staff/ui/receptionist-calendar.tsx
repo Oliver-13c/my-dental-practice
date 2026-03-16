@@ -48,28 +48,12 @@ function statusBgColor(status: string) {
   }
 }
 
-function statusLabel(status: string) {
-  switch (status) {
-    case 'in-progress': return 'In';
-    case 'arrived': return 'Arr';
-    case 'confirmed': return 'Conf';
-    case 'completed': return 'Done';
-    case 'no-show': return 'N/S';
-    case 'cancelled': return 'Can';
-    default: return 'Pend';
-  }
+function statusLabel(status: string, labels: Record<string, string>) {
+  return labels[status] ?? labels.pending;
 }
 
-function statusDisplayLabel(status: string) {
-  switch (status) {
-    case 'in-progress': return 'En progreso';
-    case 'arrived': return 'Llegó';
-    case 'confirmed': return 'Confirmado';
-    case 'completed': return 'Completado';
-    case 'no-show': return 'No asistió';
-    case 'cancelled': return 'Cancelado';
-    default: return 'Pendiente';
-  }
+function statusDisplayLabel(status: string, labels: Record<string, string>) {
+  return labels[status] ?? labels.pending;
 }
 
 function formatTime(iso: string) {
@@ -148,6 +132,30 @@ export function ReceptionistCalendar({
   const [draggedAppt, setDraggedAppt] = useState<AppointmentWithDetails | null>(null);
   const [rescheduleError, setRescheduleError] = useState<string | null>(null);
   const t = useTranslations('staff');
+  const statusShort = useMemo(
+    () => ({
+      'in-progress': t('calendar.statusShort.inProgress'),
+      arrived: t('calendar.statusShort.arrived'),
+      confirmed: t('calendar.statusShort.confirmed'),
+      completed: t('calendar.statusShort.completed'),
+      'no-show': t('calendar.statusShort.noShow'),
+      cancelled: t('calendar.statusShort.cancelled'),
+      pending: t('calendar.statusShort.pending'),
+    }),
+    [t],
+  );
+  const statusFull = useMemo(
+    () => ({
+      'in-progress': t('calendar.statusDisplay.inProgress'),
+      arrived: t('calendar.statusDisplay.arrived'),
+      confirmed: t('calendar.statusDisplay.confirmed'),
+      completed: t('calendar.statusDisplay.completed'),
+      'no-show': t('calendar.statusDisplay.noShow'),
+      cancelled: t('calendar.statusDisplay.cancelled'),
+      pending: t('calendar.statusDisplay.pending'),
+    }),
+    [t],
+  );
 
   // Build date range for the query
   const dates = useMemo(() => {
@@ -255,7 +263,7 @@ export function ReceptionistCalendar({
             value={selectedProvider || 'all'}
             onChange={(e) => setSelectedProvider(e.target.value === 'all' ? null : e.target.value)}
             className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm shadow-sm"
-            aria-label="Filter calendar by provider"
+            aria-label={t('calendar.aria.filterByProvider')}
           >
             <option value="all">{t('calendar.allProviders')}</option>
             {providers.map((p) => (
@@ -267,7 +275,7 @@ export function ReceptionistCalendar({
             value={selectedDate}
             onChange={(e) => onDateChange(e.target.value)}
             className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm shadow-sm"
-            aria-label="Select calendar date"
+            aria-label={t('calendar.aria.selectDate')}
           />
         </div>
       </div>
@@ -306,7 +314,7 @@ export function ReceptionistCalendar({
                                 <p className="font-semibold text-slate-900">{patientName(appt, t('calendar.unknownPatient'))}</p>
                                 <p className="text-slate-600">{appt.appointment_type?.name ?? t('calendar.generalType')}</p>
                                 <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${statusBgColor(appt.status)}`}>
-                                  {statusDisplayLabel(appt.status)}
+                                  {statusDisplayLabel(appt.status, statusFull)}
                                 </span>
                               </div>
                             ))}
@@ -373,7 +381,7 @@ export function ReceptionistCalendar({
                                         {appt.appointment_type?.duration_minutes ?? 30}m
                                       </span>
                                       <span className={`rounded-full px-1.5 py-0.5 text-xs font-semibold ${statusBgColor(appt.status)}`}>
-                                        {statusLabel(appt.status)}
+                                        {statusLabel(appt.status, statusShort)}
                                       </span>
                                     </div>
                                   </div>

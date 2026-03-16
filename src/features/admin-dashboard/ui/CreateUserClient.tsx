@@ -22,9 +22,10 @@ interface PasswordModalProps {
   tempPassword: string;
   firstName: string;
   onClose: () => void;
+  t: (key: string, values?: Record<string, string | number>) => string;
 }
 
-function TemporaryPasswordModal({ email, tempPassword, firstName, onClose }: PasswordModalProps) {
+function TemporaryPasswordModal({ email, tempPassword, firstName, onClose, t }: PasswordModalProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -36,19 +37,19 @@ function TemporaryPasswordModal({ email, tempPassword, firstName, onClose }: Pas
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <Card className="max-w-md w-full p-6 space-y-4">
-        <h2 className="text-2xl font-bold text-gray-900">✓ User Created Successfully</h2>
+        <h2 className="text-2xl font-bold text-gray-900">{t('modal.title')}</h2>
         
         <div className="bg-blue-50 border border-blue-200 rounded p-4 space-y-2">
           <p className="text-sm font-medium text-gray-700">
-            <strong>Staff member:</strong> {firstName}
+            <strong>{t('modal.staffMember')}:</strong> {firstName}
           </p>
           <p className="text-sm font-medium text-gray-700">
-            <strong>Email:</strong> {email}
+            <strong>{t('modal.email')}:</strong> {email}
           </p>
         </div>
 
         <div className="bg-amber-50 border border-amber-200 rounded p-4 space-y-3">
-          <p className="text-sm font-medium text-amber-900">Temporary Password:</p>
+          <p className="text-sm font-medium text-amber-900">{t('modal.temporaryPassword')}</p>
           <div className="flex gap-2">
             <code className="flex-1 bg-white border border-amber-300 rounded px-3 py-2 text-sm font-mono text-gray-900 break-all">
               {tempPassword}
@@ -61,22 +62,22 @@ function TemporaryPasswordModal({ email, tempPassword, firstName, onClose }: Pas
                   : 'bg-amber-600 text-white hover:bg-amber-700'
               }`}
             >
-              {copied ? '✓ Copied' : 'Copy'}
+              {copied ? t('modal.copied') : t('modal.copy')}
             </button>
           </div>
           <p className="text-xs text-amber-800">
-            ⚠️ This password will be displayed only once. Copy it now and share it securely with {firstName}.
+            {t('modal.passwordWarning', { firstName })}
           </p>
         </div>
 
         <div className="bg-blue-50 border border-blue-200 rounded p-4">
           <p className="text-sm text-blue-800">
-            <strong>Next steps:</strong>
+            <strong>{t('modal.nextSteps')}:</strong>
           </p>
           <ol className="text-xs text-blue-700 mt-2 space-y-1 list-decimal list-inside">
-            <li>Share the temporary password with {firstName}</li>
-            <li>Ask them to visit <strong>/staff/login</strong></li>
-            <li>They can change their password after first login</li>
+            <li>{t('modal.stepSharePassword', { firstName })}</li>
+            <li>{t('modal.stepVisitLogin')}</li>
+            <li>{t('modal.stepChangePassword')}</li>
           </ol>
         </div>
 
@@ -89,23 +90,15 @@ function TemporaryPasswordModal({ email, tempPassword, firstName, onClose }: Pas
               setCopied(true);
             }}
           >
-            Copy & Continue
+            {t('modal.copyAndContinue')}
           </Button>
           <Button className="flex-1" onClick={onClose}>
-            Done
+            {t('modal.done')}
           </Button>
         </div>
       </Card>
     </div>
   );
-}
-
-interface CreateUserData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  role: 'admin' | 'staff';
-  isActive: boolean;
 }
 
 export function CreateUserClient() {
@@ -146,7 +139,7 @@ export function CreateUserClient() {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to create user');
+        throw new Error(result.error || t('errors.createUser'));
       }
 
       // Show temporary password in secure modal + email was sent by backend
@@ -158,7 +151,7 @@ export function CreateUserClient() {
       setShowPasswordModal(true);
     } catch (err) {
       console.error('Failed to create user:', err);
-      setError(err instanceof Error ? err.message : 'Failed to create user');
+      setError(err instanceof Error ? err.message : t('errors.createUser'));
     } finally {
       setIsLoading(false);
     }
@@ -175,13 +168,13 @@ export function CreateUserClient() {
     <div className="space-y-6">
       <div>
         <Link href="/admin/users">
-          <Button variant="ghost">&larr; Back to Users</Button>
+          <Button variant="ghost">&larr; {t('backToUsers')}</Button>
         </Link>
         <h1 className="text-3xl font-bold text-gray-900 mt-4">
-          {t('createNewUser') || 'Create New User'}
+          {t('createNewUser')}
         </h1>
         <p className="text-gray-600 mt-1">
-          {t('createUserDescription') || 'Add a new staff member to the system'}
+          {t('createUserDescription')}
         </p>
       </div>
 
@@ -194,7 +187,7 @@ export function CreateUserClient() {
       <UserForm
         onSubmit={handleSubmit}
         isLoading={isLoading}
-        submitLabel={t('createUser') || 'Create User'}
+        submitLabel={t('createUser')}
       />
 
       {showPasswordModal && modalData && (
@@ -203,6 +196,7 @@ export function CreateUserClient() {
           tempPassword={modalData.tempPassword}
           firstName={modalData.firstName}
           onClose={handleModalClose}
+          t={t}
         />
       )}
     </div>
