@@ -33,6 +33,9 @@ export function Input({
   trailingIcon,
   ...props
 }: InputProps) {
+  const hasLeadingIcon = Boolean(leadingIcon);
+  const hasTrailingIcon = Boolean(trailingIcon);
+
   const inputEl = (
     <input
       {...props}
@@ -40,20 +43,20 @@ export function Input({
         'w-full rounded-md border bg-surface text-foreground outline-none transition placeholder:text-text-subtle focus-visible:ring-2',
         sizeClassMap[inputSize],
         validationClassMap[validationState],
-        leadingIcon && 'pl-9',
-        trailingIcon && 'pr-9',
+        hasLeadingIcon && 'pl-9',
+        hasTrailingIcon && 'pr-9',
         className,
       )}
     />
   );
 
-  if (!leadingIcon && !trailingIcon) return inputEl;
+  if (!hasLeadingIcon && !hasTrailingIcon) return inputEl;
 
   return (
     <div className="relative">
-      {leadingIcon && <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle">{leadingIcon}</span>}
+      {hasLeadingIcon && <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle">{leadingIcon}</span>}
       {inputEl}
-      {trailingIcon && <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-subtle">{trailingIcon}</span>}
+      {hasTrailingIcon && <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-subtle">{trailingIcon}</span>}
     </div>
   );
 }

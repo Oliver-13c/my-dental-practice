@@ -81,9 +81,6 @@ export default withSentryConfig(
     // Upload source maps to Sentry for readable stack traces
     silent: true,
 
-    // Automatically tree-shake Sentry logger statements to reduce bundle size
-    disableLogger: true,
-
     // Hides source maps from the browser bundle (good for production)
     hideSourceMaps: true,
   }
