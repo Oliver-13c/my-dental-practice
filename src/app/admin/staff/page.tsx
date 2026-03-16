@@ -17,6 +17,31 @@ interface StaffMember {
   last_sign_in_at?: string;
 }
 
+interface ScheduleRow {
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  is_active: boolean;
+}
+
+const CLINICAL_ROLES = new Set(['dentist', 'hygienist']);
+
+function buildDefaultSchedule(): ScheduleRow[] {
+  return Array.from({ length: 7 }, (_, day_of_week) => ({
+    day_of_week,
+    start_time: '08:00',
+    end_time: '17:00',
+    is_active: day_of_week >= 1 && day_of_week <= 5,
+  }));
+}
+
+function mergeScheduleRows(rows: ScheduleRow[] | undefined): ScheduleRow[] {
+  const defaults = buildDefaultSchedule();
+  const byDay = new Map((rows ?? []).map((row) => [row.day_of_week, row]));
+
+  return defaults.map((row) => byDay.get(row.day_of_week) ?? row);
+}
+
 export default function StaffPage() {
   const t = useTranslations('admin');
   const [staff, setStaff] = useState<StaffMember[]>([]);
@@ -25,6 +50,22 @@ export default function StaffPage() {
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const [selectedScheduleMember, setSelectedScheduleMember] = useState<StaffMember | null>(null);
+  const [scheduleRows, setScheduleRows] = useState<ScheduleRow[]>(buildDefaultSchedule());
+  const [scheduleLoading, setScheduleLoading] = useState(false);
+  const [scheduleSaving, setScheduleSaving] = useState(false);
+  const [scheduleError, setScheduleError] = useState<string | null>(null);
+  const [scheduleSuccess, setScheduleSuccess] = useState<string | null>(null);
+
+  const dayLabels = [
+    t('days.sunday'),
+    t('days.monday'),
+    t('days.tuesday'),
+    t('days.wednesday'),
+    t('days.thursday'),
+    t('days.friday'),
+    t('days.saturday'),
+  ];
 
   const fetchStaff = useCallback(async () => {
     try {
@@ -50,6 +91,69 @@ export default function StaffPage() {
     fetchStaff();
   }, [fetchStaff]);
 
+  const loadSchedule = useCallback(async (member: StaffMember) => {
+    setSelectedScheduleMember(member);
+    setScheduleLoading(true);
+    setScheduleError(null);
+    setScheduleSuccess(null);
+
+    try {
+      const res = await fetch(`/api/providers/${member.id}/schedule`);
+      if (!res.ok) {
+        throw new Error('Failed to fetch schedule');
+      }
+
+      const json = await res.json();
+      setScheduleRows(mergeScheduleRows(json.data?.schedules));
+    } catch {
+      setScheduleRows(buildDefaultSchedule());
+      setScheduleError(t('scheduleLoadError'));
+    } finally {
+      setScheduleLoading(false);
+    }
+  }, [t]);
+
+  const updateScheduleRow = useCallback((dayOfWeek: number, updates: Partial<ScheduleRow>) => {
+    setScheduleRows((current) =>
+      current.map((row) => (row.day_of_week === dayOfWeek ? { ...row, ...updates } : row))
+    );
+  }, []);
+
+  const saveSchedule = useCallback(async () => {
+    if (!selectedScheduleMember) return;
+
+    setScheduleSaving(true);
+    setScheduleError(null);
+    setScheduleSuccess(null);
+
+    try {
+      const payload = {
+        schedules: scheduleRows.map((row) => ({
+          day_of_week: row.day_of_week,
+          start_time: row.start_time,
+          end_time: row.end_time,
+          is_active: row.is_active,
+        })),
+      };
+
+      const res = await fetch(`/api/providers/${selectedScheduleMember.id}/schedule`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to save schedule');
+      }
+
+      setScheduleSuccess(t('scheduleSaved'));
+    } catch {
+      setScheduleError(t('scheduleSaveError'));
+    } finally {
+      setScheduleSaving(false);
+    }
+  }, [scheduleRows, selectedScheduleMember, t]);
+
   const toggleActive = async (member: StaffMember) => {
     try {
       const res = await fetch(`/api/admin/users/${member.id}`, {
@@ -66,12 +170,20 @@ export default function StaffPage() {
 
   const roleLabel = (role: string) => {
     const map: Record<string, string> = {
-      dentist: t('dentist'),
-      hygienist: t('hygienist'),
-      receptionist: t('receptionist'),
+      dentist: t('dentistLabel'),
+      hygienist: t('hygienistLabel'),
+      receptionist: t('receptionistLabel'),
+      admin: t('users.form.roleAdmin'),
     };
     return map[role] || role;
   };
+
+  const closeScheduleEditor = useCallback(() => {
+    setSelectedScheduleMember(null);
+    setScheduleError(null);
+    setScheduleSuccess(null);
+    setScheduleRows(buildDefaultSchedule());
+  }, []);
 
   const totalProviders = staff.filter((s) => s.role === 'dentist' || s.role === 'hygienist').length;
   const activeProviders = staff.filter(
@@ -120,9 +232,9 @@ export default function StaffPage() {
               aria-label={t('role')}
             >
               <option value="all">{t('all')} — {t('role')}</option>
-              <option value="dentist">{t('dentist')}</option>
-              <option value="hygienist">{t('hygienist')}</option>
-              <option value="receptionist">{t('receptionist')}</option>
+              <option value="dentist">{t('dentistLabel')}</option>
+              <option value="hygienist">{t('hygienistLabel')}</option>
+              <option value="receptionist">{t('receptionistLabel')}</option>
             </select>
             <select
               value={statusFilter}
@@ -232,6 +344,20 @@ export default function StaffPage() {
                         >
                           {t('edit')}
                         </a>
+                        {CLINICAL_ROLES.has(member.role) && (
+                          <button
+                            onClick={() => {
+                              if (selectedScheduleMember?.id === member.id) {
+                                closeScheduleEditor();
+                                return;
+                              }
+                              loadSchedule(member);
+                            }}
+                            className="mr-3 text-slate-700 hover:text-slate-900 hover:underline"
+                          >
+                            {selectedScheduleMember?.id === member.id ? t('closeSchedule') : t('editSchedule')}
+                          </button>
+                        )}
                         <button
                           onClick={() => toggleActive(member)}
                           className={`${
@@ -247,6 +373,92 @@ export default function StaffPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </Card>
+        )}
+
+        {selectedScheduleMember && CLINICAL_ROLES.has(selectedScheduleMember.role) && (
+          <Card className="p-6">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  {t('scheduleEditorTitle')} · {selectedScheduleMember.first_name} {selectedScheduleMember.last_name}
+                </h2>
+                <p className="text-sm text-gray-600">{t('scheduleEditorDescription')}</p>
+                <p className="mt-1 text-xs text-gray-500">{t('scheduleDefaultHint')}</p>
+              </div>
+              <button
+                onClick={closeScheduleEditor}
+                className="inline-flex items-center rounded-md border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+              >
+                {t('closeSchedule')}
+              </button>
+            </div>
+
+            {scheduleError && <p className="mt-4 text-sm text-red-700">{scheduleError}</p>}
+            {scheduleSuccess && <p className="mt-4 text-sm text-green-700">{scheduleSuccess}</p>}
+
+            {scheduleLoading ? (
+              <p className="mt-4 text-sm text-gray-500">{t('scheduleLoading')}</p>
+            ) : (
+              <div className="mt-6 overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">{t('scheduleDay')}</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">{t('scheduleAvailable')}</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">{t('scheduleStart')}</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">{t('scheduleEnd')}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 bg-white">
+                    {scheduleRows.map((row) => (
+                      <tr key={row.day_of_week}>
+                        <td className="px-4 py-3 text-sm font-medium text-gray-900">{dayLabels[row.day_of_week]}</td>
+                        <td className="px-4 py-3 text-sm text-gray-700">
+                          <input
+                            type="checkbox"
+                            checked={row.is_active}
+                            onChange={(event) => updateScheduleRow(row.day_of_week, { is_active: event.target.checked })}
+                            className="h-4 w-4 rounded border-gray-300"
+                            aria-label={`${t('scheduleAvailable')} ${dayLabels[row.day_of_week]}`}
+                          />
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-700">
+                          <input
+                            type="time"
+                            value={row.start_time}
+                            disabled={!row.is_active}
+                            onChange={(event) => updateScheduleRow(row.day_of_week, { start_time: event.target.value })}
+                            className="rounded-md border border-gray-300 px-3 py-2 text-sm disabled:bg-gray-100"
+                            aria-label={`${t('scheduleStart')} ${dayLabels[row.day_of_week]}`}
+                          />
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-700">
+                          <input
+                            type="time"
+                            value={row.end_time}
+                            disabled={!row.is_active}
+                            onChange={(event) => updateScheduleRow(row.day_of_week, { end_time: event.target.value })}
+                            className="rounded-md border border-gray-300 px-3 py-2 text-sm disabled:bg-gray-100"
+                            aria-label={`${t('scheduleEnd')} ${dayLabels[row.day_of_week]}`}
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={saveSchedule}
+                disabled={scheduleLoading || scheduleSaving}
+                className="inline-flex items-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-50"
+              >
+                {scheduleSaving ? t('scheduleSaving') : t('scheduleSave')}
+              </button>
             </div>
           </Card>
         )}

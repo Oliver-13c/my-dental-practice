@@ -3,6 +3,27 @@ import type { Database } from '@/shared/api/supabase-types';
 import { getCurrentUser, getCurrentAdminProfile } from './admin-auth';
 import { ApiErrors } from '@/shared/lib/api-error';
 
+const CLINICAL_ROLES = new Set(['dentist', 'hygienist']);
+
+function buildDefaultProviderSchedules(providerId: string) {
+  return [1, 2, 3, 4, 5].map((day_of_week) => ({
+    provider_id: providerId,
+    day_of_week,
+    start_time: '08:00',
+    end_time: '17:00',
+    is_active: true,
+  }));
+}
+
+async function ensureProviderScheduleSeed(supabase: ReturnType<typeof createServerClient<Database>>, providerId: string) {
+  await (supabase as any)
+    .from('provider_schedules')
+    .upsert(buildDefaultProviderSchedules(providerId), {
+      onConflict: 'provider_id,day_of_week',
+      ignoreDuplicates: true,
+    });
+}
+
 /**
  * Get all staff members (admin only)
  */
@@ -121,6 +142,10 @@ export async function createStaffMember(
     return { error: `Failed to create staff profile: ${staffError.message}`, data: null };
   }
 
+  if (CLINICAL_ROLES.has(userData.role)) {
+    await ensureProviderScheduleSeed(supabase, staffData.id);
+  }
+
   // Log admin action
   await (supabase as any).rpc('log_admin_action', {
     p_admin_id: adminProfile.id,
@@ -216,6 +241,10 @@ export async function updateStaffMember(
 
   if (error) {
     return { error: error.message, data: null };
+  }
+
+  if (CLINICAL_ROLES.has(data.role)) {
+    await ensureProviderScheduleSeed(supabase, staffId);
   }
 
   // Log admin action

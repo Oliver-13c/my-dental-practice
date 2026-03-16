@@ -1,0 +1,26 @@
+
+> my-dental-practice@0.1.0 build
+> next build
+
+   Γû▓ Next.js 15.5.12
+   - Environments: .env
+   - Experiments (use with caution):
+     ┬╖ clientTraceMetadata
+
+   Creating an optimized production build ...
+ Γ£ô Compiled successfully in 28.5s
+   Skipping linting
+   Checking validity of types ...
+Failed to compile.
+
+./src/app/api/cron/send-pending-reminders/route.ts:83:23
+Type error: Property 'appointments' does not exist on type 'never'.
+
+  81 |     for (const reminder of reminders) {
+  82 |       try {
+> 83 |         if (!reminder.appointments) {
+     |                       ^
+  84 |           failed++;
+  85 |           errors.push(`Reminder ${reminder.id}: appointment not found`);
+  86 |           continue;
+Next.js build worker exited with code: 1 and signal: null

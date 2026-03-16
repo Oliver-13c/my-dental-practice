@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
+import { useLocale } from 'next-intl';
 import { useTranslations } from 'next-intl';
 import { ReceptionistCalendar } from './receptionist-calendar';
 import {
@@ -15,6 +16,7 @@ import {
   createTimeBlock,
 } from '../hooks/use-appointments-data';
 import type { AppointmentWithDetails } from '@/entities/appointment/model/appointment.types';
+import { getProviderDisplayName, localizeAppointmentTypeName } from '@/shared/lib/appointment-display';
 
 // ── Helpers ────────────────────────────────────────────────────
 function formatISOToTime(iso: string) {
@@ -48,6 +50,7 @@ function statusBadge(status: string) {
 }
 
 export function ReceptionistDashboard() {
+    const locale = useLocale();
     const t = useTranslations('staff');
     const tr = useTranslations('staff.reception');
     const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().slice(0, 10));
@@ -79,7 +82,7 @@ export function ReceptionistDashboard() {
     const [showPatientDropdown, setShowPatientDropdown] = useState(false);
 
     // Availability for the selected provider + date + type
-    const { slots: availableSlots } = useAvailability(
+    const { slots: availableSlots, loading: availabilityLoading } = useAvailability(
         createForm.provider_id || null,
         createForm.date || null,
         createForm.appointment_type_id || null,
@@ -107,7 +110,7 @@ export function ReceptionistDashboard() {
     };
 
     const providerDisplayName = (appt: AppointmentWithDetails) => {
-        if (appt.provider) return `Dr. ${appt.provider.last_name}`;
+        if (appt.provider) return getProviderDisplayName(appt.provider, locale);
         return t('calendar.unassignedProvider');
     };
 
@@ -268,7 +271,7 @@ export function ReceptionistDashboard() {
                         <option value="all">{tr('providers.all')}</option>
                         {providers.map((p) => (
                             <option key={p.id} value={p.id}>
-                                Dr. {p.last_name}
+                                {getProviderDisplayName(p, locale)}
                             </option>
                         ))}
                     </select>
@@ -333,7 +336,7 @@ export function ReceptionistDashboard() {
                                                     {formatISOToTime(appt.start_time)} · {patientDisplayName(appt)}
                                                 </p>
                                                 <p className="text-xs text-slate-500">
-                                                    {appt.appointment_type?.name ?? t('schedule.generalType')} · {providerDisplayName(appt)} · {appt.appointment_type?.duration_minutes ?? 30} min
+                                                    {localizeAppointmentTypeName(appt.appointment_type?.name, locale)} · {providerDisplayName(appt)} · {appt.appointment_type?.duration_minutes ?? 30} min
                                                 </p>
                                                 {appt.notes && (
                                                     <p className="mt-1 text-xs text-slate-400 italic">{appt.notes}</p>
@@ -499,7 +502,7 @@ export function ReceptionistDashboard() {
                                 >
                                     <option value="">{tr('create.providerPlaceholder')}</option>
                                     {providers.map((p) => (
-                                        <option key={p.id} value={p.id}>Dr. {p.last_name}</option>
+                                        <option key={p.id} value={p.id}>{getProviderDisplayName(p, locale)}</option>
                                     ))}
                                 </select>
                                 <select
@@ -511,7 +514,7 @@ export function ReceptionistDashboard() {
                                 >
                                     <option value="">{tr('create.typePlaceholder')}</option>
                                     {appointmentTypes.map((t) => (
-                                        <option key={t.id} value={t.id}>{t.name} ({t.duration_minutes}m)</option>
+                                        <option key={t.id} value={t.id}>{localizeAppointmentTypeName(t.name, locale)} ({t.duration_minutes}m)</option>
                                     ))}
                                 </select>
                             </div>
@@ -538,6 +541,9 @@ export function ReceptionistDashboard() {
                                             {formatISOToTime(s.start_time)}
                                         </option>
                                     ))}
+                                    {availabilityLoading && (
+                                        <option value="" disabled>{tr('create.loadingTimes')}</option>
+                                    )}
                                     {createForm.provider_id && createForm.appointment_type_id && availableSlots.length === 0 && (
                                         <option value="" disabled>{tr('create.noAvailableTimes')}</option>
                                     )}
@@ -599,7 +605,7 @@ export function ReceptionistDashboard() {
                             >
                                 <option value="">{tr('block.providerPlaceholder')}</option>
                                 {providers.map((p) => (
-                                    <option key={p.id} value={p.id}>Dr. {p.last_name}</option>
+                                    <option key={p.id} value={p.id}>{getProviderDisplayName(p, locale)}</option>
                                 ))}
                             </select>
                             <div className="grid grid-cols-2 gap-2">

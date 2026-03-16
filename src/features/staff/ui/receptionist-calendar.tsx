@@ -8,6 +8,7 @@ import {
   updateAppointment,
 } from '../hooks/use-appointments-data';
 import type { AppointmentWithDetails } from '@/entities/appointment/model/appointment.types';
+import { getProviderDisplayName, localizeAppointmentTypeName } from '@/shared/lib/appointment-display';
 
 // ── Status colors ──────────────────────────────────────────────
 function statusColor(status: string) {
@@ -92,7 +93,7 @@ function patientName(appt: AppointmentWithDetails, fallback = 'Unknown') {
 }
 
 function providerLabel(appt: AppointmentWithDetails, fallback = 'Unassigned') {
-  if (appt.provider) return `Dr. ${appt.provider.last_name}`;
+  if (appt.provider) return getProviderDisplayName(appt.provider, 'en');
   return fallback;
 }
 
@@ -234,7 +235,7 @@ export function ReceptionistCalendar({
           date,
           dayName: getDayName(date),
           providerId: provider.id,
-          providerLabel: `Dr. ${provider.last_name}`,
+          providerLabel: getProviderDisplayName(provider, locale),
           slots,
         });
       });
@@ -299,7 +300,7 @@ export function ReceptionistCalendar({
           >
             <option value="all">{allProvidersLabel}</option>
             {providers.map((p) => (
-              <option key={p.id} value={p.id}>Dr. {p.last_name}</option>
+              <option key={p.id} value={p.id}>{getProviderDisplayName(p, locale)}</option>
             ))}
           </select>
           <input
@@ -344,7 +345,7 @@ export function ReceptionistCalendar({
                                 className={`cursor-move rounded-lg p-2 text-xs transition hover:shadow-md ${statusColor(appt.status)}`}
                               >
                                 <p className="font-semibold text-slate-900">{patientName(appt, unknownPatientLabel)}</p>
-                                <p className="text-slate-600">{appt.appointment_type?.name ?? generalTypeLabel}</p>
+                                <p className="text-slate-600">{localizeAppointmentTypeName(appt.appointment_type?.name, locale) ?? generalTypeLabel}</p>
                                 <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${statusBgColor(appt.status)}`}>
                                   {statusDisplayLabel(appt.status, statusFull)}
                                 </span>
@@ -407,7 +408,7 @@ export function ReceptionistCalendar({
                                     className={`cursor-move rounded-lg p-2 text-xs transition hover:shadow-md ${statusColor(appt.status)}`}
                                   >
                                     <p className="font-semibold text-slate-900 truncate">{patientName(appt, unknownPatientLabel)}</p>
-                                    <p className="text-slate-600 truncate">{appt.appointment_type?.name ?? generalTypeLabel}</p>
+                                    <p className="text-slate-600 truncate">{localizeAppointmentTypeName(appt.appointment_type?.name, locale) ?? generalTypeLabel}</p>
                                     <div className="mt-1 flex items-center justify-between gap-1">
                                       <span className="text-xs text-slate-600">
                                         {appt.appointment_type?.duration_minutes ?? 30}m

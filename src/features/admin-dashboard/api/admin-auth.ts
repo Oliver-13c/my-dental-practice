@@ -93,7 +93,7 @@ export async function getCurrentAdminProfile() {
     return { profile: null, error: error || 'Unauthorized' };
   }
 
-  if (!profile?.is_admin) {
+  if (!(profile?.is_admin || profile?.role === 'admin')) {
     return { profile: null, error: 'Forbidden: Admin access required' };
   }
 
