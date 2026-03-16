@@ -78,7 +78,7 @@ export function ReceptionistDashboard() {
         date: selectedDate,
         start_time: '',
         notes: '',
-        language_preference: 'en' as 'en' | 'es',
+        language_preference: 'es' as 'en' | 'es',
     });
     const [createBusy, setCreateBusy] = useState(false);
     const [createSuccess, setCreateSuccess] = useState(false);
@@ -538,8 +538,8 @@ export function ReceptionistDashboard() {
                                 className="w-full rounded-xl border border-slate-200 px-3 py-2"
                                 aria-label="Select language preference"
                             >
-                                <option value="en">English</option>
                                 <option value="es">Español</option>
+                                <option value="en">English</option>
                             </select>
 
                             <input
