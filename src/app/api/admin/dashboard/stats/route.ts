@@ -58,9 +58,18 @@ export async function GET() {
 
     // Get recent admin actions
     const recentActionsResult = await getAdminAuditLogs({ limit: 5, offset: 0 });
+    const recentActions = recentActionsResult.error
+      ? []
+      : (recentActionsResult.data || []).map((action) => ({
+          id: action.id,
+          action: action.action,
+          target_name: action.target_name,
+          admin_email: action.admin_email,
+          created_at: action.created_at,
+        }));
 
     if (recentActionsResult.error) {
-      throw new Error(recentActionsResult.error);
+      console.warn('[admin/dashboard/stats GET] audit logs unavailable:', recentActionsResult.error);
     }
 
     return NextResponse.json({
@@ -73,13 +82,7 @@ export async function GET() {
         activeAppointments,
         todaysAppointments: todayCount,
         upcomingAppointments: upcomingCount,
-        recentActions: (recentActionsResult.data || []).map((action) => ({
-          id: action.id,
-          action: action.action,
-          target_name: action.target_name,
-          admin_email: action.admin_email,
-          created_at: action.created_at,
-        })),
+        recentActions,
       },
     });
   } catch (error) {

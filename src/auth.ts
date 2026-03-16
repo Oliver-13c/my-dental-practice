@@ -9,6 +9,7 @@ import { logAudit } from '@/shared/lib/audit';
 declare module 'next-auth' {
   interface Session {
     user: {
+      id?: string;
       role: StaffRole;
     } & DefaultSession['user'];
   }
@@ -110,6 +111,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     session({ session, token }) {
       session.user.role = (token as typeof token & { role: StaffRole }).role;
+      session.user.id = token.sub ?? session.user.id;
       return session;
     },
   },

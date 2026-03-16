@@ -36,21 +36,40 @@ export async function getCurrentUser() {
 export async function getCurrentStaffProfile() {
   const { user, error: userError } = await getCurrentUser();
 
-  if (!user?.email) {
+  if (!user?.email && !user?.id) {
     return { profile: null, error: userError || 'Unauthorized' };
   }
 
   try {
     const supabase = createServerClient<Database>();
 
-    const { data: profile, error } = await (supabase as any)
-      .from('staff_profiles')
-      .select('*')
-      .eq('email', user.email)
-      .single();
+    let profile: any = null;
+    let profileError: any = null;
 
-    if (error || !profile) {
-      return { profile: null, error: error?.message || 'Staff profile not found' };
+    // Prefer immutable user id from the session token when available.
+    if (user?.id && user.id !== user.email) {
+      const result = await (supabase as any)
+        .from('staff_profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
+      profile = result.data;
+      profileError = result.error;
+    }
+
+    // Fallback to case-insensitive email match to avoid casing mismatches in production.
+    if (!profile && user?.email) {
+      const result = await (supabase as any)
+        .from('staff_profiles')
+        .select('*')
+        .ilike('email', user.email)
+        .maybeSingle();
+      profile = result.data;
+      profileError = result.error;
+    }
+
+    if (profileError || !profile) {
+      return { profile: null, error: profileError?.message || 'Staff profile not found' };
     }
 
     if (!profile.is_active) {
