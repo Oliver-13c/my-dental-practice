@@ -85,4 +85,36 @@
         "saving": "Saving..."
       }
     }
+  },
+  "staff": {
+    "loadingDashboard": "Loading dashboard...",
+    "roles": {
+      "receptionist": "Front Desk",
+      "dentist": "Doctor Portal",
+      "hygienist": "Hygiene Portal",
+      "admin": "Front Desk",
+      "unknown": "Staff Dashboard"
+    },
+    "goToAdmin": "Go to Admin Panel",
+    "signOut": "Sign Out",
+    "unknownRole": "Error: Unrecognized role",
+    "calendar": {
+      "daySchedule": "Day Schedule",
+      "weeklySchedule": "Weekly Schedule",
+      "dragHint": "Drag appointments to reschedule. Click to view details.",
+      "allProviders": "All Providers",
+      "loadingProviders": "Loading providers...",
+      "openSlot": "Open",
+      "releaseToReschedule": "Release to reschedule",
+      "couldNotReschedule": "Could not reschedule — time slot may conflict.",
+      "unknownPatient": "Unknown patient",
+      "unassignedProvider": "Unassigned",
+      "generalType": "General",
+      "timeHeader": "Time"
+    },
+    "schedule": {
+      "title": "Schedule",
+      "generalType": "General"
+    }
   }
+}

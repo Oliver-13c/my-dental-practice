@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
+import { useTranslations } from 'next-intl';
 import { DentistDashboard } from './dentist-dashboard';
 import { ReceptionistDashboard } from './receptionist-dashboard';
 import { useSessionExpiry } from '@/features/session-management/hooks/use-session-expiry';
@@ -11,6 +12,7 @@ import Link from 'next/link';
 export function StaffDashboard() {
   const { data: session, status } = useSession();
   const role = session?.user?.role ?? null;
+  const t = useTranslations('staff');
   const [supabaseRole, setSupabaseRole] = useState<string | null>(null);
   const [provisioning, setProvisioning] = useState(false);
 
@@ -45,7 +47,7 @@ export function StaffDashboard() {
 
   const effectiveRole = role || supabaseRole;
 
-  if (status === 'loading' || provisioning) return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading dashboard...</div>;
+  if (status === 'loading' || provisioning) return <div className="min-h-screen bg-gray-50 flex items-center justify-center">{t('loadingDashboard')}</div>;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -53,10 +55,11 @@ export function StaffDashboard() {
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900">
-            {effectiveRole === 'receptionist' && 'Front Desk'}
-            {effectiveRole === 'dentist' && 'Doctor Portal'}
-            {effectiveRole === 'hygienist' && 'Hygiene Portal'}
-            {!effectiveRole && 'Staff Dashboard'}
+            {effectiveRole === 'receptionist' && t('roles.receptionist')}
+            {effectiveRole === 'dentist' && t('roles.dentist')}
+            {effectiveRole === 'hygienist' && t('roles.hygienist')}
+            {effectiveRole === 'admin' && t('roles.admin')}
+            {!effectiveRole && t('roles.unknown')}
           </h1>
           <div className="flex items-center space-x-4">
             <span className="text-sm font-medium text-gray-500 capitalize px-3 py-1 bg-gray-100 rounded-full">{effectiveRole}</span>
@@ -65,7 +68,7 @@ export function StaffDashboard() {
                 href="/admin"
                 className="text-sm font-medium text-blue-600 hover:text-blue-500"
               >
-                Go to Admin Panel
+                {t('goToAdmin')}
               </Link>
             )}
             <button
@@ -78,7 +81,7 @@ export function StaffDashboard() {
                 });
               }}
             >
-              Sign Out
+              {t('signOut')}
             </button>
           </div>
         </div>
@@ -89,7 +92,7 @@ export function StaffDashboard() {
         {(effectiveRole === 'receptionist' || effectiveRole === 'admin') && <ReceptionistDashboard />}
         {effectiveRole === 'dentist' && <DentistDashboard />}
         {effectiveRole === 'hygienist' && <DentistDashboard /> /* Reuse dentist for now as clinical placeholder */}
-        {!effectiveRole && <p className="text-red-500">Error: Unrecognized role</p>}
+        {!effectiveRole && <p className="text-red-500">{t('unknownRole')}</p>}
       </main>
     </div>
   );

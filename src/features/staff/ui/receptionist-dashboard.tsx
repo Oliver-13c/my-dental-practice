@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { ReceptionistCalendar } from './receptionist-calendar';
 import {
   useAppointments,
@@ -78,6 +79,7 @@ function statusLabel(status: string) {
 }
 
 export function ReceptionistDashboard() {
+    const t = useTranslations('staff');
     const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().slice(0, 10));
     const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
     const [providerFilter, setProviderFilter] = useState('all');
@@ -315,7 +317,7 @@ export function ReceptionistDashboard() {
                     {/* Schedule List */}
                     <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                         <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-semibold text-slate-900">Schedule</h3>
+                            <h3 className="text-lg font-semibold text-slate-900">{t('schedule.title')}</h3>
                             <span className="text-xs uppercase tracking-[0.25em] text-slate-400">{selectedDate}</span>
                         </div>
 
@@ -341,7 +343,7 @@ export function ReceptionistDashboard() {
                                                     {formatISOToTime(appt.start_time)} · {patientDisplayName(appt)}
                                                 </p>
                                                 <p className="text-xs text-slate-500">
-                                                    {appt.appointment_type?.name ?? 'General'} · {providerDisplayName(appt)} · {appt.appointment_type?.duration_minutes ?? 30} min
+                                                    {appt.appointment_type?.name ?? t('schedule.generalType')} · {providerDisplayName(appt)} · {appt.appointment_type?.duration_minutes ?? 30} min
                                                 </p>
                                                 {appt.notes && (
                                                     <p className="mt-1 text-xs text-slate-400 italic">{appt.notes}</p>

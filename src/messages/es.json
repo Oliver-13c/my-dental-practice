@@ -85,4 +85,36 @@
         "saving": "Guardando..."
       }
     }
+  },
+  "staff": {
+    "loadingDashboard": "Cargando panel...",
+    "roles": {
+      "receptionist": "Recepcion",
+      "dentist": "Portal del Doctor",
+      "hygienist": "Portal de Higienista",
+      "admin": "Recepcion",
+      "unknown": "Panel de Personal"
+    },
+    "goToAdmin": "Ir al Panel de Admin",
+    "signOut": "Cerrar sesion",
+    "unknownRole": "Error: Rol no reconocido",
+    "calendar": {
+      "daySchedule": "Agenda del dia",
+      "weeklySchedule": "Agenda semanal",
+      "dragHint": "Arrastra citas para reprogramar. Haz clic para ver detalles.",
+      "allProviders": "Todos los proveedores",
+      "loadingProviders": "Cargando proveedores...",
+      "openSlot": "Libre",
+      "releaseToReschedule": "Suelta para reprogramar",
+      "couldNotReschedule": "No se pudo reprogramar. El horario puede estar ocupado.",
+      "unknownPatient": "Paciente desconocido",
+      "unassignedProvider": "Sin asignar",
+      "generalType": "General",
+      "timeHeader": "Hora"
+    },
+    "schedule": {
+      "title": "Horario del dia",
+      "generalType": "General"
+    }
   }
+}

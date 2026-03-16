@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   useAppointments,
   useProviders,
@@ -59,6 +60,18 @@ function statusLabel(status: string) {
   }
 }
 
+function statusDisplayLabel(status: string) {
+  switch (status) {
+    case 'in-progress': return 'En progreso';
+    case 'arrived': return 'Llegó';
+    case 'confirmed': return 'Confirmado';
+    case 'completed': return 'Completado';
+    case 'no-show': return 'No asistió';
+    case 'cancelled': return 'Cancelado';
+    default: return 'Pendiente';
+  }
+}
+
 function formatTime(iso: string) {
   const d = new Date(iso);
   const hours = d.getHours();
@@ -89,14 +102,14 @@ function dateToString(date: Date) {
   return date.toISOString().slice(0, 10);
 }
 
-function patientName(appt: AppointmentWithDetails) {
+function patientName(appt: AppointmentWithDetails, fallback = 'Unknown') {
   if (appt.patient) return `${appt.patient.first_name} ${appt.patient.last_name}`;
-  return appt.patient_name ?? 'Unknown';
+  return appt.patient_name ?? fallback;
 }
 
-function providerLabel(appt: AppointmentWithDetails) {
+function providerLabel(appt: AppointmentWithDetails, fallback = 'Unassigned') {
   if (appt.provider) return `Dr. ${appt.provider.last_name}`;
-  return 'Unassigned';
+  return fallback;
 }
 
 // ── Time slots ─────────────────────────────────────────────────
@@ -133,6 +146,8 @@ export function ReceptionistCalendar({
 }: ReceptionistCalendarProps) {
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
   const [draggedAppt, setDraggedAppt] = useState<AppointmentWithDetails | null>(null);
+  const [rescheduleError, setRescheduleError] = useState<string | null>(null);
+  const t = useTranslations('staff');
 
   // Build date range for the query
   const dates = useMemo(() => {
@@ -205,6 +220,7 @@ export function ReceptionistCalendar({
 
   const handleDrop = useCallback(async (slot: CalendarSlot, date: string, providerId: string) => {
     if (!draggedAppt) return;
+    setRescheduleError(null);
 
     // Calculate new start_time from date + slot time
     const newStart = new Date(`${date}T${slot.time}:00`).toISOString();
@@ -217,7 +233,7 @@ export function ReceptionistCalendar({
       refetch();
     } catch (err) {
       console.error('Reschedule failed:', err);
-      alert('Could not reschedule — time slot may conflict.');
+      setRescheduleError(t('calendar.couldNotReschedule'));
     }
     setDraggedAppt(null);
   }, [draggedAppt, refetch]);
@@ -227,9 +243,12 @@ export function ReceptionistCalendar({
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h3 className="text-lg font-semibold text-slate-900">
-            {viewMode === 'day' ? 'Day Schedule' : 'Weekly Schedule'}
+            {viewMode === 'day' ? t('calendar.daySchedule') : t('calendar.weeklySchedule')}
           </h3>
-          <p className="text-xs text-slate-500">Drag appointments to reschedule. Click to view details.</p>
+          <p className="text-xs text-slate-500">{t('calendar.dragHint')}</p>
+          {rescheduleError && (
+            <p className="text-xs text-rose-600 mt-1">{rescheduleError}</p>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <select
@@ -238,7 +257,7 @@ export function ReceptionistCalendar({
             className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm shadow-sm"
             aria-label="Filter calendar by provider"
           >
-            <option value="all">All Providers</option>
+            <option value="all">{t('calendar.allProviders')}</option>
             {providers.map((p) => (
               <option key={p.id} value={p.id}>Dr. {p.last_name}</option>
             ))}
@@ -254,7 +273,7 @@ export function ReceptionistCalendar({
       </div>
 
       {providers.length === 0 ? (
-        <div className="mt-6 py-8 text-center text-sm text-slate-400">Loading providers...</div>
+        <div className="mt-6 py-8 text-center text-sm text-slate-400">{t('calendar.loadingProviders')}</div>
       ) : (
         <>
           {/* Day View */}
@@ -284,16 +303,16 @@ export function ReceptionistCalendar({
                                 onDragStart={() => handleDragStart(appt)}
                                 className={`cursor-move rounded-lg p-2 text-xs transition hover:shadow-md ${statusColor(appt.status)}`}
                               >
-                                <p className="font-semibold text-slate-900">{patientName(appt)}</p>
-                                <p className="text-slate-600">{appt.appointment_type?.name ?? 'General'}</p>
+                                <p className="font-semibold text-slate-900">{patientName(appt, t('calendar.unknownPatient'))}</p>
+                                <p className="text-slate-600">{appt.appointment_type?.name ?? t('calendar.generalType')}</p>
                                 <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${statusBgColor(appt.status)}`}>
-                                  {appt.status.replace('-', ' ')}
+                                  {statusDisplayLabel(appt.status)}
                                 </span>
                               </div>
                             ))}
                           </div>
                         ) : (
-                          <div className="mt-2 text-xs text-slate-400">Open</div>
+                          <div className="mt-2 text-xs text-slate-400">{t('calendar.openSlot')}</div>
                         )}
                       </div>
                     ))}
@@ -310,7 +329,7 @@ export function ReceptionistCalendar({
                 <thead>
                   <tr className="border-b border-slate-200">
                     <th className="sticky left-0 z-10 min-w-20 bg-white text-left text-xs font-semibold text-slate-600 p-3">
-                      Time
+                      {t('calendar.timeHeader')}
                     </th>
                     {displayCalendars.slice(0, viewMode === 'week' ? undefined : 5).map((col) => (
                       <th
@@ -347,8 +366,8 @@ export function ReceptionistCalendar({
                                     onDragStart={() => handleDragStart(appt)}
                                     className={`cursor-move rounded-lg p-2 text-xs transition hover:shadow-md ${statusColor(appt.status)}`}
                                   >
-                                    <p className="font-semibold text-slate-900 truncate">{patientName(appt)}</p>
-                                    <p className="text-slate-600 truncate">{appt.appointment_type?.name ?? 'General'}</p>
+                                    <p className="font-semibold text-slate-900 truncate">{patientName(appt, t('calendar.unknownPatient'))}</p>
+                                    <p className="text-slate-600 truncate">{appt.appointment_type?.name ?? t('calendar.generalType')}</p>
                                     <div className="mt-1 flex items-center justify-between gap-1">
                                       <span className="text-xs text-slate-600">
                                         {appt.appointment_type?.duration_minutes ?? 30}m
@@ -379,7 +398,7 @@ export function ReceptionistCalendar({
       {draggedAppt && (
         <div className="fixed bottom-4 left-4 rounded-2xl border-2 border-dashed border-slate-400 bg-white p-3 shadow-lg pointer-events-none">
           <p className="text-sm font-semibold text-slate-900">{patientName(draggedAppt)}</p>
-          <p className="text-xs text-slate-500">Release to reschedule</p>
+          <p className="text-xs text-slate-500">{t('calendar.releaseToReschedule')}</p>
         </div>
       )}
     </div>
