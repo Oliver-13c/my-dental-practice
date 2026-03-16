@@ -132,7 +132,9 @@
         "saving": "Saving...",
         "save": "Save",
         "roleAdmin": "Admin",
-        "roleStaff": "Staff",
+        "roleReceptionist": "Front Desk",
+        "roleDentist": "Dentist",
+        "roleHygienist": "Hygienist",
         "placeholders": {
           "firstName": "John",
           "lastName": "Doe",
@@ -302,6 +304,16 @@
         "startVisit": "Start Visit",
         "completeVisit": "Complete Visit",
         "noShow": "No-Show"
+      },
+      "snapshot": {
+        "title": "Patient Snapshot",
+        "phone": "Phone",
+        "email": "Email",
+        "notes": "Clinical Notes",
+        "noNotes": "No notes on file",
+        "restricted": "Restricted",
+        "na": "N/A",
+        "unknown": "Unknown patient"
       }
     }
   }

@@ -117,3 +117,48 @@ Prove the real business flows work and remove false confidence from stale tests.
 - Notification failure handling
 - Calendar sync failure handling
 - Bilingual UI checks on critical flows
+## 5. Dentist Enablement Backlog
+
+### Phase 1: Real Roles in Admin (Priority)
+- [x] Enable real role options in create/edit user UI: `dentist`, `hygienist`, `receptionist`, `admin`.
+- [x] Remove frontend mapping `staff -> receptionist` and send the selected role directly.
+- [ ] Verify backend persistence in `/api/admin/users` for `dentist` and `hygienist`.
+- [x] Add role filters in admin users panel for clinical roles.
+- [x] Define and document role permissions (dentist vs receptionist vs admin).
+
+### Phase 2: Dentist Personalized Surface
+- [x] Create or refine dedicated route `/staff/dentist` with clinical layout.
+- [x] Show dentist day/week schedule for authenticated provider.
+- [x] Show quick patient snapshot for the current appointment: name, contact, reason, medical notes.
+- [x] Add clinical appointment states: `waiting`, `in-progress`, `completed`, `no-show`.
+- [x] Add quick actions: start visit, complete visit, add/update clinical note.
+- [x] Add "current patient" + "upcoming patients" panels.
+
+### Phase 3: Patient Data Scope and Safety
+- [ ] Define minimum required fields for in-visit patient card.
+- [ ] Define sensitive fields and explicit redaction rules per role.
+- [x] Build reusable `PatientSnapshotCard` component in shared/feature UI.
+- [x] Register audit events for clinical read/update actions.
+- [ ] Review and update RLS policies so each role can only access permitted data.
+
+### Phase 4: Calendar Strategy (App-first + Gmail Optional)
+- [ ] Keep internal app calendar as primary source of truth (MVP).
+- [ ] Add optional Google Calendar connect toggle per dentist user.
+- [ ] Implement OAuth connect/disconnect flow for staff Google account.
+- [ ] Implement initial sync operations: create, update, cancel event.
+- [ ] Implement conflict/fallback behavior: if Google fails, app schedule remains authoritative.
+- [ ] Add connection status UI: connected, error, reconnect, disconnect.
+
+### Phase 5: QA and Security Hardening
+- [ ] Add E2E for dentist user creation and dentist dashboard access.
+- [ ] Add permission tests for forbidden role access to clinical routes.
+- [ ] Add tests for app calendar flow with Google disconnected.
+- [ ] Add tests for app calendar flow with Google connected and sync failures.
+- [ ] Add data exposure tests to ensure sensitive fields are not leaked.
+
+### Delivery Order
+- [ ] 1) Real roles in Admin UI + persistence.
+- [ ] 2) Dentist personalized dashboard with internal schedule.
+- [ ] 3) Patient snapshot + clinical actions.
+- [ ] 4) Optional Google Calendar integration.
+- [ ] 5) QA, audit, and security hardening.

@@ -1,0 +1,90 @@
+
+> my-dental-practice@0.1.0 build
+> next build
+
+   Γû▓ Next.js 15.5.12
+   - Environments: .env
+   - Experiments (use with caution):
+     ┬╖ clientTraceMetadata
+
+   Creating an optimized production build ...
+ Γ£ô Compiled successfully in 27.3s
+   Skipping linting
+   Checking validity of types ...
+   Collecting page data ...
+[twilio-client] Missing TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, or TWILIO_PHONE_NUMBER ΓÇö SMS will be disabled
+[twilio-client] Missing TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, or TWILIO_PHONE_NUMBER ΓÇö SMS will be disabled
+[twilio-client] Missing TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, or TWILIO_PHONE_NUMBER ΓÇö SMS will be disabled
+   Generating static pages (0/21) ...
+[twilio-client] Missing TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, or TWILIO_PHONE_NUMBER ΓÇö SMS will be disabled
+   Generating static pages (5/21) 
+   Generating static pages (10/21) 
+   Generating static pages (15/21) 
+ Γ£ô Generating static pages (21/21)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                  Size  First Load JS
+Γöî ╞Æ /                                       427 B         220 kB
+Γö£ ╞Æ /_not-found                           1.16 kB         221 kB
+Γö£ ╞Æ /admin                                3.16 kB         241 kB
+Γö£ ╞Æ /admin/analytics                      4.03 kB         242 kB
+Γö£ ╞Æ /admin/appointments                   3.91 kB         242 kB
+Γö£ ╞Æ /admin/audit-logs                     3.32 kB         242 kB
+Γö£ ╞Æ /admin/staff                          3.64 kB         242 kB
+Γö£ ╞Æ /admin/users                           3.5 kB         242 kB
+Γö£ ╞Æ /admin/users/[id]                     4.32 kB         265 kB
+Γö£ ╞Æ /admin/users/create                   4.31 kB         265 kB
+Γö£ ╞Æ /api/admin/analytics                    427 B         220 kB
+Γö£ ╞Æ /api/admin/audit-logs                   426 B         220 kB
+Γö£ ╞Æ /api/admin/dashboard/stats              427 B         220 kB
+Γö£ ╞Æ /api/admin/users                        427 B         220 kB
+Γö£ ╞Æ /api/admin/users/[id]                   427 B         220 kB
+Γö£ ╞Æ /api/admin/users/[id]/reset-password    426 B         220 kB
+Γö£ ╞Æ /api/appointment-types                  426 B         220 kB
+Γö£ ╞Æ /api/appointments                       426 B         220 kB
+Γö£ ╞Æ /api/appointments/[id]                  425 B         220 kB
+Γö£ ╞Æ /api/appointments/availability          426 B         220 kB
+Γö£ ╞Æ /api/audit-logs                         427 B         220 kB
+Γö£ ╞Æ /api/auth/[...nextauth]                 427 B         220 kB
+Γö£ ╞Æ /api/auth/provision-profile             426 B         220 kB
+Γö£ ╞Æ /api/calendar/auth                      426 B         220 kB
+Γö£ ╞Æ /api/calendar/callback                  426 B         220 kB
+Γö£ ╞Æ /api/calendar/webhook                   427 B         220 kB
+Γö£ ╞Æ /api/cron/reminders                     428 B         220 kB
+Γö£ ╞Æ /api/csp-report                         426 B         220 kB
+Γö£ ╞Æ /api/csrf                               428 B         220 kB
+Γö£ ╞Æ /api/health                             426 B         220 kB
+Γö£ ╞Æ /api/patient-intake                     428 B         220 kB
+Γö£ ╞Æ /api/patients                           427 B         220 kB
+Γö£ ╞Æ /api/patients/[id]                      426 B         220 kB
+Γö£ ╞Æ /api/patients/search                    426 B         220 kB
+Γö£ ╞Æ /api/providers                          428 B         220 kB
+Γö£ ╞Æ /api/providers/[id]/schedule            426 B         220 kB
+Γö£ ╞Æ /api/sentry-test                        426 B         220 kB
+Γö£ ╞Æ /auth/callback                          426 B         220 kB
+Γö£ ╞Æ /auth/error                           1.24 kB         222 kB
+Γö£ ╞Æ /auth/reset-password                  2.57 kB         277 kB
+Γö£ ╞Æ /login                                2.25 kB         298 kB
+Γö£ ╞Æ /patient/appointments                 1.57 kB         288 kB
+Γö£ ╞Æ /signup                                 427 B         220 kB
+Γö£ ╞Æ /staff/admin                            427 B         220 kB
+Γö£ ╞Æ /staff/admin/audit-logs                 426 B         220 kB
+Γö£ ╞Æ /staff/admin/settings                   427 B         220 kB
+Γö£ ╞Æ /staff/admin/users                      427 B         220 kB
+Γö£ ╞Æ /staff/admin/users/create               427 B         220 kB
+Γö£ ╞Æ /staff/dashboard                         8 kB         308 kB
+Γö£ ╞Æ /staff/dentist                          360 B         243 kB
+Γö£ ╞Æ /staff/hygienist                        362 B         243 kB
+Γöö ╞Æ /staff/login                          2.08 kB         297 kB
++ First Load JS shared by all              219 kB
+  Γö£ chunks/3284-bb3b34d1544d63ee.js        124 kB
+  Γö£ chunks/4bd1b696-9c5bd943e17f4826.js   54.4 kB
+  Γö£ chunks/52774a7f-93b3f745fb4acde0.js   38.5 kB
+  Γöö other shared chunks (total)           2.91 kB
+
+
+╞Æ Middleware                               144 kB
+
+╞Æ  (Dynamic)  server-rendered on demand
+

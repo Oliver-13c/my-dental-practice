@@ -13,7 +13,7 @@ interface CreateUserData {
   firstName: string;
   lastName: string;
   email: string;
-  role: 'admin' | 'staff';
+  role: 'admin' | 'receptionist' | 'dentist' | 'hygienist';
   isActive: boolean;
 }
 
@@ -114,13 +114,7 @@ export function CreateUserClient() {
     setError(null);
 
     try {
-      // Map role from UI to backend format
-      const roleMap: Record<string, string> = {
-        admin: 'admin',
-        staff: 'receptionist',
-      };
-
-      // Generate a temporary password (server-side only, not shown to user)
+      // Generate a temporary password shown to admin via modal + reset email sent
       const tempPassword = `Temp${Math.random().toString(36).slice(-8)}!`;
 
       const response = await csrfFetch('/api/admin/users', {
@@ -131,7 +125,7 @@ export function CreateUserClient() {
           password: tempPassword,
           first_name: data.firstName,
           last_name: data.lastName,
-          role: roleMap[data.role] || 'receptionist',
+          role: data.role,
           sendWelcomeEmail: true, // Signal to backend to send password reset email
         }),
       });

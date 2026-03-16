@@ -14,7 +14,7 @@ type UserFormData = {
   firstName: string;
   lastName: string;
   email: string;
-  role: 'admin' | 'staff';
+  role: 'admin' | 'receptionist' | 'dentist' | 'hygienist';
   isActive: boolean;
 };
 
@@ -37,7 +37,7 @@ export function UserForm({
       firstName: z.string().min(1, t('errors.firstNameRequired')),
       lastName: z.string().min(1, t('errors.lastNameRequired')),
       email: z.string().email(t('errors.invalidEmail')),
-      role: z.enum(['admin', 'staff'], { errorMap: () => ({ message: t('errors.invalidRole') }) }),
+      role: z.enum(['admin', 'receptionist', 'dentist', 'hygienist'], { errorMap: () => ({ message: t('errors.invalidRole') }) }),
       isActive: z.boolean(),
     }),
     [t],
@@ -53,7 +53,7 @@ export function UserForm({
     resolver: zodResolver(userFormSchema),
     defaultValues: initialData || {
       isActive: true,
-      role: 'staff',
+      role: 'receptionist',
     },
   });
 
@@ -111,7 +111,9 @@ export function UserForm({
             {...register('role')}
             className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
           >
-            <option value="staff">{t('roleStaff')}</option>
+            <option value="receptionist">{t('roleReceptionist')}</option>
+            <option value="dentist">{t('roleDentist')}</option>
+            <option value="hygienist">{t('roleHygienist')}</option>
             <option value="admin">{t('roleAdmin')}</option>
           </select>
           {errors.role && (

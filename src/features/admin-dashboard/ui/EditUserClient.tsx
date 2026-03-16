@@ -13,7 +13,7 @@ interface EditUserData {
   firstName: string;
   lastName: string;
   email: string;
-  role: 'admin' | 'staff';
+  role: 'admin' | 'receptionist' | 'dentist' | 'hygienist';
   isActive: boolean;
 }
 
@@ -44,11 +44,17 @@ export function EditUserClient({ userId }: EditUserClientProps) {
       }
 
       // Transform data from backend format to UI format
+      const backendRole = result.data.role as string;
+      const validRoles = ['admin', 'receptionist', 'dentist', 'hygienist'] as const;
+      type UiRole = typeof validRoles[number];
+      const role: UiRole = (validRoles as readonly string[]).includes(backendRole)
+        ? (backendRole as UiRole)
+        : 'receptionist';
       setUser({
         firstName: result.data.first_name,
         lastName: result.data.last_name,
         email: result.data.email,
-        role: result.data.is_admin ? 'admin' : 'staff',
+        role,
         isActive: result.data.is_active,
       });
     } catch (err) {
@@ -64,19 +70,13 @@ export function EditUserClient({ userId }: EditUserClientProps) {
     setError(null);
 
     try {
-      // Map role from UI to backend format
-      const roleMap: Record<string, string> = {
-        admin: 'admin',
-        staff: 'receptionist',
-      };
-
       const response = await csrfFetch(`/api/admin/users/${userId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           first_name: data.firstName,
           last_name: data.lastName,
-          role: roleMap[data.role] || 'receptionist',
+          role: data.role,
           is_active: data.isActive,
           is_admin: data.role === 'admin',
         }),

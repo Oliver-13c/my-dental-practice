@@ -3,8 +3,14 @@ import type { NextRequest } from 'next/server';
 import { createServerClient } from '@/shared/api/supabase-server';
 import type { Database } from '@/shared/api/supabase-types';
 import { createAppointmentSchema } from '@/entities/appointment/model/appointment.types';
+import { getCurrentStaffProfile } from '@/features/admin-dashboard/api/admin-auth';
+import { logAudit } from '@/shared/lib/audit';
 import { sendAppointmentConfirmation } from '@/services/notification-service';
 import { createCalendarEvent } from '@/services/google-calendar-service';
+
+function canManageAllAppointments(role: string) {
+  return role === 'admin' || role === 'receptionist';
+}
 
 /**
  * GET /api/appointments
@@ -13,6 +19,12 @@ import { createCalendarEvent } from '@/services/google-calendar-service';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
+    const { profile, error: authError } = await getCurrentStaffProfile();
+
+    if (!profile) {
+      return NextResponse.json({ error: authError || 'Unauthorized' }, { status: 401 });
+    }
+
     const supabase = createServerClient<Database>() as any;
 
     let query = supabase
@@ -32,6 +44,10 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const patientId = searchParams.get('patient_id');
 
+    if (!canManageAllAppointments(profile.role)) {
+      query = query.eq('provider_id', profile.id);
+    }
+
     if (date) {
       query = query
         .gte('start_time', `${date}T00:00:00.000Z`)
@@ -43,7 +59,7 @@ export async function GET(request: NextRequest) {
     if (endDate) {
       query = query.lte('start_time', `${endDate}T23:59:59.999Z`);
     }
-    if (providerId) {
+    if (providerId && canManageAllAppointments(profile.role)) {
       query = query.eq('provider_id', providerId);
     }
     if (status) {
@@ -73,6 +89,12 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    const { profile, error: authError } = await getCurrentStaffProfile();
+
+    if (!profile) {
+      return NextResponse.json({ error: authError || 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const parsed = createAppointmentSchema.safeParse(body);
 
@@ -84,6 +106,14 @@ export async function POST(request: NextRequest) {
     }
 
     const input = parsed.data;
+
+    if (!canManageAllAppointments(profile.role) && input.provider_id !== profile.id) {
+      return NextResponse.json(
+        { error: 'Forbidden: you can only create appointments assigned to yourself' },
+        { status: 403 },
+      );
+    }
+
     const supabase = createServerClient<Database>() as any;
 
     // 1. Get appointment type to determine duration
@@ -175,6 +205,12 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('[api/appointments] Created appointment:', appointment.id);
+
+    await logAudit(profile.id, 'appointment.create', 'appointment', appointment.id, {
+      provider_id: appointment.provider_id,
+      patient_id: appointment.patient_id,
+      status: appointment.status,
+    });
 
     // Fire-and-forget notification (don't block the response)
     sendAppointmentConfirmation(appointment).catch((err) =>

@@ -5,12 +5,14 @@ import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { Button } from '@/shared/ui/button';
 
+type UserRole = 'admin' | 'receptionist' | 'dentist' | 'hygienist';
+
 export interface User {
   id: string;
   email: string;
   firstName: string;
   lastName: string;
-  role: 'admin' | 'staff';
+  role: UserRole;
   isActive: boolean;
   lastLogin?: string;
   createdAt: string;
@@ -30,6 +32,21 @@ export function UsersTable({ users, isLoading = false, onEdit, onDelete, onRefre
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [filterRole, setFilterRole] = useState<string>('');
   const [filterActive, setFilterActive] = useState<string>('');
+
+  const roleLabel = (role: UserRole) => {
+    switch (role) {
+      case 'admin':
+        return t('form.roleAdmin');
+      case 'receptionist':
+        return t('form.roleReceptionist');
+      case 'dentist':
+        return t('form.roleDentist');
+      case 'hygienist':
+        return t('form.roleHygienist');
+      default:
+        return role;
+    }
+  };
 
   const filteredUsers = users.filter((user) => {
     if (filterRole && user.role !== filterRole) return false;
@@ -65,7 +82,9 @@ export function UsersTable({ users, isLoading = false, onEdit, onDelete, onRefre
         >
           <option value="">{t('filterByRole')}</option>
           <option value="admin">{t('form.roleAdmin')}</option>
-          <option value="staff">{t('form.roleStaff')}</option>
+          <option value="receptionist">{t('form.roleReceptionist')}</option>
+          <option value="dentist">{t('form.roleDentist')}</option>
+          <option value="hygienist">{t('form.roleHygienist')}</option>
         </select>
 
         <select
@@ -114,7 +133,7 @@ export function UsersTable({ users, isLoading = false, onEdit, onDelete, onRefre
                 </td>
                 <td className="px-6 py-4">
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {user.role === 'admin' ? t('form.roleAdmin') : t('form.roleStaff')}
+                    {roleLabel(user.role)}
                   </span>
                 </td>
                 <td className="px-6 py-4">

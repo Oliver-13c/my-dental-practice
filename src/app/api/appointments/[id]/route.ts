@@ -3,6 +3,8 @@ import type { NextRequest } from 'next/server';
 import { createServerClient } from '@/shared/api/supabase-server';
 import type { Database } from '@/shared/api/supabase-types';
 import { updateAppointmentSchema } from '@/entities/appointment/model/appointment.types';
+import { getCurrentStaffProfile } from '@/features/admin-dashboard/api/admin-auth';
+import { logAudit } from '@/shared/lib/audit';
 import {
   sendAppointmentReschedule,
   sendAppointmentCancellation,
@@ -16,6 +18,10 @@ interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
+function canManageAllAppointments(role: string) {
+  return role === 'admin' || role === 'receptionist';
+}
+
 /**
  * GET /api/appointments/[id]
  * Get a single appointment with full details.
@@ -23,9 +29,15 @@ interface RouteParams {
 export async function GET(_request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
+    const { profile, error: authError } = await getCurrentStaffProfile();
+
+    if (!profile) {
+      return NextResponse.json({ error: authError || 'Unauthorized' }, { status: 401 });
+    }
+
     const supabase = createServerClient<Database>() as any;
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('appointments')
       .select(`
         *,
@@ -33,12 +45,22 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
         provider:staff_profiles!provider_id (id, first_name, last_name, role),
         appointment_type:appointment_types!appointment_type_id (id, name, duration_minutes, color)
       `)
-      .eq('id', id)
-      .single();
+      .eq('id', id);
+
+    if (!canManageAllAppointments(profile.role)) {
+      query = query.eq('provider_id', profile.id);
+    }
+
+    const { data, error } = await query.single();
 
     if (error) {
       return NextResponse.json({ error: 'Appointment not found' }, { status: 404 });
     }
+
+    await logAudit(profile.id, 'appointment.read', 'appointment', id, {
+      provider_id: data.provider_id,
+      patient_id: data.patient_id,
+    });
 
     return NextResponse.json({ data });
   } catch (err) {
@@ -54,6 +76,12 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
+    const { profile, error: authError } = await getCurrentStaffProfile();
+
+    if (!profile) {
+      return NextResponse.json({ error: authError || 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const parsed = updateAppointmentSchema.safeParse(body);
 
@@ -66,6 +94,23 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     const input = parsed.data;
     const supabase = createServerClient<Database>() as any;
+
+    const { data: existingAppointment, error: existingError } = await supabase
+      .from('appointments')
+      .select('id, provider_id, patient_id, status')
+      .eq('id', id)
+      .single();
+
+    if (existingError || !existingAppointment) {
+      return NextResponse.json({ error: 'Appointment not found' }, { status: 404 });
+    }
+
+    if (!canManageAllAppointments(profile.role) && existingAppointment.provider_id !== profile.id) {
+      return NextResponse.json(
+        { error: 'Forbidden: you can only update your own appointments' },
+        { status: 403 },
+      );
+    }
 
     // If rescheduling (start_time changed), recalculate end_time and check availability
     const updates: Record<string, unknown> = { ...input };
@@ -147,6 +192,12 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     console.log('[api/appointments/id] Updated:', id, 'changes:', Object.keys(input));
 
+    await logAudit(profile.id, 'appointment.update', 'appointment', id, {
+      provider_id: data.provider_id,
+      patient_id: data.patient_id,
+      fields: Object.keys(input),
+    });
+
     // Send reschedule notification if time was changed
     if (input.start_time) {
       sendAppointmentReschedule(data).catch((err) =>
@@ -173,7 +224,30 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
+    const { profile, error: authError } = await getCurrentStaffProfile();
+
+    if (!profile) {
+      return NextResponse.json({ error: authError || 'Unauthorized' }, { status: 401 });
+    }
+
     const supabase = createServerClient<Database>() as any;
+
+    const { data: existingAppointment, error: existingError } = await supabase
+      .from('appointments')
+      .select('id, provider_id, patient_id')
+      .eq('id', id)
+      .single();
+
+    if (existingError || !existingAppointment) {
+      return NextResponse.json({ error: 'Appointment not found' }, { status: 404 });
+    }
+
+    if (!canManageAllAppointments(profile.role) && existingAppointment.provider_id !== profile.id) {
+      return NextResponse.json(
+        { error: 'Forbidden: you can only cancel your own appointments' },
+        { status: 403 },
+      );
+    }
 
     const { data, error } = await supabase
       .from('appointments')
@@ -193,6 +267,11 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
     }
 
     console.log('[api/appointments/id] Cancelled:', id);
+
+    await logAudit(profile.id, 'appointment.cancel', 'appointment', id, {
+      provider_id: data.provider_id,
+      patient_id: data.patient_id,
+    });
 
     // Send cancellation notification
     sendAppointmentCancellation(data).catch((err) =>

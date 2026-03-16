@@ -7,6 +7,9 @@ import { UsersTable, type User } from './UsersTable';
 import { Button } from '@/shared/ui/button';
 import { csrfFetch } from '@/shared/lib/csrf-fetch';
 
+const UI_ROLES = ['admin', 'receptionist', 'dentist', 'hygienist'] as const;
+type UiRole = (typeof UI_ROLES)[number];
+
 export function UsersListClient() {
   const t = useTranslations('admin.users');
   const [users, setUsers] = useState<User[]>([]);
@@ -33,7 +36,7 @@ export function UsersListClient() {
         email: staff.email,
         firstName: staff.first_name,
         lastName: staff.last_name,
-        role: staff.is_admin ? 'admin' : 'staff',
+        role: UI_ROLES.includes(staff.role as UiRole) ? staff.role : 'receptionist',
         isActive: staff.is_active,
         lastLogin: staff.last_login,
         createdAt: staff.created_at,

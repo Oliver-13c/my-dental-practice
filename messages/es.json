@@ -188,6 +188,16 @@
         "startVisit": "Iniciar consulta",
         "completeVisit": "Finalizar consulta",
         "noShow": "No asistio"
+      },
+      "snapshot": {
+        "title": "Resumen del paciente",
+        "phone": "Telefono",
+        "email": "Correo",
+        "notes": "Notas clinicas",
+        "noNotes": "No hay notas registradas",
+        "restricted": "Restringido",
+        "na": "N/D",
+        "unknown": "Paciente desconocido"
       }
     }
   },
@@ -487,7 +497,9 @@
         "saving": "Guardando...",
         "save": "Guardar",
         "roleAdmin": "Admin",
-        "roleStaff": "Personal",
+        "roleReceptionist": "Recepcionista",
+        "roleDentist": "Dentista",
+        "roleHygienist": "Higienista",
         "placeholders": {
           "firstName": "Juan",
           "lastName": "Perez",

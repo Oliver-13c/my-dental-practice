@@ -32,3 +32,16 @@ Default development credentials (created by the seed script):
 | Dentist     | doctor@practice.com      | password123   |
 
 > **Note:** These are for local/development use only. Change all passwords before deploying to any shared or production environment.
+
+## Role permissions
+
+The staff portal now uses the real clinical roles from `staff_profiles.role`.
+
+| Role | Primary responsibilities | Access scope |
+|------|---------------------------|--------------|
+| Admin | Staff management, audit review, global scheduling oversight | Full admin surface and all appointments |
+| Receptionist | Appointment booking, rescheduling, cancellations, front-desk operations | All appointments and operational scheduling flows |
+| Dentist | Clinical day view, patient snapshot, visit state updates, clinical notes | Only appointments assigned to the authenticated provider |
+| Hygienist | Clinical day view, patient snapshot, visit state updates, clinical notes | Only appointments assigned to the authenticated provider |
+
+Clinical access is enforced in the staff routes and in the appointment API. Non-admin clinical staff are restricted to their own assigned appointments.
