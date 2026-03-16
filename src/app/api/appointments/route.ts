@@ -7,10 +7,7 @@ import { getCurrentStaffProfile } from '@/features/admin-dashboard/api/admin-aut
 import { logAudit } from '@/shared/lib/audit';
 import { sendAppointmentConfirmation } from '@/services/notification-service';
 import { createCalendarEvent } from '@/services/google-calendar-service';
-
-function canManageAllAppointments(role: string) {
-  return role === 'admin' || role === 'receptionist';
-}
+import { canManageAllAppointments } from '@/shared/lib/staff-permissions';
 
 /**
  * GET /api/appointments

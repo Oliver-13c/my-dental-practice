@@ -106,6 +106,68 @@ export interface Database {
           updated_at?: string;
         };
       };
+      google_calendar_connections: {
+        Row: {
+          provider_id: string;
+          google_account_email: string | null;
+          calendar_id: string;
+          refresh_token: string | null;
+          access_token: string | null;
+          token_expiry: string | null;
+          scopes: string[];
+          sync_enabled: boolean;
+          connected_at: string;
+          disconnected_at: string | null;
+          last_sync_at: string | null;
+          last_error: string | null;
+          watch_channel_id: string | null;
+          watch_resource_id: string | null;
+          watch_expires_at: string | null;
+          watch_token: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          provider_id: string;
+          google_account_email?: string | null;
+          calendar_id?: string;
+          refresh_token?: string | null;
+          access_token?: string | null;
+          token_expiry?: string | null;
+          scopes?: string[];
+          sync_enabled?: boolean;
+          connected_at?: string;
+          disconnected_at?: string | null;
+          last_sync_at?: string | null;
+          last_error?: string | null;
+          watch_channel_id?: string | null;
+          watch_resource_id?: string | null;
+          watch_expires_at?: string | null;
+          watch_token?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          provider_id?: string;
+          google_account_email?: string | null;
+          calendar_id?: string;
+          refresh_token?: string | null;
+          access_token?: string | null;
+          token_expiry?: string | null;
+          scopes?: string[];
+          sync_enabled?: boolean;
+          connected_at?: string;
+          disconnected_at?: string | null;
+          last_sync_at?: string | null;
+          last_error?: string | null;
+          watch_channel_id?: string | null;
+          watch_resource_id?: string | null;
+          watch_expires_at?: string | null;
+          watch_token?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
       patient_intake_submissions: {
         Row: {
           id: string;

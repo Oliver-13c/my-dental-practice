@@ -10,6 +10,18 @@ import Link from 'next/link';
 import type { StaffRole } from '@/entities/staff/model/staff.types';
 import { Button } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
+import type { CalendarConnectionState } from '@/services/google-calendar-connections';
+
+const disconnectedCalendarState: CalendarConnectionState = {
+  connected: false,
+  calendarAvailable: true,
+  googleAccountEmail: null,
+  calendarId: null,
+  syncEnabled: false,
+  connectedAt: null,
+  disconnectedAt: null,
+  lastError: null,
+};
 
 export function StaffDashboard({
   initialRole,
@@ -68,8 +80,20 @@ export function StaffDashboard({
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-8">
         {(effectiveRole === 'receptionist' || effectiveRole === 'admin') && <ReceptionistDashboard />}
-        {effectiveRole === 'dentist' && <DentistDashboard providerId={staffProfileId} />}
-        {effectiveRole === 'hygienist' && <DentistDashboard providerId={staffProfileId} /> /* Reuse dentist for now as clinical placeholder */}
+        {effectiveRole === 'dentist' && (
+          <DentistDashboard
+            providerId={staffProfileId}
+            viewerRole="dentist"
+            calendarConnection={disconnectedCalendarState}
+          />
+        )}
+        {effectiveRole === 'hygienist' && (
+          <DentistDashboard
+            providerId={staffProfileId}
+            viewerRole="hygienist"
+            calendarConnection={disconnectedCalendarState}
+          />
+        ) /* Reuse dentist for now as clinical placeholder */}
         {!effectiveRole && (
           <Card status="critical">
             <p className="text-critical">{t('unknownRole')}</p>

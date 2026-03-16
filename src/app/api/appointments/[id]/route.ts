@@ -13,13 +13,10 @@ import {
   updateCalendarEvent,
   deleteCalendarEvent,
 } from '@/services/google-calendar-service';
+import { canManageAllAppointments } from '@/shared/lib/staff-permissions';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
-}
-
-function canManageAllAppointments(role: string) {
-  return role === 'admin' || role === 'receptionist';
 }
 
 /**
@@ -280,7 +277,7 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
 
     // Delete from Google Calendar
     if (data.google_calendar_event_id) {
-      deleteCalendarEvent(data.google_calendar_event_id).catch((err) =>
+      deleteCalendarEvent(data.provider_id, data.google_calendar_event_id).catch((err) =>
         console.error('[api/appointments/id] Calendar delete error:', err),
       );
     }

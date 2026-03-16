@@ -4,6 +4,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getCurrentStaffProfile } from '@/features/admin-dashboard/api/admin-auth';
 import { ApiErrors } from '@/shared/lib/api-error';
+import {
+  canManageAllPatientData,
+  hasAssignedPatientAccess,
+  isClinicalStaffRole,
+} from '@/shared/lib/staff-permissions';
 
 const updatePatientSchema = z.object({
   firstName: z.string().min(1).optional(),
@@ -36,6 +41,20 @@ export async function GET(
 
     // Staff only: Use server client with RLS
     const supabase = createServerClient();
+
+    if (!canManageAllPatientData(profile.role)) {
+      if (!isClinicalStaffRole(profile.role)) {
+        return ApiErrors.forbidden('Forbidden');
+      }
+
+      const allowed = await hasAssignedPatientAccess(supabase, profile.id, id);
+      if (!allowed) {
+        return NextResponse.json(
+          { error: 'Patient not found' },
+          { status: 404 }
+        );
+      }
+    }
 
     const { data: patient, error } = await supabase
       .from('patients')
@@ -73,6 +92,11 @@ export async function PATCH(
     }
 
     const { id } = await params;
+
+    if (!canManageAllPatientData(profile.role)) {
+      return ApiErrors.forbidden('Only admins and receptionists can update patients');
+    }
+
     const body = await request.json();
 
     // Validate input
@@ -146,6 +170,10 @@ export async function DELETE(
     }
 
     const { id } = await params;
+
+    if (!canManageAllPatientData(profile.role)) {
+      return ApiErrors.forbidden('Only admins and receptionists can delete patients');
+    }
 
     // Use server client (staff only via RLS)
     const supabase = createServerClient();

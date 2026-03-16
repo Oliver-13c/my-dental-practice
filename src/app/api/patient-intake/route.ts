@@ -3,6 +3,9 @@ import type { Database } from '@/shared/api/supabase-types';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { auth } from '@/auth';
+import { getCurrentStaffProfile } from '@/features/admin-dashboard/api/admin-auth';
+import { ApiErrors } from '@/shared/lib/api-error';
+import { canManageAllPatientData } from '@/shared/lib/staff-permissions';
 
 const patientIntakeSchema = z.object({
   fullName: z.string().optional(),
@@ -95,9 +98,15 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { profile, error: authError } = await getCurrentStaffProfile();
+    if (!profile) {
+      return authError?.includes('Forbidden')
+        ? ApiErrors.forbidden(authError)
+        : ApiErrors.unauthorized(authError || 'Unauthorized');
+    }
+
+    if (!canManageAllPatientData(profile.role)) {
+      return ApiErrors.forbidden('Only admins and receptionists can view intake submissions');
     }
 
     // Staff only: Use server client with RLS
@@ -128,9 +137,15 @@ export async function GET(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { profile, error: authError } = await getCurrentStaffProfile();
+    if (!profile) {
+      return authError?.includes('Forbidden')
+        ? ApiErrors.forbidden(authError)
+        : ApiErrors.unauthorized(authError || 'Unauthorized');
+    }
+
+    if (!canManageAllPatientData(profile.role)) {
+      return ApiErrors.forbidden('Only admins and receptionists can delete intake submissions');
     }
 
     const { searchParams } = new URL(request.url);

@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getCurrentStaffProfile } from '@/features/admin-dashboard/api/admin-auth';
 import { DentistDashboard } from '@/features/staff/ui/dentist-dashboard';
-import { isGoogleCalendarConfigured } from '@/services/google-calendar-service';
+import { getGoogleCalendarConnectionState } from '@/services/google-calendar-connections';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,6 +16,8 @@ export default async function DentistPage() {
     redirect('/staff/dashboard');
   }
 
+  const calendarConnection = await getGoogleCalendarConnectionState(profile.id);
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border bg-surface shadow-sm">
@@ -26,7 +28,11 @@ export default async function DentistPage() {
         </div>
       </header>
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <DentistDashboard providerId={profile.id} calendarConnected={isGoogleCalendarConfigured} />
+        <DentistDashboard
+          providerId={profile.id}
+          viewerRole="dentist"
+          calendarConnection={calendarConnection}
+        />
       </main>
     </div>
   );

@@ -5,6 +5,11 @@ import { z } from 'zod';
 import { createPatientSchema } from '@/entities/patient/model/patient';
 import { getCurrentStaffProfile } from '@/features/admin-dashboard/api/admin-auth';
 import { ApiErrors } from '@/shared/lib/api-error';
+import {
+  canManageAllPatientData,
+  getAssignedPatientIds,
+  isClinicalStaffRole,
+} from '@/shared/lib/staff-permissions';
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,12 +22,25 @@ export async function GET(request: NextRequest) {
 
     // Staff only: Use server client with RLS
     const supabase = createServerClient();
-
-    const { data: patients, error } = await supabase
+    let query = (supabase as any)
       .from('patients')
       .select('*')
       .eq('is_active', true)
       .order('created_at', { ascending: false });
+
+    if (!canManageAllPatientData(profile.role)) {
+      if (!isClinicalStaffRole(profile.role)) {
+        return ApiErrors.forbidden('Forbidden');
+      }
+
+      const patientIds = await getAssignedPatientIds(supabase, profile.id);
+      if (patientIds.length === 0) {
+        return NextResponse.json({ data: [] });
+      }
+      query = query.in('id', patientIds);
+    }
+
+    const { data: patients, error } = await query;
 
     if (error) {
       console.error('Fetch patients error:', error);
@@ -49,6 +67,10 @@ export async function POST(request: NextRequest) {
       return authError?.includes('Forbidden')
         ? ApiErrors.forbidden(authError)
         : ApiErrors.unauthorized(authError || 'Unauthorized');
+    }
+
+    if (!canManageAllPatientData(profile.role)) {
+      return ApiErrors.forbidden('Only admins and receptionists can create patients');
     }
 
     const body = await request.json();

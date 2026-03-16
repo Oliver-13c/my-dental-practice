@@ -1,43 +1,17 @@
-/**
- * Google Calendar Sync Service
- *
- * Two-way sync between appointments and a Google Calendar.
- * - On appointment create/update/delete → push to Google Calendar
- * - Webhook endpoint receives changes from Google → updates local DB
- *
- * Requires:
- *   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI
- *   GOOGLE_REFRESH_TOKEN (obtained via one-time OAuth flow)
- *   GOOGLE_CALENDAR_ID (the calendar to sync with)
- */
-import { google, calendar_v3 } from 'googleapis';
-
-const clientId = process.env.GOOGLE_CLIENT_ID ?? '';
-const clientSecret = process.env.GOOGLE_CLIENT_SECRET ?? '';
-const redirectUri = process.env.GOOGLE_REDIRECT_URI ?? '';
-const refreshToken = process.env.GOOGLE_REFRESH_TOKEN ?? '';
-const calendarId = process.env.GOOGLE_CALENDAR_ID ?? 'primary';
-
-const isConfigured = !!(clientId && clientSecret && refreshToken);
-
-function getAuth() {
-  const oauth2 = new google.auth.OAuth2(clientId, clientSecret, redirectUri);
-  oauth2.setCredentials({ refresh_token: refreshToken });
-  return oauth2;
-}
-
-function getCalendar(): calendar_v3.Calendar | null {
-  if (!isConfigured) {
-    console.warn('[google-calendar] Not configured — skipping sync');
-    return null;
-  }
-  return google.calendar({ version: 'v3', auth: getAuth() });
-}
+import { type calendar_v3 } from 'googleapis';
+import {
+  getCalendarClientForProvider,
+  getGoogleCalendarConnectionByWatchToken,
+  isGoogleCalendarOAuthConfigured,
+  markGoogleCalendarSyncError,
+  markGoogleCalendarSyncSuccess,
+} from '@/services/google-calendar-connections';
 
 // ── Types ──────────────────────────────────────────────────────
 
 export interface CalendarAppointment {
   id: string;
+  provider_id: string | null;
   start_time: string;
   end_time: string;
   patient_name: string | null;
@@ -59,6 +33,7 @@ interface SyncResult {
   success: boolean;
   eventId?: string;
   error?: string;
+  skipped?: boolean;
 }
 
 // ── Color mapping (Google Calendar uses colorId 1-11) ──────────
@@ -115,21 +90,29 @@ function buildEvent(appt: CalendarAppointment): calendar_v3.Schema$Event {
 export async function createCalendarEvent(
   appt: CalendarAppointment,
 ): Promise<SyncResult> {
-  const calendar = getCalendar();
-  if (!calendar) return { success: false, error: 'Google Calendar not configured' };
+  if (!appt.provider_id) {
+    return { success: false, skipped: true, error: 'Appointment has no provider' };
+  }
+
+  const context = await getCalendarClientForProvider(appt.provider_id);
+  if (!context) {
+    return { success: false, skipped: true, error: 'Google Calendar not connected for provider' };
+  }
 
   try {
     const event = buildEvent(appt);
-    const res = await calendar.events.insert({
-      calendarId,
+    const res = await context.calendar.events.insert({
+      calendarId: context.calendarId,
       requestBody: event,
     });
 
     const eventId = res.data.id ?? undefined;
     console.log(`[google-calendar] Created event ${eventId} for appointment ${appt.id}`);
+    await markGoogleCalendarSyncSuccess(appt.provider_id);
     return { success: true, eventId: eventId };
   } catch (err) {
     console.error('[google-calendar] Create event error:', err);
+    await markGoogleCalendarSyncError(appt.provider_id, String(err));
     return { success: false, error: String(err) };
   }
 }
@@ -137,18 +120,23 @@ export async function createCalendarEvent(
 export async function updateCalendarEvent(
   appt: CalendarAppointment,
 ): Promise<SyncResult> {
-  const calendar = getCalendar();
-  if (!calendar) return { success: false, error: 'Google Calendar not configured' };
+  if (!appt.provider_id) {
+    return { success: false, skipped: true, error: 'Appointment has no provider' };
+  }
+
+  const context = await getCalendarClientForProvider(appt.provider_id);
+  if (!context) {
+    return { success: false, skipped: true, error: 'Google Calendar not connected for provider' };
+  }
 
   if (!appt.google_calendar_event_id) {
-    // No existing event — create one instead
     return createCalendarEvent(appt);
   }
 
   try {
     const event = buildEvent(appt);
-    await calendar.events.update({
-      calendarId,
+    await context.calendar.events.update({
+      calendarId: context.calendarId,
       eventId: appt.google_calendar_event_id,
       requestBody: event,
     });
@@ -156,59 +144,64 @@ export async function updateCalendarEvent(
     console.log(
       `[google-calendar] Updated event ${appt.google_calendar_event_id} for appointment ${appt.id}`,
     );
+    await markGoogleCalendarSyncSuccess(appt.provider_id);
     return { success: true, eventId: appt.google_calendar_event_id };
   } catch (err) {
     console.error('[google-calendar] Update event error:', err);
+    await markGoogleCalendarSyncError(appt.provider_id, String(err));
     return { success: false, error: String(err) };
   }
 }
 
 export async function deleteCalendarEvent(
+  providerId: string | null,
   googleEventId: string,
 ): Promise<SyncResult> {
-  const calendar = getCalendar();
-  if (!calendar) return { success: false, error: 'Google Calendar not configured' };
+  if (!providerId) {
+    return { success: false, skipped: true, error: 'Appointment has no provider' };
+  }
+
+  const context = await getCalendarClientForProvider(providerId);
+  if (!context) {
+    return { success: false, skipped: true, error: 'Google Calendar not connected for provider' };
+  }
 
   try {
-    await calendar.events.delete({
-      calendarId,
+    await context.calendar.events.delete({
+      calendarId: context.calendarId,
       eventId: googleEventId,
     });
 
     console.log(`[google-calendar] Deleted event ${googleEventId}`);
+    await markGoogleCalendarSyncSuccess(providerId);
     return { success: true, eventId: googleEventId };
   } catch (err) {
     console.error('[google-calendar] Delete event error:', err);
+    await markGoogleCalendarSyncError(providerId, String(err));
     return { success: false, error: String(err) };
   }
 }
 
-/**
- * Start a watch channel for push notifications from Google Calendar.
- * Google will POST to our webhook when events change.
- */
-export async function startWatch(webhookUrl: string): Promise<SyncResult> {
-  const calendar = getCalendar();
-  if (!calendar) return { success: false, error: 'Google Calendar not configured' };
-
-  try {
-    const channelId = `dental-sync-${Date.now()}`;
-    await calendar.events.watch({
-      calendarId,
-      requestBody: {
-        id: channelId,
-        type: 'web_hook',
-        address: webhookUrl,
-        token: process.env.GOOGLE_WEBHOOK_VERIFY_TOKEN ?? 'dental-practice',
-      },
-    });
-
-    console.log(`[google-calendar] Watch channel created: ${channelId}`);
-    return { success: true, eventId: channelId };
-  } catch (err) {
-    console.error('[google-calendar] Start watch error:', err);
-    return { success: false, error: String(err) };
+export async function getWebhookCalendarContext(watchToken: string): Promise<{
+  calendar: calendar_v3.Calendar;
+  calendarId: string;
+  providerId: string;
+} | null> {
+  const connection = await getGoogleCalendarConnectionByWatchToken(watchToken);
+  if (!connection?.provider_id) {
+    return null;
   }
+
+  const context = await getCalendarClientForProvider(connection.provider_id);
+  if (!context) {
+    return null;
+  }
+
+  return {
+    calendar: context.calendar,
+    calendarId: context.calendarId,
+    providerId: connection.provider_id,
+  };
 }
 
-export { isConfigured as isGoogleCalendarConfigured };
+export { isGoogleCalendarOAuthConfigured as isGoogleCalendarConfigured };

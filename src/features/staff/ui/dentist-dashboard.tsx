@@ -5,7 +5,9 @@ import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useAppointments, updateAppointment } from '../hooks/use-appointments-data';
 import type { AppointmentWithDetails } from '@/entities/appointment/model/appointment.types';
+import type { StaffRole } from '@/entities/staff/model/staff.types';
 import { PatientSnapshotCard } from './patient-snapshot-card';
+import type { CalendarConnectionState } from '@/services/google-calendar-connections';
 
 function formatTime(iso: string) {
   const d = new Date(iso);
@@ -45,16 +47,20 @@ function patientName(appointment: AppointmentWithDetails) {
 
 export function DentistDashboard({
   providerId,
-  calendarConnected = false,
+  viewerRole,
+  calendarConnection,
 }: {
   providerId?: string | null;
-  calendarConnected?: boolean;
+  viewerRole: StaffRole;
+  calendarConnection: CalendarConnectionState;
 }) {
   const t = useTranslations('staff.clinical');
   const today = new Date().toISOString().slice(0, 10);
   const [selectedDate] = useState(today);
   const [activeAppointmentId, setActiveAppointmentId] = useState<string | null>(null);
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
+  const [disconnectingCalendar, setDisconnectingCalendar] = useState(false);
+  const [calendarState, setCalendarState] = useState(calendarConnection);
 
   const { appointments, loading, refetch } = useAppointments({
     date: selectedDate,
@@ -131,6 +137,42 @@ export function DentistDashboard({
       console.error('Clinical note update failed:', err);
     }
   }
+
+  async function handleDisconnectCalendar() {
+    try {
+      setDisconnectingCalendar(true);
+      const response = await fetch('/api/calendar/connection', {
+        method: 'DELETE',
+      });
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result.error ?? 'Failed to disconnect Google Calendar');
+      }
+
+      setCalendarState((current) => ({
+        ...current,
+        connected: false,
+        syncEnabled: false,
+        disconnectedAt: new Date().toISOString(),
+        lastError: null,
+      }));
+    } catch (err) {
+      console.error('Google Calendar disconnect failed:', err);
+      setCalendarState((current) => ({
+        ...current,
+        lastError: err instanceof Error ? err.message : 'Failed to disconnect Google Calendar',
+      }));
+    } finally {
+      setDisconnectingCalendar(false);
+    }
+  }
+
+  const calendarConnected = calendarState.connected;
+  const canManageCalendar = viewerRole === 'dentist' || viewerRole === 'hygienist';
+  const connectHref = `/api/calendar/auth?returnTo=${encodeURIComponent(
+    viewerRole === 'hygienist' ? '/staff/hygienist' : '/staff/dentist',
+  )}`;
 
   return (
     <div className="space-y-6">
@@ -237,25 +279,45 @@ export function DentistDashboard({
                 <p className="mt-1 text-sm text-slate-500">
                   The app schedule stays authoritative. Google Calendar sync is optional.
                 </p>
+                {calendarState.googleAccountEmail && (
+                  <p className="mt-2 text-xs text-slate-500">
+                    Connected account: {calendarState.googleAccountEmail}
+                  </p>
+                )}
+                {calendarState.lastError && (
+                  <p className="mt-2 text-xs text-rose-600">{calendarState.lastError}</p>
+                )}
               </div>
-              <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${calendarConnected ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                {calendarConnected ? 'Connected' : 'Setup required'}
+              <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${calendarConnected ? 'bg-emerald-100 text-emerald-700' : calendarState.calendarAvailable ? 'bg-amber-100 text-amber-700' : 'bg-slate-200 text-slate-700'}`}>
+                {calendarConnected ? 'Connected' : calendarState.calendarAvailable ? 'Setup required' : 'Unavailable'}
               </span>
             </div>
-            <div className="mt-4 flex gap-2">
-              <Link
-                href="/api/calendar/auth"
-                className="rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white hover:bg-blue-800"
-              >
-                {calendarConnected ? 'Reconnect Google Calendar' : 'Connect Google Calendar'}
-              </Link>
-            </div>
+            {canManageCalendar && calendarState.calendarAvailable && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Link
+                  href={connectHref}
+                  className="rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white hover:bg-blue-800"
+                >
+                  {calendarConnected ? 'Reconnect Google Calendar' : 'Connect Google Calendar'}
+                </Link>
+                {calendarConnected && (
+                  <button
+                    type="button"
+                    onClick={handleDisconnectCalendar}
+                    disabled={disconnectingCalendar}
+                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {disconnectingCalendar ? 'Disconnecting...' : 'Disconnect'}
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="rounded-2xl border border-blue-100 bg-white p-6 shadow-sm">
             <h2 className="mb-3 text-lg font-semibold text-slate-900">Current Patient</h2>
             {currentAppointment ? (
-              <PatientSnapshotCard appointment={currentAppointment} viewerRole="dentist" />
+              <PatientSnapshotCard appointment={currentAppointment} viewerRole={viewerRole} />
             ) : (
               <p className="text-sm text-slate-500">No patient currently in chair.</p>
             )}
@@ -265,7 +327,7 @@ export function DentistDashboard({
             <h2 className="mb-3 text-lg font-semibold text-slate-900">Selected Appointment</h2>
             {activeAppointment ? (
               <div className="space-y-4">
-                <PatientSnapshotCard appointment={activeAppointment} viewerRole="dentist" />
+                <PatientSnapshotCard appointment={activeAppointment} viewerRole={viewerRole} />
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-700">
                     Update Clinical Note

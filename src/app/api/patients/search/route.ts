@@ -4,6 +4,11 @@ import { createServerClient } from '@/shared/api/supabase-server';
 import type { Database } from '@/shared/api/supabase-types';
 import { getCurrentStaffProfile } from '@/features/admin-dashboard/api/admin-auth';
 import { ApiErrors } from '@/shared/lib/api-error';
+import {
+  canManageAllPatientData,
+  getAssignedPatientIds,
+  isClinicalStaffRole,
+} from '@/shared/lib/staff-permissions';
 
 /**
  * GET /api/patients/search
@@ -34,11 +39,21 @@ export async function GET(request: NextRequest) {
     }
 
     const supabase = createServerClient<Database>() as any;
-
-    // Use ilike for case-insensitive search across name, phone, and email
     const searchPattern = `%${q}%`;
 
-    const { data, error } = await supabase
+    let allowedPatientIds: string[] | null = null;
+    if (!canManageAllPatientData(profile.role)) {
+      if (!isClinicalStaffRole(profile.role)) {
+        return ApiErrors.forbidden('Forbidden');
+      }
+
+      allowedPatientIds = await getAssignedPatientIds(supabase, profile.id);
+      if (allowedPatientIds.length === 0) {
+        return NextResponse.json({ data: [] });
+      }
+    }
+
+    let query = supabase
       .from('patients')
       .select('id, first_name, last_name, email, phone, date_of_birth')
       .or(
@@ -46,6 +61,12 @@ export async function GET(request: NextRequest) {
       )
       .order('last_name')
       .limit(limit);
+
+    if (allowedPatientIds) {
+      query = query.in('id', allowedPatientIds);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error('[api/patients/search] GET error:', error.message);
