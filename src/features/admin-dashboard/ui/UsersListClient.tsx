@@ -24,7 +24,7 @@ export function UsersListClient() {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to fetch users');
+        throw new Error(result.error || t('errors.fetchUsers'));
       }
 
       // Transform data from backend format to UI format
@@ -42,7 +42,7 @@ export function UsersListClient() {
       setUsers(transformedUsers);
     } catch (err) {
       console.error('Failed to fetch users:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch users');
+      setError(err instanceof Error ? err.message : t('errors.fetchUsers'));
     } finally {
       setIsLoading(false);
     }
@@ -54,7 +54,7 @@ export function UsersListClient() {
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
           {error}
         </div>
-        <Button onClick={fetchUsers}>Retry</Button>
+        <Button onClick={fetchUsers}>{t('retry')}</Button>
       </div>
     );
   }
@@ -64,14 +64,14 @@ export function UsersListClient() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">
-            {t('title') || 'User Management'}
+            {t('title')}
           </h1>
           <p className="text-gray-600 mt-1">
-            {t('description') || 'Manage staff members and their access'}
+            {t('description')}
           </p>
         </div>
         <Link href="/admin/users/create">
-          <Button>{t('createNewUser') || 'Create New User'}</Button>
+          <Button>{t('createNewUser')}</Button>
         </Link>
       </div>
 

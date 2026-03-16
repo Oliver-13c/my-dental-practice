@@ -24,6 +24,52 @@
       "loading": "Cargando panel...",
       "unrecognizedRole": "Error: Rol no reconocido",
       "signOut": "Cerrar Sesión"
+    },
+    "loadingDashboard": "Cargando panel...",
+    "roles": {
+      "receptionist": "Recepcion",
+      "dentist": "Portal del Doctor",
+      "hygienist": "Portal de Higienista",
+      "admin": "Recepcion",
+      "unknown": "Panel de Personal"
+    },
+    "goToAdmin": "Ir al Panel de Admin",
+    "signOut": "Cerrar sesion",
+    "unknownRole": "Error: Rol no reconocido",
+    "calendar": {
+      "daySchedule": "Agenda del dia",
+      "weeklySchedule": "Agenda semanal",
+      "dragHint": "Arrastra citas para reprogramar. Haz clic para ver detalles.",
+      "allProviders": "Todos los proveedores",
+      "loadingProviders": "Cargando proveedores...",
+      "openSlot": "Libre",
+      "releaseToReschedule": "Suelta para reprogramar",
+      "couldNotReschedule": "No se pudo reprogramar. El horario puede estar ocupado.",
+      "unknownPatient": "Paciente desconocido",
+      "unassignedProvider": "Sin asignar",
+      "generalType": "General",
+      "timeHeader": "Hora"
+    },
+    "schedule": {
+      "title": "Horario del dia",
+      "generalType": "General"
+    },
+    "clinical": {
+      "stats": {
+        "totalPatients": "Pacientes del dia",
+        "waiting": "En espera",
+        "inProgress": "En consulta",
+        "completed": "Completadas"
+      },
+      "scheduleTitle": "Agenda del dia",
+      "loadingSchedule": "Cargando agenda...",
+      "emptySchedule": "No hay citas programadas para hoy.",
+      "generalType": "General",
+      "actions": {
+        "startVisit": "Iniciar consulta",
+        "completeVisit": "Finalizar consulta",
+        "noShow": "No asistio"
+      }
     }
   },
   "auth": {

@@ -1,30 +1,81 @@
 'use client';
 
 import React from 'react';
+import { cn } from '@/shared/lib/utils';
+
+type ButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'outline'
+  | 'ghost'
+  | 'danger'
+  | 'success'
+  | 'warning'
+  | 'default'
+  | 'destructive';
+
+type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'icon';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'default' | 'destructive' | 'outline' | 'ghost';
-  size?: 'sm' | 'md' | 'lg';
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  loading?: boolean;
+  fullWidth?: boolean;
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
 }
 
-export function Button({ variant = 'default', size = 'md', ...props }: ButtonProps) {
-  const variantClass = {
-    default: 'bg-blue-600 text-white hover:bg-blue-700',
-    destructive: 'bg-red-600 text-white hover:bg-red-700',
-    outline: 'border border-gray-300 text-gray-700 hover:bg-gray-50',
-    ghost: 'text-gray-700 hover:bg-gray-100',
-  }[variant];
+const variantClassMap: Record<ButtonVariant, string> = {
+  primary: 'bg-primary text-primary-foreground hover:opacity-95',
+  secondary: 'bg-secondary text-secondary-foreground hover:opacity-95',
+  outline: 'border border-border bg-transparent text-foreground hover:bg-surface-muted',
+  ghost: 'bg-transparent text-foreground hover:bg-surface-muted',
+  danger: 'bg-critical text-white hover:opacity-95',
+  success: 'bg-success text-white hover:opacity-95',
+  warning: 'bg-warning text-warning-foreground hover:opacity-95',
+  // Compatibility aliases
+  default: 'bg-primary text-primary-foreground hover:opacity-95',
+  destructive: 'bg-critical text-white hover:opacity-95',
+};
 
-  const sizeClass = {
-    sm: 'px-2 py-1 text-sm',
-    md: 'px-4 py-2 text-base',
-    lg: 'px-6 py-3 text-lg',
-  }[size];
+const sizeClassMap: Record<ButtonSize, string> = {
+  xs: 'h-8 px-2 text-xs',
+  sm: 'h-9 px-3 text-sm',
+  md: 'h-12 px-4 text-sm',
+  lg: 'h-12 px-6 text-base',
+  icon: 'h-10 w-10 p-0',
+};
+
+export function Button({
+  variant = 'primary',
+  size = 'md',
+  loading = false,
+  fullWidth = false,
+  leftIcon,
+  rightIcon,
+  className,
+  children,
+  disabled,
+  ...props
+}: ButtonProps) {
+  const isDisabled = disabled || loading;
 
   return (
     <button
       {...props}
-      className={`rounded ${variantClass} ${sizeClass} ${props.className || ''}`}
-    />
+      disabled={isDisabled}
+      className={cn(
+        'inline-flex items-center justify-center gap-2 rounded-md font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+        variantClassMap[variant],
+        sizeClassMap[size],
+        fullWidth && 'w-full',
+        className,
+      )}
+    >
+      {loading && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />}
+      {!loading && leftIcon}
+      <span>{children}</span>
+      {!loading && rightIcon}
+    </button>
   );
 }

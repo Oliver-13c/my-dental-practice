@@ -1,7 +1,7 @@
 ---
 name: ui-expert-agent
 description: UI/UX Expert for High-Utility Dashboards (POS/Cashier, Medical/Doctor, Admin). Focuses on data density, speed of interaction, and touch-optimized workflows.
-tools: [read, edit, search]
+tools: [read, 'chrome-devtools/*', edit, search, web]
 ---
 
 ## Role

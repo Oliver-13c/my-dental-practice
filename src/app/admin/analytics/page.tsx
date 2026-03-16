@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { AdminLayout } from '@/features/admin-dashboard/ui/AdminLayout';
 import { Card } from '@/shared/ui/card';
 
@@ -76,7 +77,7 @@ function BarRow({
 }
 
 function MiniChart({ data }: { data: { date: string; total: number }[] }) {
-  if (data.length === 0) return <p className="text-gray-400 text-sm">No data</p>;
+  if (data.length === 0) return null;
   const maxVal = Math.max(...data.map((d) => d.total), 1);
   const barWidth = Math.max(4, Math.min(20, Math.floor(600 / data.length)));
 
@@ -89,7 +90,7 @@ function MiniChart({ data }: { data: { date: string; total: number }[] }) {
             <div
               className="bg-blue-500 rounded-t hover:bg-blue-600 transition-colors"
               style={{ width: barWidth, height: `${Math.max(height, 2)}%` }}
-              title={`${d.date}: ${d.total} appointments`}
+              title={`${d.date}: ${d.total}`}
             />
           </div>
         );
@@ -101,6 +102,7 @@ function MiniChart({ data }: { data: { date: string; total: number }[] }) {
 // ── Page ───────────────────────────────────────────────────────
 
 export default function AnalyticsPage() {
+  const t = useTranslations('admin');
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -115,11 +117,11 @@ export default function AnalyticsPage() {
     setError(null);
     try {
       const res = await fetch(`/api/admin/analytics?startDate=${startDate}&endDate=${endDate}`);
-      if (!res.ok) throw new Error('Failed to load analytics');
+      if (!res.ok) throw new Error(t('error'));
       const json = await res.json();
       setData(json.data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(err instanceof Error ? err.message : t('error'));
     } finally {
       setLoading(false);
     }
@@ -135,8 +137,8 @@ export default function AnalyticsPage() {
         {/* Header with date range picker */}
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Analytics</h1>
-            <p className="text-gray-600 mt-1">Appointment statistics and trends</p>
+            <h1 className="text-3xl font-bold text-gray-900">{t('analyticsTitle')}</h1>
+            <p className="text-gray-600 mt-1">{t('analyticsDescription')}</p>
           </div>
           <div className="flex items-center gap-2">
             <input
@@ -145,7 +147,7 @@ export default function AnalyticsPage() {
               onChange={(e) => setStartDate(e.target.value)}
               className="border rounded px-3 py-1.5 text-sm"
             />
-            <span className="text-gray-400">to</span>
+            <span className="text-gray-400">{t('to')}</span>
             <input
               type="date"
               value={endDate}
@@ -157,7 +159,7 @@ export default function AnalyticsPage() {
 
         {loading && (
           <Card className="p-6 text-center">
-            <p className="text-gray-500">Loading analytics...</p>
+            <p className="text-gray-500">{t('loading')}</p>
           </Card>
         )}
 
@@ -172,38 +174,39 @@ export default function AnalyticsPage() {
             {/* Summary stat cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
               <StatCard
-                label="Total Appointments"
+                label={t('appointmentVolume')}
                 value={data.summary.total}
               />
               <StatCard
-                label="Completed"
+                label={t('completed')}
                 value={data.summary.completed}
-                sublabel={`${data.summary.completionRate}% rate`}
+                sublabel={`${data.summary.completionRate}%`}
                 color="text-green-700"
               />
               <StatCard
-                label="Cancelled"
+                label={t('cancelled')}
                 value={data.summary.cancelled}
-                sublabel={`${data.summary.cancellationRate}% rate`}
+                sublabel={`${data.summary.cancellationRate}%`}
                 color="text-red-600"
               />
               <StatCard
-                label="No-Shows"
+                label={t('noShow')}
                 value={data.summary.noShow}
-                sublabel={`${data.summary.noShowRate}% rate`}
+                sublabel={`${data.summary.noShowRate}%`}
                 color="text-amber-600"
               />
               <StatCard
-                label="Unique Patients"
+                label={t('uniquePatients')}
                 value={data.summary.uniquePatients}
-                sublabel={`${data.summary.avgPerDay} avg/day`}
+                sublabel={`${data.summary.avgPerDay} ${t('avgPerDay')}`}
               />
             </div>
 
             {/* Daily Volume Chart */}
             <Card className="p-6">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">Daily Appointment Volume</h2>
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">{t('dailyVolume')}</h2>
               <MiniChart data={data.dailyVolume} />
+              {data.dailyVolume.length === 0 && <p className="text-gray-400 text-sm">{t('noData')}</p>}
               {data.dailyVolume.length > 0 && (
                 <div className="flex justify-between mt-2 text-xs text-gray-400">
                   <span>{data.dailyVolume[0].date}</span>
@@ -215,10 +218,10 @@ export default function AnalyticsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* By Provider */}
               <Card className="p-6">
-                <h2 className="text-lg font-semibold text-gray-800 mb-4">Appointments by Provider</h2>
+                <h2 className="text-lg font-semibold text-gray-800 mb-4">{t('byProvider')}</h2>
                 <div className="space-y-3">
                   {data.byProvider.length === 0 && (
-                    <p className="text-gray-400 text-sm">No data</p>
+                    <p className="text-gray-400 text-sm">{t('noData')}</p>
                   )}
                   {data.byProvider
                     .sort((a, b) => b.total - a.total)
@@ -236,10 +239,10 @@ export default function AnalyticsPage() {
 
               {/* By Type */}
               <Card className="p-6">
-                <h2 className="text-lg font-semibold text-gray-800 mb-4">Appointments by Type</h2>
+                <h2 className="text-lg font-semibold text-gray-800 mb-4">{t('byType')}</h2>
                 <div className="space-y-3">
                   {data.byType.length === 0 && (
-                    <p className="text-gray-400 text-sm">No data</p>
+                    <p className="text-gray-400 text-sm">{t('noData')}</p>
                   )}
                   {data.byType
                     .sort((a, b) => b.count - a.count)
@@ -258,7 +261,7 @@ export default function AnalyticsPage() {
 
             {/* Status Breakdown */}
             <Card className="p-6">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">Status Breakdown</h2>
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">{t('statusBreakdown')}</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {Object.entries(data.byStatus)
                   .sort(([, a], [, b]) => b - a)
@@ -288,16 +291,16 @@ export default function AnalyticsPage() {
 
             {/* Provider Performance Table */}
             <Card className="p-6">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">Provider Performance</h2>
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">{t('providerPerformance')}</h2>
               <div className="overflow-x-auto">
                 <table className="min-w-full text-sm">
                   <thead>
                     <tr className="border-b text-left text-gray-500">
-                      <th className="pb-2 font-medium">Provider</th>
-                      <th className="pb-2 font-medium text-right">Total</th>
-                      <th className="pb-2 font-medium text-right">Completed</th>
-                      <th className="pb-2 font-medium text-right">Cancelled</th>
-                      <th className="pb-2 font-medium text-right">Completion Rate</th>
+                      <th className="pb-2 font-medium">{t('provider')}</th>
+                      <th className="pb-2 font-medium text-right">{t('total')}</th>
+                      <th className="pb-2 font-medium text-right">{t('completed')}</th>
+                      <th className="pb-2 font-medium text-right">{t('cancelled')}</th>
+                      <th className="pb-2 font-medium text-right">{t('completionRate')}</th>
                     </tr>
                   </thead>
                   <tbody>

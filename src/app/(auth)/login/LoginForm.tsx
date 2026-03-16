@@ -5,6 +5,10 @@ import { useForm } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
 import { supabase } from '@/shared/api/supabase-client';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/shared/ui/button';
+import { Field } from '@/shared/ui/field';
+import { FormFeedback } from '@/shared/ui/form-feedback';
+import { Input } from '@/shared/ui/input';
 
 interface LoginFormInputs {
   email: string;
@@ -16,6 +20,7 @@ export function LoginForm() {
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormInputs>();
   const router = useRouter();
@@ -26,49 +31,51 @@ export function LoginForm() {
       password: data.password,
     });
     if (error) {
-      alert(t('loginError'));
+      setError('root', { type: 'server', message: t('loginError') });
     } else {
       router.refresh();
     }
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-md mx-auto p-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="mx-auto max-w-md space-y-6 p-4">
       <h2 className="text-2xl font-bold mb-4">{t('loginTitle')}</h2>
 
-      <div>
-        <label htmlFor="email" className="block font-semibold mb-1">
-          {t('email')}
-        </label>
-        <input
+      {errors.root?.message && <FormFeedback type="error" message={errors.root.message} />}
+
+      <Field
+        htmlFor="email"
+        label={t('email')}
+        required
+        error={errors.email ? t('loginError') : undefined}
+      >
+        <Input
           id="email"
           type="email"
           {...register('email', { required: true })}
-          className={`w-full rounded border border-gray-300 p-2 focus:border-primary focus:ring-primary ${errors.email ? 'border-red-500' : ''}`}
+          validationState={errors.email ? 'error' : 'default'}
           aria-invalid={errors.email ? 'true' : 'false'}
         />
-      </div>
+      </Field>
 
-      <div>
-        <label htmlFor="password" className="block font-semibold mb-1">
-          {t('password')}
-        </label>
-        <input
+      <Field
+        htmlFor="password"
+        label={t('password')}
+        required
+        error={errors.password ? t('loginError') : undefined}
+      >
+        <Input
           id="password"
           type="password"
           {...register('password', { required: true })}
-          className={`w-full rounded border border-gray-300 p-2 focus:border-primary focus:ring-primary ${errors.password ? 'border-red-500' : ''}`}
+          validationState={errors.password ? 'error' : 'default'}
           aria-invalid={errors.password ? 'true' : 'false'}
         />
-      </div>
+      </Field>
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="w-full rounded bg-primary px-4 py-2 font-semibold text-white hover:bg-secondary disabled:opacity-50"
-      >
+      <Button type="submit" disabled={isSubmitting} loading={isSubmitting} fullWidth>
         {t('login')}
-      </button>
+      </Button>
     </form>
   );
 }

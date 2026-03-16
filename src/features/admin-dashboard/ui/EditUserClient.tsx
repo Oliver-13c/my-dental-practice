@@ -40,7 +40,7 @@ export function EditUserClient({ userId }: EditUserClientProps) {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to fetch user');
+        throw new Error(result.error || t('errors.fetchUser'));
       }
 
       // Transform data from backend format to UI format
@@ -53,7 +53,7 @@ export function EditUserClient({ userId }: EditUserClientProps) {
       });
     } catch (err) {
       console.error('Failed to fetch user:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch user');
+      setError(err instanceof Error ? err.message : t('errors.fetchUser'));
     } finally {
       setIsLoading(false);
     }
@@ -85,22 +85,22 @@ export function EditUserClient({ userId }: EditUserClientProps) {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to update user');
+        throw new Error(result.error || t('errors.updateUser'));
       }
 
-      alert('User updated successfully!');
+      alert(t('messages.userUpdated'));
       router.push('/admin/users');
       router.refresh();
     } catch (err) {
       console.error('Failed to update user:', err);
-      setError(err instanceof Error ? err.message : 'Failed to update user');
+      setError(err instanceof Error ? err.message : t('errors.updateUser'));
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to deactivate this user?')) {
+    if (!confirm(t('messages.confirmDeactivate'))) {
       return;
     }
 
@@ -112,20 +112,20 @@ export function EditUserClient({ userId }: EditUserClientProps) {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to delete user');
+        throw new Error(result.error || t('errors.deleteUser'));
       }
 
-      alert('User deactivated successfully!');
+      alert(t('messages.userDeactivated'));
       router.push('/admin/users');
       router.refresh();
     } catch (err) {
       console.error('Failed to delete user:', err);
-      setError(err instanceof Error ? err.message : 'Failed to delete user');
+      setError(err instanceof Error ? err.message : t('errors.deleteUser'));
     }
   };
 
   const handlePasswordReset = async () => {
-    if (!confirm('Send password reset email to this user?')) {
+    if (!confirm(t('messages.confirmPasswordReset'))) {
       return;
     }
 
@@ -137,20 +137,20 @@ export function EditUserClient({ userId }: EditUserClientProps) {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to send password reset');
+        throw new Error(result.error || t('errors.passwordReset'));
       }
 
-      alert('Password reset email sent successfully!');
+      alert(t('messages.passwordResetSent'));
     } catch (err) {
       console.error('Failed to send password reset:', err);
-      alert(err instanceof Error ? err.message : 'Failed to send password reset');
+      alert(err instanceof Error ? err.message : t('errors.passwordReset'));
     }
   };
 
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
-        <div className="text-gray-600">Loading...</div>
+        <div className="text-gray-600">{t('loading')}</div>
       </div>
     );
   }
@@ -159,7 +159,7 @@ export function EditUserClient({ userId }: EditUserClientProps) {
     return (
       <div className="space-y-6">
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-          {error || 'User not found'}
+          {error || t('errors.userNotFound')}
         </div>
         <Link href="/admin/users">
           <Button variant="ghost">&larr; Back to Users</Button>
@@ -175,10 +175,10 @@ export function EditUserClient({ userId }: EditUserClientProps) {
           <Button variant="ghost">&larr; Back to Users</Button>
         </Link>
         <h1 className="text-3xl font-bold text-gray-900 mt-4">
-          {t('editUser') || 'Edit User'}
+          {t('editUser')}
         </h1>
         <p className="text-gray-600 mt-1">
-          Update user information and permissions
+          {t('editDescription')}
         </p>
       </div>
 
@@ -194,47 +194,47 @@ export function EditUserClient({ userId }: EditUserClientProps) {
             initialData={user}
             onSubmit={handleSubmit}
             isLoading={isSaving}
-            submitLabel={t('saveChanges') || 'Save Changes'}
+            submitLabel={t('saveChanges')}
           />
         </div>
 
         <div className="space-y-4">
           <Card className="p-4">
-            <h3 className="font-semibold mb-4">Actions</h3>
+            <h3 className="font-semibold mb-4">{t('actions')}</h3>
             <div className="space-y-2">
               <Button
                 variant="outline"
                 className="w-full"
                 onClick={handlePasswordReset}
               >
-                Reset Password
+                {t('resetPassword')}
               </Button>
               <Button
                 variant="destructive"
                 className="w-full"
                 onClick={handleDelete}
               >
-                Deactivate User
+                {t('deactivateUser')}
               </Button>
             </div>
           </Card>
 
           <Card className="p-4">
-            <h3 className="font-semibold mb-2">User Info</h3>
+            <h3 className="font-semibold mb-2">{t('userInfo')}</h3>
             <dl className="space-y-2 text-sm">
               <div>
-                <dt className="text-gray-500">Email</dt>
+                <dt className="text-gray-500">{t('email')}</dt>
                 <dd className="font-medium">{user.email}</dd>
               </div>
               <div>
-                <dt className="text-gray-500">Status</dt>
+                <dt className="text-gray-500">{t('status')}</dt>
                 <dd>
                   <span className={`inline-block px-2 py-1 rounded text-xs ${
                     user.isActive
                       ? 'bg-green-100 text-green-800'
                       : 'bg-red-100 text-red-800'
                   }`}>
-                    {user.isActive ? 'Active' : 'Inactive'}
+                    {user.isActive ? t('active') : t('inactive')}
                   </span>
                 </dd>
               </div>

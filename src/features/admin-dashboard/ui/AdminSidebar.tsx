@@ -24,19 +24,19 @@ export function AdminSidebar() {
   };
 
   const menuItems = [
-    { href: '/admin', label: t('dashboard') || 'Dashboard', icon: '📊' },
-    { href: '/admin/users', label: t('usersNav') || 'Users', icon: '👥' },
-    { href: '/admin/appointments', label: t('appointments') || 'Appointments', icon: '📅' },
-    { href: '/admin/staff', label: t('staff') || 'Staff', icon: '👨‍⚕️' },
-    { href: '/admin/audit-logs', label: t('auditLogs') || 'Audit Logs', icon: '📋' },
-    { href: '/admin/analytics', label: t('analytics') || 'Analytics', icon: '📈' },
+    { href: '/admin', label: t('dashboard'), icon: '📊' },
+    { href: '/admin/users', label: t('usersNav'), icon: '👥' },
+    { href: '/admin/appointments', label: t('appointments'), icon: '📅' },
+    { href: '/admin/staff', label: t('staff'), icon: '👨‍⚕️' },
+    { href: '/admin/audit-logs', label: t('auditLogs'), icon: '📋' },
+    { href: '/admin/analytics', label: t('analytics'), icon: '📈' },
   ];
 
   return (
     <aside className="w-64 bg-gray-900 text-white h-screen flex flex-col fixed left-0 top-0">
       <div className="p-6 border-b border-gray-700">
-        <h1 className="text-2xl font-bold">{t('admin') || 'Admin'}</h1>
-        <p className="text-sm text-gray-400">{t('systemAdministration') || 'System Administration'}</p>
+        <h1 className="text-2xl font-bold">{t('admin')}</h1>
+        <p className="text-sm text-gray-400">{t('systemAdministration')}</p>
       </div>
 
       <nav className="flex-1 overflow-y-auto p-4 space-y-2">

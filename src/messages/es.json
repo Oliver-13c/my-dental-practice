@@ -115,6 +115,23 @@
     "schedule": {
       "title": "Horario del dia",
       "generalType": "General"
+    },
+    "clinical": {
+      "stats": {
+        "totalPatients": "Pacientes del dia",
+        "waiting": "En espera",
+        "inProgress": "En consulta",
+        "completed": "Completadas"
+      },
+      "scheduleTitle": "Agenda del dia",
+      "loadingSchedule": "Cargando agenda...",
+      "emptySchedule": "No hay citas programadas para hoy.",
+      "generalType": "General",
+      "actions": {
+        "startVisit": "Iniciar consulta",
+        "completeVisit": "Finalizar consulta",
+        "noShow": "No asistio"
+      }
     }
   }
 }

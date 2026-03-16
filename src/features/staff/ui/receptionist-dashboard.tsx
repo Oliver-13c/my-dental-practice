@@ -26,16 +26,6 @@ function formatISOToTime(iso: string) {
     return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
 }
 
-function providerDisplayName(appt: AppointmentWithDetails) {
-    if (appt.provider) return `Dr. ${appt.provider.last_name}`;
-    return 'Sin asignar';
-}
-
-function patientDisplayName(appt: AppointmentWithDetails) {
-    if (appt.patient) return `${appt.patient.first_name} ${appt.patient.last_name}`;
-    return appt.patient_name ?? 'Desconocido';
-}
-
 type StatusStyle = 'arrived' | 'in-progress' | 'completed' | 'no-show' | 'confirmed' | 'pending' | 'cancelled';
 
 function statusBadge(status: string) {
@@ -57,29 +47,9 @@ function statusBadge(status: string) {
     }
 }
 
-function statusLabel(status: string) {
-    switch (status as StatusStyle) {
-        case 'arrived':
-            return 'en recepcion';
-        case 'in-progress':
-            return 'en consulta';
-        case 'completed':
-            return 'completada';
-        case 'no-show':
-            return 'no asistio';
-        case 'confirmed':
-            return 'confirmada';
-        case 'pending':
-            return 'pendiente';
-        case 'cancelled':
-            return 'cancelada';
-        default:
-            return status;
-    }
-}
-
 export function ReceptionistDashboard() {
     const t = useTranslations('staff');
+    const tr = useTranslations('staff.reception');
     const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().slice(0, 10));
     const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
     const [providerFilter, setProviderFilter] = useState('all');
@@ -126,6 +96,26 @@ export function ReceptionistDashboard() {
     const [blockBusy, setBlockBusy] = useState(false);
     const [blockSuccess, setBlockSuccess] = useState(false);
 
+    const statusLabelByKey: Record<StatusStyle, string> = {
+        arrived: tr('status.arrived'),
+        'in-progress': tr('status.inProgress'),
+        completed: tr('status.completed'),
+        'no-show': tr('status.noShow'),
+        confirmed: tr('status.confirmed'),
+        pending: tr('status.pending'),
+        cancelled: tr('status.cancelled'),
+    };
+
+    const providerDisplayName = (appt: AppointmentWithDetails) => {
+        if (appt.provider) return `Dr. ${appt.provider.last_name}`;
+        return t('calendar.unassignedProvider');
+    };
+
+    const patientDisplayName = (appt: AppointmentWithDetails) => {
+        if (appt.patient) return `${appt.patient.first_name} ${appt.patient.last_name}`;
+        return appt.patient_name ?? t('calendar.unknownPatient');
+    };
+
     // ── Derived data ───────────────────────────────────────────
     const filteredAppointments = useMemo(() => {
         const list = providerFilter === 'all'
@@ -157,7 +147,7 @@ export function ReceptionistDashboard() {
     }, [refetch]);
 
     const handleCancel = useCallback(async (id: string) => {
-        if (!confirm('Cancelar esta cita?')) return;
+        if (!confirm(tr('confirmCancel'))) return;
         try {
             await cancelAppointment(id);
             refetch();
@@ -169,7 +159,7 @@ export function ReceptionistDashboard() {
     async function handleCreateAppointment(event: React.FormEvent) {
         event.preventDefault();
         if (!createForm.patient_id || !createForm.provider_id || !createForm.appointment_type_id || !createForm.start_time) {
-            setCreateError('Completa todos los campos obligatorios.');
+            setCreateError(tr('errors.requiredFields'));
             return;
         }
 
@@ -198,7 +188,7 @@ export function ReceptionistDashboard() {
             setPatientQuery('');
             refetch();
         } catch (err: any) {
-            setCreateError(err.message ?? 'No se pudo crear la cita');
+            setCreateError(err.message ?? tr('errors.createFailed'));
         } finally {
             setCreateBusy(false);
         }
@@ -232,13 +222,13 @@ export function ReceptionistDashboard() {
         <section className="rounded-3xl border border-slate-200/70 bg-gradient-to-br from-amber-50 via-white to-teal-50 p-6 shadow-sm">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                    <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Espacio de recepcion</p>
-                    <h2 className="mt-2 text-2xl font-semibold text-slate-900 font-serif">Centro de control de recepcion</h2>
-                    <p className="mt-1 text-sm text-slate-600">Anticipate a llegadas, huecos libres y disponibilidad de proveedores.</p>
+                    <p className="text-xs uppercase tracking-[0.3em] text-slate-500">{tr('header.kicker')}</p>
+                    <h2 className="mt-2 text-2xl font-semibold text-slate-900 font-serif">{tr('header.title')}</h2>
+                    <p className="mt-1 text-sm text-slate-600">{tr('header.description')}</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                     <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm">
-                        <span className="text-xs uppercase text-slate-400">Vista</span>
+                        <span className="text-xs uppercase text-slate-400">{tr('view.label')}</span>
                         <button
                             type="button"
                             onClick={() => setViewMode('day')}
@@ -246,7 +236,7 @@ export function ReceptionistDashboard() {
                                 viewMode === 'day' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-900'
                             }`}
                         >
-                            Dia
+                            {tr('view.day')}
                         </button>
                         <button
                             type="button"
@@ -255,7 +245,7 @@ export function ReceptionistDashboard() {
                                 viewMode === 'week' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-900'
                             }`}
                         >
-                            Semana
+                            {tr('view.week')}
                         </button>
                     </div>
                     <input
@@ -267,15 +257,15 @@ export function ReceptionistDashboard() {
                             setBlockForm((prev) => ({ ...prev, date: event.target.value }));
                         }}
                         className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 shadow-sm"
-                        aria-label="Seleccionar fecha"
+                        aria-label={tr('aria.selectDate')}
                     />
                     <select
                         value={providerFilter}
                         onChange={(event) => setProviderFilter(event.target.value)}
                         className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 shadow-sm"
-                        aria-label="Filtrar citas por proveedor"
+                        aria-label={tr('aria.filterByProvider')}
                     >
-                        <option value="all">Todos los proveedores</option>
+                        <option value="all">{tr('providers.all')}</option>
                         {providers.map((p) => (
                             <option key={p.id} value={p.id}>
                                 Dr. {p.last_name}
@@ -288,24 +278,24 @@ export function ReceptionistDashboard() {
             {/* Stats Cards */}
             <div className="mt-6 grid gap-4 md:grid-cols-4">
                 <div className="rounded-2xl border border-white/60 bg-white/80 p-4 shadow-sm backdrop-blur">
-                    <p className="text-xs uppercase tracking-wide text-slate-500">Citas</p>
+                    <p className="text-xs uppercase tracking-wide text-slate-500">{tr('stats.appointments')}</p>
                     <p className="mt-2 text-2xl font-semibold text-slate-900">{totals.total}</p>
-                    <p className="text-xs text-slate-500">Programadas para hoy</p>
+                    <p className="text-xs text-slate-500">{tr('stats.scheduledToday')}</p>
                 </div>
                 <div className="rounded-2xl border border-white/60 bg-white/80 p-4 shadow-sm backdrop-blur">
-                    <p className="text-xs uppercase tracking-wide text-slate-500">Recepcion</p>
+                    <p className="text-xs uppercase tracking-wide text-slate-500">{tr('stats.reception')}</p>
                     <p className="mt-2 text-2xl font-semibold text-emerald-700">{totals.checkedIn}</p>
-                    <p className="text-xs text-slate-500">En clinica ahora</p>
+                    <p className="text-xs text-slate-500">{tr('stats.inClinicNow')}</p>
                 </div>
                 <div className="rounded-2xl border border-white/60 bg-white/80 p-4 shadow-sm backdrop-blur">
-                    <p className="text-xs uppercase tracking-wide text-slate-500">Proximas</p>
+                    <p className="text-xs uppercase tracking-wide text-slate-500">{tr('stats.upcoming')}</p>
                     <p className="mt-2 text-2xl font-semibold text-amber-700">{totals.upcoming}</p>
-                    <p className="text-xs text-slate-500">Pendientes y confirmadas</p>
+                    <p className="text-xs text-slate-500">{tr('stats.pendingAndConfirmed')}</p>
                 </div>
                 <div className="rounded-2xl border border-white/60 bg-white/80 p-4 shadow-sm backdrop-blur">
-                    <p className="text-xs uppercase tracking-wide text-slate-500">Completadas</p>
+                    <p className="text-xs uppercase tracking-wide text-slate-500">{tr('stats.completed')}</p>
                     <p className="mt-2 text-2xl font-semibold text-slate-900">{totals.completed}</p>
-                    <p className="text-xs text-slate-500">Finalizadas del dia</p>
+                    <p className="text-xs text-slate-500">{tr('stats.completedToday')}</p>
                 </div>
             </div>
 
@@ -324,11 +314,11 @@ export function ReceptionistDashboard() {
                         {appointmentsLoading ? (
                             <div className="mt-4 flex items-center justify-center py-8">
                                 <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700" />
-                                <span className="ml-3 text-sm text-slate-500">Cargando citas...</span>
+                                <span className="ml-3 text-sm text-slate-500">{tr('schedule.loading')}</span>
                             </div>
                         ) : filteredAppointments.length === 0 ? (
                             <div className="mt-4 py-8 text-center text-sm text-slate-400">
-                                No hay citas para esta fecha.
+                                {tr('schedule.empty')}
                             </div>
                         ) : (
                             <div className="mt-4 space-y-3">
@@ -350,7 +340,7 @@ export function ReceptionistDashboard() {
                                                 )}
                                             </div>
                                             <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusBadge(appt.status)}`}>
-                                                {statusLabel(appt.status)}
+                                                {statusLabelByKey[appt.status as StatusStyle] ?? appt.status}
                                             </span>
                                         </div>
                                         {appt.status !== 'cancelled' && appt.status !== 'completed' && (
@@ -360,7 +350,7 @@ export function ReceptionistDashboard() {
                                                         onClick={() => handleStatusChange(appt.id, 'confirmed')}
                                                         className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-teal-700 transition hover:bg-teal-100"
                                                     >
-                                                        Confirmar
+                                                        {tr('actions.confirm')}
                                                     </button>
                                                 )}
                                                 {(appt.status === 'pending' || appt.status === 'confirmed') && (
@@ -368,7 +358,7 @@ export function ReceptionistDashboard() {
                                                         onClick={() => handleStatusChange(appt.id, 'arrived')}
                                                         className="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-700 transition hover:border-slate-300"
                                                     >
-                                                        Registrar llegada
+                                                        {tr('actions.checkIn')}
                                                     </button>
                                                 )}
                                                 {appt.status === 'arrived' && (
@@ -376,7 +366,7 @@ export function ReceptionistDashboard() {
                                                         onClick={() => handleStatusChange(appt.id, 'in-progress')}
                                                         className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sky-700 transition hover:bg-sky-100"
                                                     >
-                                                        Iniciar consulta
+                                                        {tr('actions.startVisit')}
                                                     </button>
                                                 )}
                                                 {appt.status === 'in-progress' && (
@@ -384,20 +374,20 @@ export function ReceptionistDashboard() {
                                                         onClick={() => handleStatusChange(appt.id, 'completed')}
                                                         className="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-700 transition hover:border-slate-300"
                                                     >
-                                                        Completar
+                                                        {tr('actions.complete')}
                                                     </button>
                                                 )}
                                                 <button
                                                     onClick={() => handleStatusChange(appt.id, 'no-show')}
                                                     className="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-700 transition hover:border-slate-300"
                                                 >
-                                                    No asistio
+                                                    {tr('actions.noShow')}
                                                 </button>
                                                 <button
                                                     onClick={() => handleCancel(appt.id)}
                                                     className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-rose-700 transition hover:bg-rose-100"
                                                 >
-                                                    Cancelar
+                                                    {tr('actions.cancel')}
                                                 </button>
                                             </div>
                                         )}
@@ -409,7 +399,7 @@ export function ReceptionistDashboard() {
 
                     {/* Arrivals & Check-In */}
                     <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                        <h3 className="text-lg font-semibold text-slate-900">Llegadas y registro</h3>
+                        <h3 className="text-lg font-semibold text-slate-900">{tr('arrivals.title')}</h3>
                         <ul className="mt-4 space-y-3">
                             {appointments
                                 .filter((a) => a.status === 'confirmed' || a.status === 'pending' || a.status === 'arrived')
@@ -422,19 +412,19 @@ export function ReceptionistDashboard() {
                                             <p className="text-xs text-slate-500">{formatISOToTime(appt.start_time)} · {providerDisplayName(appt)}</p>
                                         </div>
                                         {appt.status === 'arrived' ? (
-                                            <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">En recepcion</span>
+                                            <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">{tr('arrivals.inReception')}</span>
                                         ) : (
                                             <button
                                                 onClick={() => handleStatusChange(appt.id, 'arrived')}
                                                 className="rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white hover:bg-slate-800"
                                             >
-                                                Registrar llegada
+                                                {tr('actions.checkIn')}
                                             </button>
                                         )}
                                     </li>
                                 ))}
                             {appointments.filter((a) => a.status === 'confirmed' || a.status === 'pending' || a.status === 'arrived').length === 0 && (
-                                <li className="py-4 text-center text-sm text-slate-400">No hay pacientes esperando</li>
+                                <li className="py-4 text-center text-sm text-slate-400">{tr('arrivals.empty')}</li>
                             )}
                         </ul>
                     </div>
@@ -443,14 +433,14 @@ export function ReceptionistDashboard() {
                 <div className="space-y-6">
                     {/* Quick Create Appointment */}
                     <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                        <h3 className="text-lg font-semibold text-slate-900">Crear cita rapida</h3>
-                        <p className="text-xs text-slate-500">Selecciona paciente, proveedor y horario.</p>
+                        <h3 className="text-lg font-semibold text-slate-900">{tr('create.title')}</h3>
+                        <p className="text-xs text-slate-500">{tr('create.description')}</p>
                         <form onSubmit={handleCreateAppointment} className="mt-4 space-y-3 text-sm">
                             {/* Patient Search */}
                             <div className="relative">
                                 <input
                                     type="text"
-                                    placeholder="Buscar paciente por nombre..."
+                                    placeholder={tr('create.searchPatientPlaceholder')}
                                     value={createForm.patient_display || patientQuery}
                                     onChange={(event) => {
                                         const val = event.target.value;
@@ -460,7 +450,7 @@ export function ReceptionistDashboard() {
                                     }}
                                     onFocus={() => setShowPatientDropdown(true)}
                                     className="w-full rounded-xl border border-slate-200 px-3 py-2"
-                                    aria-label="Buscar paciente"
+                                    aria-label={tr('aria.searchPatient')}
                                     required
                                 />
                                 {showPatientDropdown && patientResults.length > 0 && !createForm.patient_id && (
@@ -491,11 +481,11 @@ export function ReceptionistDashboard() {
 
                             <input
                                 type="tel"
-                                placeholder="Numero de telefono"
+                                placeholder={tr('create.phonePlaceholder')}
                                 value={createForm.phone}
                                 onChange={(event) => setCreateForm((prev) => ({ ...prev, phone: event.target.value }))}
                                 className="w-full rounded-xl border border-slate-200 px-3 py-2"
-                                aria-label="Ingresar numero de telefono"
+                                aria-label={tr('aria.enterPhone')}
                             />
 
                             {/* Provider + Type */}
@@ -504,10 +494,10 @@ export function ReceptionistDashboard() {
                                     value={createForm.provider_id}
                                     onChange={(event) => setCreateForm((prev) => ({ ...prev, provider_id: event.target.value, start_time: '' }))}
                                     className="rounded-xl border border-slate-200 px-3 py-2"
-                                    aria-label="Seleccionar proveedor"
+                                    aria-label={tr('aria.selectProvider')}
                                     required
                                 >
-                                    <option value="">Proveedor...</option>
+                                    <option value="">{tr('create.providerPlaceholder')}</option>
                                     {providers.map((p) => (
                                         <option key={p.id} value={p.id}>Dr. {p.last_name}</option>
                                     ))}
@@ -516,10 +506,10 @@ export function ReceptionistDashboard() {
                                     value={createForm.appointment_type_id}
                                     onChange={(event) => setCreateForm((prev) => ({ ...prev, appointment_type_id: event.target.value, start_time: '' }))}
                                     className="rounded-xl border border-slate-200 px-3 py-2"
-                                    aria-label="Seleccionar tipo de cita"
+                                    aria-label={tr('aria.selectAppointmentType')}
                                     required
                                 >
-                                    <option value="">Tipo...</option>
+                                    <option value="">{tr('create.typePlaceholder')}</option>
                                     {appointmentTypes.map((t) => (
                                         <option key={t.id} value={t.id}>{t.name} ({t.duration_minutes}m)</option>
                                     ))}
@@ -533,23 +523,23 @@ export function ReceptionistDashboard() {
                                     value={createForm.date}
                                     onChange={(event) => setCreateForm((prev) => ({ ...prev, date: event.target.value, start_time: '' }))}
                                     className="rounded-xl border border-slate-200 px-3 py-2"
-                                    aria-label="Seleccionar fecha de cita"
+                                    aria-label={tr('aria.selectAppointmentDate')}
                                 />
                                 <select
                                     value={createForm.start_time}
                                     onChange={(event) => setCreateForm((prev) => ({ ...prev, start_time: event.target.value }))}
                                     className="rounded-xl border border-slate-200 px-3 py-2"
-                                    aria-label="Seleccionar horario disponible"
+                                    aria-label={tr('aria.selectAvailableTime')}
                                     required
                                 >
-                                    <option value="">Horario...</option>
+                                    <option value="">{tr('create.timePlaceholder')}</option>
                                     {availableSlots.map((s) => (
                                         <option key={s.start_time} value={s.start_time}>
                                             {formatISOToTime(s.start_time)}
                                         </option>
                                     ))}
                                     {createForm.provider_id && createForm.appointment_type_id && availableSlots.length === 0 && (
-                                        <option value="" disabled>No hay horarios disponibles</option>
+                                        <option value="" disabled>{tr('create.noAvailableTimes')}</option>
                                     )}
                                 </select>
                             </div>
@@ -559,7 +549,7 @@ export function ReceptionistDashboard() {
                                 value={createForm.language_preference}
                                 onChange={(event) => setCreateForm((prev) => ({ ...prev, language_preference: event.target.value as 'en' | 'es' }))}
                                 className="w-full rounded-xl border border-slate-200 px-3 py-2"
-                                aria-label="Seleccionar idioma"
+                                aria-label={tr('aria.selectLanguage')}
                             >
                                 <option value="es">Español</option>
                                 <option value="en">English</option>
@@ -567,11 +557,11 @@ export function ReceptionistDashboard() {
 
                             <input
                                 type="text"
-                                placeholder="Notas (opcional)"
+                                placeholder={tr('create.notesPlaceholder')}
                                 value={createForm.notes}
                                 onChange={(event) => setCreateForm((prev) => ({ ...prev, notes: event.target.value }))}
                                 className="w-full rounded-xl border border-slate-200 px-3 py-2"
-                                aria-label="Ingresar notas"
+                                aria-label={tr('aria.enterNotes')}
                             />
 
                             <button
@@ -579,12 +569,12 @@ export function ReceptionistDashboard() {
                                 disabled={createBusy}
                                 className="w-full rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-50"
                             >
-                                {createBusy ? 'Creando...' : 'Agregar cita'}
+                                {createBusy ? tr('create.creating') : tr('create.addAppointment')}
                             </button>
 
                             {createSuccess && (
                                 <p className="rounded-full bg-emerald-100 px-3 py-2 text-center text-xs font-semibold text-emerald-800">
-                                    Cita agregada al calendario.
+                                    {tr('create.success')}
                                 </p>
                             )}
                             {createError && (
@@ -597,17 +587,17 @@ export function ReceptionistDashboard() {
 
                     {/* Block Time */}
                     <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                        <h3 className="text-lg font-semibold text-slate-900">Bloquear horario</h3>
-                        <p className="text-xs text-slate-500">Bloquea tiempo para reuniones, descansos o cambios de equipo.</p>
+                        <h3 className="text-lg font-semibold text-slate-900">{tr('block.title')}</h3>
+                        <p className="text-xs text-slate-500">{tr('block.description')}</p>
                         <form onSubmit={handleBlockTime} className="mt-4 space-y-3 text-sm">
                             <select
                                 value={blockForm.provider_id}
                                 onChange={(event) => setBlockForm((prev) => ({ ...prev, provider_id: event.target.value }))}
                                 className="w-full rounded-xl border border-slate-200 px-3 py-2"
-                                aria-label="Seleccionar proveedor para bloquear horario"
+                                aria-label={tr('aria.selectProviderForBlock')}
                                 required
                             >
-                                <option value="">Seleccionar proveedor...</option>
+                                <option value="">{tr('block.providerPlaceholder')}</option>
                                 {providers.map((p) => (
                                     <option key={p.id} value={p.id}>Dr. {p.last_name}</option>
                                 ))}
@@ -618,23 +608,23 @@ export function ReceptionistDashboard() {
                                     value={blockForm.start}
                                     onChange={(event) => setBlockForm((prev) => ({ ...prev, start: event.target.value }))}
                                     className="rounded-xl border border-slate-200 px-3 py-2"
-                                    aria-label="Seleccionar hora de inicio"
+                                    aria-label={tr('aria.selectStartTime')}
                                 />
                                 <input
                                     type="time"
                                     value={blockForm.end}
                                     onChange={(event) => setBlockForm((prev) => ({ ...prev, end: event.target.value }))}
                                     className="rounded-xl border border-slate-200 px-3 py-2"
-                                    aria-label="Seleccionar hora de fin"
+                                    aria-label={tr('aria.selectEndTime')}
                                 />
                             </div>
                             <input
                                 type="text"
-                                placeholder="Motivo del bloqueo"
+                                placeholder={tr('block.reasonPlaceholder')}
                                 value={blockForm.reason}
                                 onChange={(event) => setBlockForm((prev) => ({ ...prev, reason: event.target.value }))}
                                 className="w-full rounded-xl border border-slate-200 px-3 py-2"
-                                aria-label="Ingresar motivo del bloqueo"
+                                aria-label={tr('aria.enterBlockReason')}
                                 required
                             />
                             <button
@@ -642,11 +632,11 @@ export function ReceptionistDashboard() {
                                 disabled={blockBusy}
                                 className="w-full rounded-full border border-slate-200 bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-50"
                             >
-                                {blockBusy ? 'Bloqueando...' : 'Bloquear horario'}
+                                {blockBusy ? tr('block.blocking') : tr('block.submit')}
                             </button>
                             {blockSuccess && (
                                 <p className="rounded-full bg-amber-100 px-3 py-2 text-center text-xs font-semibold text-amber-800">
-                                    Horario bloqueado correctamente.
+                                    {tr('block.success')}
                                 </p>
                             )}
                         </form>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -8,6 +8,8 @@ import { Button } from '@/shared/ui/button';
 import { Textarea } from '@/shared/ui/textarea';
 import { Card } from '@/shared/ui/card';
 import { useCsrfToken } from '@/shared/hooks/useCsrfToken';
+import { Field } from '@/shared/ui/field';
+import { FormFeedback } from '@/shared/ui/form-feedback';
 
 const patientIntakeSchema = z.object({
   fullName: z.string().min(2, 'patientIntake.errors.fullNameRequired'),
@@ -24,6 +26,7 @@ type PatientIntakeFormData = z.infer<typeof patientIntakeSchema>;
 export function PatientIntakeForm({ patientId }: { patientId: string }) {
   const t = useTranslations('patientIntake.form');
   const getCsrfHeaders = useCsrfToken();
+  const [submitState, setSubmitState] = useState<'idle' | 'success' | 'error'>('idle');
   const {
     register,
     handleSubmit,
@@ -32,6 +35,7 @@ export function PatientIntakeForm({ patientId }: { patientId: string }) {
 
   async function onSubmit(data: PatientIntakeFormData) {
     try {
+      setSubmitState('idle');
       const csrfHeaders = await getCsrfHeaders();
       const response = await fetch('/api/patient-intake', {
         method: 'POST',
@@ -41,10 +45,10 @@ export function PatientIntakeForm({ patientId }: { patientId: string }) {
       if (!response.ok) {
         throw new Error(await response.text());
       }
-      alert(t('success'));
+      setSubmitState('success');
     } catch (error) {
       console.error('Error submitting intake form:', error);
-      alert(t('error'));
+      setSubmitState('error');
     }
   }
 
@@ -53,58 +57,60 @@ export function PatientIntakeForm({ patientId }: { patientId: string }) {
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <h1 className="text-2xl font-bold mb-4">{t('title')}</h1>
 
-        <div className="mb-4">
-          <label htmlFor="fullName" className="block font-semibold mb-1">
-            {t('fullName')}
-          </label>
-          <Input id="fullName" {...register('fullName')} aria-invalid={!!errors.fullName} />
-          {errors.fullName && <p className="text-red-600 mt-1">{t(errors.fullName.message)}</p>}
-        </div>
+        {submitState === 'success' && <FormFeedback type="success" message={t('success')} className="mb-4" />}
+        {submitState === 'error' && <FormFeedback type="error" message={t('error')} className="mb-4" />}
 
-        <div className="mb-4">
-          <label htmlFor="dateOfBirth" className="block font-semibold mb-1">
-            {t('dateOfBirth')}
-          </label>
-          <Input type="date" id="dateOfBirth" {...register('dateOfBirth')} aria-invalid={!!errors.dateOfBirth} />
-          {errors.dateOfBirth && <p className="text-red-600 mt-1">{t(errors.dateOfBirth.message)}</p>}
-        </div>
+        <Field
+          className="mb-4"
+          htmlFor="fullName"
+          label={t('fullName')}
+          required
+          error={errors.fullName ? t(errors.fullName.message) : undefined}
+        >
+          <Input id="fullName" {...register('fullName')} validationState={errors.fullName ? 'error' : 'default'} aria-invalid={!!errors.fullName} />
+        </Field>
 
-        <div className="mb-4">
-          <label htmlFor="contactNumber" className="block font-semibold mb-1">
-            {t('contactNumber')}
-          </label>
-          <Input id="contactNumber" {...register('contactNumber')} aria-invalid={!!errors.contactNumber} />
-          {errors.contactNumber && <p className="text-red-600 mt-1">{t(errors.contactNumber.message)}</p>}
-        </div>
+        <Field
+          className="mb-4"
+          htmlFor="dateOfBirth"
+          label={t('dateOfBirth')}
+          required
+          error={errors.dateOfBirth ? t(errors.dateOfBirth.message) : undefined}
+        >
+          <Input type="date" id="dateOfBirth" {...register('dateOfBirth')} validationState={errors.dateOfBirth ? 'error' : 'default'} aria-invalid={!!errors.dateOfBirth} />
+        </Field>
 
-        <div className="mb-4">
-          <label htmlFor="email" className="block font-semibold mb-1">
-            {t('email')}
-          </label>
-          <Input type="email" id="email" {...register('email')} aria-invalid={!!errors.email} />
-          {errors.email && <p className="text-red-600 mt-1">{t(errors.email.message)}</p>}
-        </div>
+        <Field
+          className="mb-4"
+          htmlFor="contactNumber"
+          label={t('contactNumber')}
+          required
+          error={errors.contactNumber ? t(errors.contactNumber.message) : undefined}
+        >
+          <Input id="contactNumber" {...register('contactNumber')} validationState={errors.contactNumber ? 'error' : 'default'} aria-invalid={!!errors.contactNumber} />
+        </Field>
 
-        <div className="mb-4">
-          <label htmlFor="medicalHistory" className="block font-semibold mb-1">
-            {t('medicalHistory')}
-          </label>
+        <Field
+          className="mb-4"
+          htmlFor="email"
+          label={t('email')}
+          required
+          error={errors.email ? t(errors.email.message) : undefined}
+        >
+          <Input type="email" id="email" {...register('email')} validationState={errors.email ? 'error' : 'default'} aria-invalid={!!errors.email} />
+        </Field>
+
+        <Field className="mb-4" htmlFor="medicalHistory" label={t('medicalHistory')}>
           <Textarea id="medicalHistory" {...register('medicalHistory')} />
-        </div>
+        </Field>
 
-        <div className="mb-4">
-          <label htmlFor="insuranceProvider" className="block font-semibold mb-1">
-            {t('insuranceProvider')}
-          </label>
+        <Field className="mb-4" htmlFor="insuranceProvider" label={t('insuranceProvider')}>
           <Input id="insuranceProvider" {...register('insuranceProvider')} />
-        </div>
+        </Field>
 
-        <div className="mb-4">
-          <label htmlFor="insurancePolicyNumber" className="block font-semibold mb-1">
-            {t('insurancePolicyNumber')}
-          </label>
+        <Field className="mb-4" htmlFor="insurancePolicyNumber" label={t('insurancePolicyNumber')}>
           <Input id="insurancePolicyNumber" {...register('insurancePolicyNumber')} />
-        </div>
+        </Field>
 
         <Button type="submit" disabled={isSubmitting} className="w-full">
           {isSubmitting ? t('submitting') : t('submit')}

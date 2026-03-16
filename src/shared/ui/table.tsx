@@ -1,8 +1,9 @@
 import React from 'react';
+import { cn } from '@/shared/lib/utils';
 
 export function Table({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <table className={`w-full border-collapse border border-gray-300 ${className || ''}`}>
+    <table className={cn('w-full border-collapse overflow-hidden rounded-lg border border-border bg-surface', className)}>
       {children}
     </table>
   );
@@ -10,7 +11,7 @@ export function Table({ children, className }: { children: React.ReactNode; clas
 
 export function TableHead({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <thead className={`bg-gray-100 ${className || ''}`}>
+    <thead className={cn('bg-surface-muted', className)}>
       {children}
     </thead>
   );
@@ -18,7 +19,7 @@ export function TableHead({ children, className }: { children: React.ReactNode; 
 
 export function TableHeader({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <th className={`border border-gray-300 px-4 py-2 text-left font-semibold ${className || ''}`}>
+    <th className={cn('border-b border-border px-4 py-2 text-left text-sm font-semibold text-foreground', className)}>
       {children}
     </th>
   );
@@ -26,7 +27,7 @@ export function TableHeader({ children, className }: { children: React.ReactNode
 
 export function TableBody({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <tbody className={className || ''}>
+    <tbody className={cn('', className)}>
       {children}
     </tbody>
   );
@@ -34,7 +35,7 @@ export function TableBody({ children, className }: { children: React.ReactNode; 
 
 export function TableRow({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <tr className={`hover:bg-gray-50 ${className || ''}`}>
+    <tr className={cn('border-b border-border/80 transition hover:bg-surface-muted/70', className)}>
       {children}
     </tr>
   );
@@ -42,7 +43,7 @@ export function TableRow({ children, className }: { children: React.ReactNode; c
 
 export function TableCell({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <td className={`border border-gray-300 px-4 py-2 ${className || ''}`}>
+    <td className={cn('px-4 py-2 text-sm text-foreground', className)}>
       {children}
     </td>
   );

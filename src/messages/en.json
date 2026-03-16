@@ -115,6 +115,23 @@
     "schedule": {
       "title": "Schedule",
       "generalType": "General"
+    },
+    "clinical": {
+      "stats": {
+        "totalPatients": "Today's Patients",
+        "waiting": "Waiting",
+        "inProgress": "In Progress",
+        "completed": "Completed"
+      },
+      "scheduleTitle": "Today's Schedule",
+      "loadingSchedule": "Loading schedule...",
+      "emptySchedule": "No appointments scheduled for today.",
+      "generalType": "General",
+      "actions": {
+        "startVisit": "Start Visit",
+        "completeVisit": "Complete Visit",
+        "noShow": "No-Show"
+      }
     }
   }
 }
