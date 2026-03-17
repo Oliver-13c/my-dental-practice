@@ -495,6 +495,7 @@
     "dateRange": "Date Range",
     "to": "to",
     "usersNav": "Users",
+    "remindersNav": "Reminders",
     "users": {
       "title": "User Management",
       "description": "Manage staff members and their access",
@@ -618,7 +619,22 @@
     "appointmentType": "Appointment Type",
     "overrides": "Appointment Type Overrides",
     "unsaved": "Unsaved changes",
-    "saved": "Settings saved successfully"
+    "saved": "Settings saved successfully",
+    "saveSettings": "Save Settings",
+    "twilio": {
+      "title": "SMS / Twilio Configuration",
+      "configured": "Connected",
+      "notConfigured": "Not Configured",
+      "accountSid": "Account SID",
+      "fromPhone": "From Phone",
+      "testSms": "Send Test SMS",
+      "testPhoneLabel": "Test phone number",
+      "testPhonePlaceholder": "+1 (555) 000-0000",
+      "testSending": "Sending…",
+      "testSuccess": "Test SMS sent successfully",
+      "testFailed": "Failed to send test SMS",
+      "envHint": "Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_PHONE_NUMBER environment variables to enable SMS."
+    }
   },
   "contacts": {
     "title": "Contacts & Messaging",

@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
       `
       id,
       patient_id,
+      staff_id,
       recipient_email,
       recipient_phone,
       message_type,
@@ -36,7 +37,13 @@ export async function GET(req: NextRequest) {
       sms_status,
       sent_at,
       delivered_at,
+      received_at,
       read_at,
+      direction,
+      thread_key,
+      is_read,
+      read_by,
+      read_at_timestamp,
       failure_reason,
       created_at,
       updated_at
@@ -147,7 +154,11 @@ export async function POST(req: NextRequest) {
         body: messageBody,
         message_type: message_type || 'custom',
         status: 'pending',
+        direction: 'outbound',
+        is_read: false,
         created_by: user.data.user.id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       })
       .select()
       .single();

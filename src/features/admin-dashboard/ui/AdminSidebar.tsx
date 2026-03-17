@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 import {
   Activity,
   BarChart3,
+  Bell,
   CalendarDays,
   ClipboardList,
   LayoutDashboard,
@@ -42,6 +43,7 @@ export function AdminSidebar({ onNavigate }: AdminSidebarProps) {
     { href: '/admin/appointments', label: t('appointments'), icon: CalendarDays },
     { href: '/admin/staff', label: t('staff'), icon: UserRound },
     { href: '/admin/contacts', label: tc('title'), icon: MessageSquare },
+    { href: '/admin/reminders', label: t('remindersNav'), icon: Bell },
     { href: '/admin/audit-logs', label: t('auditLogs'), icon: ClipboardList },
     { href: '/admin/analytics', label: t('analytics'), icon: BarChart3 },
   ];

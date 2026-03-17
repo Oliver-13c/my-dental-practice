@@ -495,6 +495,7 @@
     "dateRange": "Rango de Fechas",
     "to": "hasta",
     "usersNav": "Usuarios",
+    "remindersNav": "Recordatorios",
     "users": {
       "title": "Gestión de Usuarios",
       "description": "Gestionar miembros del personal y sus accesos",
@@ -618,7 +619,22 @@
     "appointmentType": "Tipo de Cita",
     "overrides": "Sobrescrituras por Tipo de Cita",
     "unsaved": "Cambios sin guardar",
-    "saved": "Configuración guardada con éxito"
+    "saved": "Configuración guardada con éxito",
+    "saveSettings": "Guardar Configuración",
+    "twilio": {
+      "title": "Configuración de SMS / Twilio",
+      "configured": "Conectado",
+      "notConfigured": "No Configurado",
+      "accountSid": "ID de Cuenta",
+      "fromPhone": "Número de Envío",
+      "testSms": "Enviar SMS de Prueba",
+      "testPhoneLabel": "Número de teléfono de prueba",
+      "testPhonePlaceholder": "+1 (555) 000-0000",
+      "testSending": "Enviando…",
+      "testSuccess": "SMS de prueba enviado con éxito",
+      "testFailed": "Error al enviar SMS de prueba",
+      "envHint": "Configure las variables TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN y TWILIO_PHONE_NUMBER para habilitar SMS."
+    }
   },
   "contacts": {
     "title": "Contactos y Mensajería",
