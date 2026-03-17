@@ -1,83 +1,85 @@
 'use client';
 
 import React from 'react';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
+import {
+  Activity,
+  BarChart3,
+  CalendarDays,
+  ClipboardList,
+  LayoutDashboard,
+  MessageSquare,
+  Users,
+  UserRound,
+} from 'lucide-react';
 import { Button } from '@/shared/ui/button';
 
-export function AdminSidebar() {
+type AdminSidebarProps = {
+  onNavigate?: () => void;
+};
+
+type MenuItem = {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+};
+
+export function AdminSidebar({ onNavigate }: AdminSidebarProps) {
   const t = useTranslations('admin');
-  const tu = useTranslations('admin.users');
   const tc = useTranslations('contacts');
-  const locale = useLocale();
   const pathname = usePathname();
-  const router = useRouter();
 
   const isActive = (href: string) => {
     if (href === '/admin') return pathname === '/admin';
     return pathname.startsWith(href);
   };
 
-  const toggleLocale = () => {
-    const newLocale = locale === 'es' ? 'en' : 'es';
-    document.cookie = `NEXT_LOCALE=${newLocale};path=/;max-age=31536000`;
-    router.replace(pathname);
-    router.refresh();
-  };
-
-  const menuItems = [
-    { href: '/admin', label: t('dashboard'), icon: '📊' },
-    { href: '/admin/users', label: t('usersNav'), icon: '👥' },
-    { href: '/admin/appointments', label: t('appointments'), icon: '📅' },
-    { href: '/admin/staff', label: t('staff'), icon: '👨‍⚕️' },
-    { href: '/admin/contacts', label: tc('title'), icon: '💬' },
-    { href: '/admin/audit-logs', label: t('auditLogs'), icon: '📋' },
-    { href: '/admin/analytics', label: t('analytics'), icon: '📈' },
+  const menuItems: MenuItem[] = [
+    { href: '/admin', label: t('dashboard'), icon: LayoutDashboard },
+    { href: '/admin/users', label: t('usersNav'), icon: Users },
+    { href: '/admin/appointments', label: t('appointments'), icon: CalendarDays },
+    { href: '/admin/staff', label: t('staff'), icon: UserRound },
+    { href: '/admin/contacts', label: tc('title'), icon: MessageSquare },
+    { href: '/admin/audit-logs', label: t('auditLogs'), icon: ClipboardList },
+    { href: '/admin/analytics', label: t('analytics'), icon: BarChart3 },
   ];
 
   return (
-    <aside className="w-64 bg-gray-900 text-white h-screen flex flex-col fixed left-0 top-0">
-      <div className="p-6 border-b border-gray-700">
-        <h1 className="text-2xl font-bold">{t('admin')}</h1>
-        <p className="text-sm text-gray-400">{t('systemAdministration')}</p>
+    <aside className="flex h-full w-full flex-col bg-slate-900 text-white">
+      <div className="border-b border-slate-700 p-6">
+        <h1 className="text-2xl font-bold tracking-tight">{t('title')}</h1>
+        <p className="mt-1 text-sm text-slate-300">{t('systemAdministration')}</p>
       </div>
 
-      <nav className="flex-1 overflow-y-auto p-4 space-y-2">
+      <nav className="flex-1 space-y-2 overflow-y-auto p-4">
         {menuItems.map((item) => (
-          <Link key={item.href} href={item.href}>
+          <Link key={item.href} href={item.href} onClick={onNavigate}>
             <Button
               variant={isActive(item.href) ? 'default' : 'ghost'}
               className={`w-full justify-start text-left ${
                 isActive(item.href)
-                  ? 'bg-blue-600 hover:bg-blue-700'
-                  : 'text-gray-300 hover:bg-gray-800'
+                  ? 'h-11 bg-blue-600 text-white hover:bg-blue-700'
+                  : 'h-11 text-slate-100 hover:bg-slate-800'
               }`}
             >
-              <span className="mr-3">{item.icon}</span>
+              <item.icon className="h-4 w-4" />
               {item.label}
             </Button>
           </Link>
         ))}
       </nav>
 
-      <div className="p-4 border-t border-gray-700 space-y-3">
-        <button
-          onClick={toggleLocale}
-          className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors text-sm"
-        >
-          <span>🌐 {locale === 'es' ? tu('language.spanish') : tu('language.english')}</span>
-          <span className="text-xs text-gray-400">
-            → {locale === 'es' ? tu('language.switchToEnglish') : tu('language.switchToSpanish')}
-          </span>
-        </button>
+      <div className="space-y-3 border-t border-slate-700 p-4">
         <Link
           href="/staff/dashboard"
-          className="block w-full text-center px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors text-sm text-gray-300"
+          onClick={onNavigate}
+          className="flex h-11 w-full items-center justify-center rounded-lg bg-slate-800 px-3 text-sm text-slate-100 transition-colors hover:bg-slate-700"
         >
-          ← {tu('openStaffDashboard')}
+          <Activity className="mr-2 h-4 w-4" />
+          {t('users.openStaffDashboard')}
         </Link>
-        <p className="text-xs text-gray-400">{tu('version', { value: '1.0.0' })}</p>
       </div>
     </aside>
   );
