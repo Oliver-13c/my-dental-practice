@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { useLocale } from 'next-intl';
 import { useTranslations } from 'next-intl';
 import { ReceptionistCalendar } from './receptionist-calendar';
+import { MessagesTab } from './messages-tab';
 import {
   useAppointments,
   useProviders,
@@ -53,6 +54,10 @@ export function ReceptionistDashboard() {
     const locale = useLocale();
     const t = useTranslations('staff');
     const tr = useTranslations('staff.reception');
+    
+    // Tab state for Schedule / Messages
+    const [activeTab, setActiveTab] = useState<'schedule' | 'messages'>('schedule');
+    
     const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().slice(0, 10));
     const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
     const [providerFilter, setProviderFilter] = useState('all');
@@ -223,6 +228,36 @@ export function ReceptionistDashboard() {
 
     return (
         <section className="rounded-3xl border border-slate-200/70 bg-gradient-to-br from-amber-50 via-white to-teal-50 p-6 shadow-sm">
+            {/* Tab Navigation */}
+            <div className="mb-6 flex gap-2 border-b border-slate-200">
+                <button
+                    onClick={() => setActiveTab('schedule')}
+                    className={`pb-3 px-4 font-semibold text-sm transition ${
+                        activeTab === 'schedule'
+                            ? 'text-slate-900 border-b-2 border-slate-900'
+                            : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                >
+                    {tr('tabs.schedule')}
+                </button>
+                <button
+                    onClick={() => setActiveTab('messages')}
+                    className={`pb-3 px-4 font-semibold text-sm transition ${
+                        activeTab === 'messages'
+                            ? 'text-slate-900 border-b-2 border-slate-900'
+                            : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                >
+                    {t('messages.title')}
+                </button>
+            </div>
+
+            {/* Messages Tab */}
+            {activeTab === 'messages' && <MessagesTab />}
+
+            {/* Schedule Tab */}
+            {activeTab === 'schedule' && (
+            <>
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                     <p className="text-xs uppercase tracking-[0.3em] text-slate-500">{tr('header.kicker')}</p>
@@ -649,6 +684,8 @@ export function ReceptionistDashboard() {
                     </div>
                 </div>
             </div>
+            </>
+            )}
         </section>
     );
 }

@@ -173,7 +173,23 @@
         "selectEndTime": "Select end time",
         "enterBlockReason": "Enter blocking reason"
       },
-      "confirmCancel": "Cancel this appointment?"
+      "confirmCancel": "Cancel this appointment?",
+      "tabs": {
+        "schedule": "Schedule"
+      }
+    },
+    "messages": {
+      "title": "Messages",
+      "threads": "Message Threads",
+      "noThreads": "No message threads yet",
+      "selectThread": "Select a thread to view messages",
+      "loading": "Loading messages...",
+      "noMessages": "No messages in this thread",
+      "message": "message",
+      "messages": "messages",
+      "read": "Read",
+      "error": "Error loading messages",
+      "sending": "Sending..."
     },
     "clinical": {
       "stats": {
@@ -635,6 +651,9 @@
       "testFailed": "Failed to send test SMS",
       "envHint": "Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_PHONE_NUMBER environment variables to enable SMS."
     }
+  },
+  "messages": {
+    "title": "Messages"
   },
   "contacts": {
     "title": "Contacts & Messaging",

@@ -173,7 +173,23 @@
         "selectEndTime": "Seleccionar hora de fin",
         "enterBlockReason": "Ingresar motivo del bloqueo"
       },
-      "confirmCancel": "Cancelar esta cita?"
+      "confirmCancel": "¿Cancelar esta cita?",
+      "tabs": {
+        "schedule": "Cronograma"
+      }
+    },
+    "messages": {
+      "title": "Mensajes",
+      "threads": "Hilos de Mensaje",
+      "noThreads": "Sin hilos de mensaje aún",
+      "selectThread": "Selecciona un hilo para ver los mensajes",
+      "loading": "Cargando mensajes...",
+      "noMessages": "Sin mensajes en este hilo",
+      "message": "mensaje",
+      "messages": "mensajes",
+      "read": "Leído",
+      "error": "Error al cargar mensajes",
+      "sending": "Enviando..."
     },
     "clinical": {
       "stats": {
@@ -635,6 +651,9 @@
       "testFailed": "Error al enviar SMS de prueba",
       "envHint": "Configure las variables TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN y TWILIO_PHONE_NUMBER para habilitar SMS."
     }
+  },
+  "messages": {
+    "title": "Mensajes"
   },
   "contacts": {
     "title": "Contactos y Mensajería",
