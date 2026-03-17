@@ -1,10 +1,11 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, useEffect } from 'react';
 import { useLocale } from 'next-intl';
 import { useTranslations } from 'next-intl';
 import { ReceptionistCalendar } from './receptionist-calendar';
 import { MessagesTab } from './messages-tab';
+import { useMessageThreads } from '../hooks/use-messages';
 import {
   useAppointments,
   useProviders,
@@ -50,13 +51,30 @@ function statusBadge(status: string) {
     }
 }
 
-export function ReceptionistDashboard() {
+interface ReceptionistDashboardProps {
+    staffRole?: string;
+}
+
+export function ReceptionistDashboard({ staffRole = 'receptionist' }: ReceptionistDashboardProps = {}) {
     const locale = useLocale();
     const t = useTranslations('staff');
     const tr = useTranslations('staff.reception');
     
+    // Check if user can see Messages tab (receptionist or admin only)
+    const canViewMessages = staffRole === 'receptionist' || staffRole === 'admin';
+    
     // Tab state for Schedule / Messages
     const [activeTab, setActiveTab] = useState<'schedule' | 'messages'>('schedule');
+    const [unreadCount, setUnreadCount] = useState(0);
+    
+    // Fetch messages for unread count
+    const { threads } = useMessageThreads();
+    
+    // Update unread count when threads change
+    useEffect(() => {
+        const count = threads.reduce((sum, thread) => sum + (thread.unread_count || 0), 0);
+        setUnreadCount(count);
+    }, [threads]);
     
     const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().slice(0, 10));
     const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
@@ -240,16 +258,23 @@ export function ReceptionistDashboard() {
                 >
                     {tr('tabs.schedule')}
                 </button>
-                <button
-                    onClick={() => setActiveTab('messages')}
-                    className={`pb-3 px-4 font-semibold text-sm transition ${
-                        activeTab === 'messages'
-                            ? 'text-slate-900 border-b-2 border-slate-900'
-                            : 'text-slate-500 hover:text-slate-700'
-                    }`}
-                >
-                    {t('messages.title')}
-                </button>
+                {canViewMessages && (
+                    <button
+                        onClick={() => setActiveTab('messages')}
+                        className={`pb-3 px-4 font-semibold text-sm transition flex items-center gap-2 ${
+                            activeTab === 'messages'
+                                ? 'text-slate-900 border-b-2 border-slate-900'
+                                : 'text-slate-500 hover:text-slate-700'
+                        }`}
+                    >
+                        {t('messages.title')}
+                        {unreadCount > 0 && (
+                            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-semibold text-white">
+                                {unreadCount > 99 ? '99+' : unreadCount}
+                            </span>
+                        )}
+                    </button>
+                )}
             </div>
 
             {/* Messages Tab */}

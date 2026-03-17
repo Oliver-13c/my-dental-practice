@@ -79,7 +79,7 @@ export function StaffDashboard({
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-8">
-        {(effectiveRole === 'receptionist' || effectiveRole === 'admin') && <ReceptionistDashboard />}
+        {(effectiveRole === 'receptionist' || effectiveRole === 'admin') && <ReceptionistDashboard staffRole={effectiveRole} />}
         {effectiveRole === 'dentist' && (
           <DentistDashboard
             providerId={staffProfileId}
