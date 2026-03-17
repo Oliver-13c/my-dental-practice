@@ -13,6 +13,7 @@ export { useSharedMessageThreads } from './hooks/use-shared-message-threads';
 
 // Components
 export { ContactPreferenceBadge } from './components/contact-preference-badge';
+export { MessageHistoryList } from './components/message-history-list';
 
 // Types
 export type {

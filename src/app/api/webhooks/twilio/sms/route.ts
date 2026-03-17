@@ -50,7 +50,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify signature
-    const bodyStr = new URLSearchParams(formData as any as Record<string, string>).toString();
+    const bodyStr = new URLSearchParams(
+      Object.fromEntries(
+        (formData as any).entries 
+          ? Array.from((formData as any).entries() as Iterable<[string, string]>)
+          : []
+      )
+    ).toString();
     if (!verifyTwilioSignature(request, bodyStr)) {
       console.error('[twilio-webhook] Invalid Twilio signature');
       return NextResponse.json({ error: 'Invalid signature' }, { status: 403 });
@@ -109,17 +115,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 4: Log audit event
-    await supabase.from('audit_logs').insert({
+    const message = insertedMessage as { id: string };
+    await (supabase.from('audit_logs') as any).insert({
       action: 'inbound_sms_received',
       entity_type: 'message_logs',
-      entity_id: insertedMessage.id,
+      entity_id: message.id,
       details: {
         patient_id: patientId,
         from_phone: fromPhone,
         message_sid: messageSid,
         has_media: numMedia > 0,
       },
-    } as any);
+    });
 
     // Step 5: Trigger real-time notification
     // This will notify staff dashboard in real-time
@@ -128,7 +135,7 @@ export async function POST(request: NextRequest) {
       .send('broadcast', {
         event: 'inbound_sms',
         payload: {
-          message_id: insertedMessage.id,
+          message_id: message.id,
           patient_id: patientId,
           thread_key: threadKey,
           timestamp: new Date().toISOString(),

@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { AdminLayout } from '@/features/admin-dashboard/ui/AdminLayout';
 import { Card } from '@/shared/ui/card';
+import { useSendMessage, ContactPreferenceBadge, MessageHistoryList } from '@/features/shared/messaging';
+import type { MessageLogRecord, ContactPreferences } from '@/features/shared/messaging';
 
 type Patient = {
   id: string;
@@ -11,19 +13,6 @@ type Patient = {
   last_name: string;
   email: string | null;
   phone: string | null;
-};
-
-type MessageLog = {
-  id: string;
-  patient_id: string;
-  recipient_email: string | null;
-  recipient_phone: string | null;
-  message_type: string;
-  channels: string[];
-  subject: string;
-  body: string;
-  status: string;
-  created_at: string;
 };
 
 type ContactPreference = {
@@ -35,10 +24,9 @@ type ContactPreference = {
 export default function AdminContactsPage() {
   const tc = useTranslations('contacts');
   const [patients, setPatients] = useState<Patient[]>([]);
-  const [messages, setMessages] = useState<MessageLog[]>([]);
+  const [messages, setMessages] = useState<MessageLogRecord[]>([]);
   const [selectedPatientId, setSelectedPatientId] = useState<string>('');
   const [loading, setLoading] = useState(true);
-  const [sending, setSending] = useState(false);
   const [savingPrefs, setSavingPrefs] = useState(false);
 
   const [subject, setSubject] = useState('');
@@ -54,6 +42,9 @@ export default function AdminContactsPage() {
 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Use shared send message hook
+  const { send: sendMessage, loading: sendingMessage, error: sendError } = useSendMessage();
 
   const selectedPatient = useMemo(
     () => patients.find((p) => p.id === selectedPatientId) ?? null,
@@ -80,7 +71,7 @@ export default function AdminContactsPage() {
       throw new Error('Failed to load messages');
     }
     const json = await res.json();
-    setMessages((json.data ?? []) as MessageLog[]);
+    setMessages((json.data ?? []) as MessageLogRecord[]);
   }, []);
 
   const fetchPreferences = useCallback(async (patientId: string) => {
@@ -149,25 +140,19 @@ export default function AdminContactsPage() {
     }
 
     try {
-      setSending(true);
       setError(null);
       setSuccess(null);
 
-      const res = await fetch('/api/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          patient_id: selectedPatientId,
-          channels,
-          subject: subject.trim() || tc('sendMessage'),
-          body: messageBody.trim(),
-          message_type: 'custom',
-        }),
+      const result = await sendMessage({
+        patient_id: selectedPatientId,
+        thread_key: `admin-${selectedPatientId}`,
+        body: messageBody.trim(),
+        channels,
+        message_type: 'custom',
       });
 
-      if (!res.ok) {
-        const json = await res.json().catch(() => null);
-        throw new Error(json?.error || tc('messageFailed'));
+      if (!result.success) {
+        throw new Error(result.error || tc('messageFailed'));
       }
 
       setSubject('');
@@ -176,8 +161,6 @@ export default function AdminContactsPage() {
       await fetchMessages(selectedPatientId);
     } catch (err) {
       setError(err instanceof Error ? err.message : tc('messageFailed'));
-    } finally {
-      setSending(false);
     }
   };
 
@@ -290,10 +273,10 @@ export default function AdminContactsPage() {
               <div className="mt-3 flex justify-end">
                 <button
                   onClick={handleSendMessage}
-                  disabled={sending}
+                  disabled={sendingMessage}
                   className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
                 >
-                  {sending ? tc('sendingMessage') : tc('sendMessage')}
+                  {sendingMessage ? tc('sendingMessage') : tc('sendMessage')}
                 </button>
               </div>
             </Card>
@@ -347,24 +330,10 @@ export default function AdminContactsPage() {
             <Card className="p-4 lg:col-span-2">
               <h2 className="mb-3 text-sm font-semibold text-gray-900">{tc('inbox')}</h2>
 
-              {messages.length === 0 ? (
-                <p className="text-sm text-gray-500">{tc('noMessages')}</p>
-              ) : (
-                <div className="space-y-3">
-                  {messages.map((msg) => (
-                    <div key={msg.id} className="rounded-md border border-gray-200 p-3">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="text-sm font-semibold text-gray-900">{msg.subject || tc('sendMessage')}</p>
-                        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700">{msg.status}</span>
-                      </div>
-                      <p className="mt-1 text-xs text-gray-500">
-                        {new Date(msg.created_at).toLocaleString()} · {msg.channels?.join(', ') || '-'}
-                      </p>
-                      <p className="mt-2 text-sm text-gray-700 whitespace-pre-wrap">{msg.body}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <MessageHistoryList
+                messages={messages}
+                emptyText={tc('noMessages')}
+              />
             </Card>
           </div>
         )}
