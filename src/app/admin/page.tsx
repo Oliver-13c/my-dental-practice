@@ -88,6 +88,12 @@ export default function AdminDashboard() {
       title: t('viewAuditLogs'),
       desc: t('viewAuditLogsDesc'),
     },
+    {
+      href: '/admin/settings',
+      icon: '⚙️',
+      title: 'Settings',
+      desc: 'Configure Twilio and integrations',
+    },
   ];
 
   return (

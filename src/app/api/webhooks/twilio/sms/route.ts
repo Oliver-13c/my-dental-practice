@@ -3,19 +3,25 @@
  * 
  * Twilio inbound SMS webhook handler
  * Receives incoming SMS messages from patients and logs them to message_logs
+ * 
+ * Note: Twilio configuration is read from tenant_configurations table (per-tenant setup)
+ * with fallback to environment variables for backward compatibility.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/shared/api/supabase-server';
 import { generateThreadKey, findPatientByPhone } from '@/services/message-service';
+import { getTenantTwilioConfig } from '@/services/tenant-config';
 
 // Verify Twilio request signature for security
-function verifyTwilioSignature(request: NextRequest, body: string): boolean {
+async function verifyTwilioSignature(request: NextRequest, body: string): Promise<boolean> {
   const twilioSignature = request.headers.get('x-twilio-signature') || '';
-  const twilioToken = process.env.TWILIO_AUTH_TOKEN || '';
-  const twilioUrl = process.env.TWILIO_WEBHOOK_URL || '';
+  
+  // Get Twilio config from database or environment
+  const twilioConfig = await getTenantTwilioConfig();
+  const twilioToken = twilioConfig?.twilio_auth_token || process.env.TWILIO_AUTH_TOKEN || '';
 
-  if (!twilioSignature || !twilioToken || !twilioUrl) {
+  if (!twilioSignature || !twilioToken) {
     console.warn('[twilio-webhook] Missing signature verification config');
     // In production, this should fail. For development, warn but proceed if explicitly enabled.
     if (process.env.SKIP_TWILIO_SIGNATURE_VERIFY !== 'true') {
@@ -57,7 +63,7 @@ export async function POST(request: NextRequest) {
           : []
       )
     ).toString();
-    if (!verifyTwilioSignature(request, bodyStr)) {
+    if (!await verifyTwilioSignature(request, bodyStr)) {
       console.error('[twilio-webhook] Invalid Twilio signature');
       return NextResponse.json({ error: 'Invalid signature' }, { status: 403 });
     }

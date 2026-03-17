@@ -3,10 +3,14 @@
  * 
  * Twilio delivery status webhook handler
  * Receives SMS delivery/failure updates and updates message_logs
+ * 
+ * Note: Twilio configuration is read from tenant_configurations table (per-tenant setup)
+ * with fallback to environment variables for backward compatibility.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/shared/api/supabase-server';
+import { getTenantTwilioConfig } from '@/services/tenant-config';
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,6 +27,13 @@ export async function POST(request: NextRequest) {
         messageStatus: !!messageStatus,
       });
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    // Verify we have Twilio configuration
+    const twilioConfig = await getTenantTwilioConfig();
+    if (!twilioConfig || !twilioConfig.twilio_enabled) {
+      console.error('[twilio-status-webhook] Twilio not configured');
+      return NextResponse.json({ error: 'Twilio not configured' }, { status: 400 });
     }
 
     const supabase = createAdminClient();
