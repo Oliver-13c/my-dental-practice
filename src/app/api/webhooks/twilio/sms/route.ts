@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify signature
-    const bodyStr = new URLSearchParams(formData).toString();
+    const bodyStr = new URLSearchParams(formData as any as Record<string, string>).toString();
     if (!verifyTwilioSignature(request, bodyStr)) {
       console.error('[twilio-webhook] Invalid Twilio signature');
       return NextResponse.json({ error: 'Invalid signature' }, { status: 403 });
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     const threadKey = await generateThreadKey(supabase, patientId, 'inbound', fromPhone);
 
     // Step 3: Insert inbound message into message_logs
-    const { data: insertedMessage, error: insertError } = await supabase
+    const { data: insertedMessage, error: insertError }: { data: { id: string } | null; error: any } = await supabase
       .from('message_logs')
       .insert({
         patient_id: patientId,
@@ -99,9 +99,9 @@ export async function POST(request: NextRequest) {
       .select('id')
       .single();
 
-    if (insertError) {
+    if (insertError || !insertedMessage) {
       console.error('[twilio-webhook] Failed to insert message', {
-        error: insertError.message,
+        error: insertError?.message,
         patientId,
         messageSid,
       });
@@ -119,12 +119,12 @@ export async function POST(request: NextRequest) {
         message_sid: messageSid,
         has_media: numMedia > 0,
       },
-    });
+    } as any);
 
     // Step 5: Trigger real-time notification
     // This will notify staff dashboard in real-time
-    supabase
-      .channel(`patient_messages:${patientId}`)
+    (supabase
+      .channel(`patient_messages:${patientId}`) as any)
       .send('broadcast', {
         event: 'inbound_sms',
         payload: {
@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
           timestamp: new Date().toISOString(),
         },
       })
-      .catch((err) => {
+      .catch((err: any) => {
         console.warn('[twilio-webhook] Failed to broadcast notification', err);
       });
 

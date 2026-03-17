@@ -189,7 +189,25 @@
       "messages": "messages",
       "read": "Read",
       "error": "Error loading messages",
-      "sending": "Sending..."
+      "sending": "Sending...",
+      "search": {
+        "placeholder": "Search by patient name, phone, or message...",
+        "noResults": "No messages found matching your search"
+      },
+      "compose": {
+        "title": "Reply to Patient",
+        "placeholder": "Type your message here...",
+        "characters": "{count}/{max} characters",
+        "sendSms": "Send via SMS",
+        "send": "Send Message",
+        "sending": "Sending...",
+        "success": "Message sent successfully",
+        "errors": {
+          "emptyMessage": "Please enter a message",
+          "noPhone": "Patient phone number not available",
+          "sendFailed": "Failed to send message. Please try again."
+        }
+      }
     },
     "clinical": {
       "stats": {

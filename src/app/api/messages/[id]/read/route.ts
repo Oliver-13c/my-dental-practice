@@ -10,7 +10,7 @@ import { markMessageAsRead } from '@/services/message-service';
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = createServerClient();
@@ -21,7 +21,7 @@ export async function PATCH(
     }
 
     // Get staff profile to find staff_id
-    const { data: staffProfile } = await supabase
+    const { data: staffProfile }: { data: { id: string } | null } = await supabase
       .from('staff_profiles')
       .select('id')
       .eq('auth_user_id', user.data.user.id)
@@ -31,7 +31,8 @@ export async function PATCH(
       return NextResponse.json({ error: 'Staff profile not found' }, { status: 404 });
     }
 
-    const messageId = params.id;
+    const { id } = await params;
+    const messageId = id;
     const success = await markMessageAsRead(supabase, messageId, staffProfile.id);
 
     if (!success) {
