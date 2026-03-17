@@ -33,9 +33,9 @@ export function MessagesTab() {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
+    <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[300px_minmax(0,1fr)]">
       {/* Thread List Sidebar */}
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="rounded-3xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm overflow-hidden">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-slate-900">{t('threads')}</h3>
           {threads.length > 0 && (
@@ -63,7 +63,7 @@ export function MessagesTab() {
             {searchQuery ? t('search.noResults') : t('noThreads')}
           </div>
         ) : (
-          <div className="space-y-2 max-h-96 overflow-y-auto">
+          <div className="space-y-2 max-h-96 overflow-y-auto scrollbar scrollbar-thumb-slate-300 scrollbar-track-slate-100">
             {filteredThreads.map((thread) => (
               <button
                 key={`${thread.patient_id}::${thread.thread_key}`}
@@ -101,7 +101,7 @@ export function MessagesTab() {
       </div>
 
       {/* Viewer + Composer */}
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 min-w-0">
         {selectedPatientId ? (
           <>
             <MessageThreadViewer
@@ -118,8 +118,8 @@ export function MessagesTab() {
             />
           </>
         ) : (
-          <div className="flex h-96 items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50">
-            <p className="text-center text-sm text-slate-400">
+          <div className="flex h-64 sm:h-96 items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50">
+            <p className="text-center text-sm text-slate-400 px-4">
               {t('selectThread')}
             </p>
           </div>
