@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import {
   useAppointments,
@@ -108,6 +108,7 @@ const TIME_SLOTS = [
 interface CalendarSlot {
   time: string;
   appointments: AppointmentWithDetails[];
+  isAvailable: boolean;
 }
 
 interface DayColumn {
@@ -116,6 +117,13 @@ interface DayColumn {
   providerId: string;
   providerLabel: string;
   slots: CalendarSlot[];
+}
+
+interface ProviderScheduleRow {
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  is_active: boolean;
 }
 
 interface ReceptionistCalendarProps {
@@ -132,6 +140,7 @@ export function ReceptionistCalendar({
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
   const [draggedAppt, setDraggedAppt] = useState<AppointmentWithDetails | null>(null);
   const [rescheduleError, setRescheduleError] = useState<string | null>(null);
+  const [providerSchedules, setProviderSchedules] = useState<Record<string, ProviderScheduleRow[]>>({});
   const locale = useLocale();
   const t = useTranslations('staff');
   const tc = useTranslations('staff.calendar');
@@ -154,6 +163,12 @@ export function ReceptionistCalendar({
   const allProvidersLabel = safe('allProviders', 'All Providers', 'Todos los proveedores');
   const loadingProvidersLabel = safe('loadingProviders', 'Loading providers...', 'Cargando proveedores...');
   const openSlotLabel = safe('openSlot', 'Open', 'Libre');
+  const unavailableSlotLabel = safe('unavailableSlot', 'Unavailable', 'No disponible');
+  const noAvailabilityLabel = safe(
+    'noAvailability',
+    'No schedule available for this day.',
+    'No hay horario disponible para este dia.',
+  );
   const unknownPatientLabel = safe('unknownPatient', 'Unknown patient', 'Paciente desconocido');
   const generalTypeLabel = safe('generalType', 'General', 'General');
   const timeHeaderLabel = safe('timeHeader', 'Time', 'Hora');
@@ -216,6 +231,42 @@ export function ReceptionistCalendar({
     viewMode === 'day' ? { date: startDate } : { startDate, endDate },
   );
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadProviderSchedules() {
+      if (!providers.length) {
+        if (!cancelled) setProviderSchedules({});
+        return;
+      }
+
+      const entries = await Promise.all(
+        providers.map(async (provider) => {
+          try {
+            const res = await fetch(`/api/providers/${provider.id}/schedule`);
+            if (!res.ok) return [provider.id, []] as const;
+
+            const body = await res.json();
+            const schedules = (body?.data?.schedules ?? []) as ProviderScheduleRow[];
+            return [provider.id, schedules] as const;
+          } catch {
+            return [provider.id, []] as const;
+          }
+        }),
+      );
+
+      if (!cancelled) {
+        setProviderSchedules(Object.fromEntries(entries));
+      }
+    }
+
+    loadProviderSchedules();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [providers]);
+
   // Build calendar columns
   const calendars = useMemo(() => {
     const columns: DayColumn[] = [];
@@ -226,9 +277,20 @@ export function ReceptionistCalendar({
           return apptDate === date && appt.provider_id === provider.id;
         });
 
+        const weekday = new Date(`${date}T12:00:00`).getDay();
+        const daySchedule = (providerSchedules[provider.id] ?? []).find(
+          (s) => s.day_of_week === weekday,
+        );
+
         const slots: CalendarSlot[] = TIME_SLOTS.map((time) => {
           const slotsAtTime = dayAppts.filter((appt) => getSlotTimeKey(appt.start_time) === time);
-          return { time, appointments: slotsAtTime };
+          const isAvailable = Boolean(
+            daySchedule
+              && daySchedule.is_active
+              && time >= daySchedule.start_time
+              && time < daySchedule.end_time,
+          );
+          return { time, appointments: slotsAtTime, isAvailable };
         });
 
         columns.push({
@@ -241,7 +303,7 @@ export function ReceptionistCalendar({
       });
     });
     return columns;
-  }, [dates, providers, appointments]);
+  }, [dates, providers, appointments, providerSchedules]);
 
   const displayCalendars = useMemo(
     () => selectedProvider
@@ -326,6 +388,11 @@ export function ReceptionistCalendar({
                     <h4 className="font-semibold text-slate-900">{col.providerLabel}</h4>
                     <span className="text-xs text-slate-500">{col.dayName}</span>
                   </div>
+                  {!col.slots.some((slot) => slot.isAvailable || slot.appointments.length > 0) ? (
+                    <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
+                      {noAvailabilityLabel}
+                    </div>
+                  ) : (
                   <div className="grid auto-rows-min gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                     {col.slots.map((slot, idx) => (
                       <div
@@ -353,11 +420,14 @@ export function ReceptionistCalendar({
                             ))}
                           </div>
                         ) : (
-                          <div className="mt-2 text-xs text-slate-400">{openSlotLabel}</div>
+                          <div className="mt-2 text-xs text-slate-400">
+                            {slot.isAvailable ? openSlotLabel : unavailableSlotLabel}
+                          </div>
                         )}
                       </div>
                     ))}
                   </div>
+                  )}
                 </div>
               ))}
             </div>

@@ -43,6 +43,8 @@
       "allProviders": "All Providers",
       "loadingProviders": "Loading providers...",
       "openSlot": "Open",
+      "unavailableSlot": "Unavailable",
+      "noAvailability": "No schedule available for this day.",
       "releaseToReschedule": "Release to reschedule",
       "couldNotReschedule": "Could not reschedule - time slot may conflict.",
       "unknownPatient": "Unknown patient",
@@ -199,6 +201,32 @@
         "na": "N/A",
         "unknown": "Unknown patient"
       }
+    }
+  },
+  "admin": {
+    "dentistLabel": "Dentist",
+    "hygienistLabel": "Hygienist",
+    "receptionistLabel": "Front Desk",
+    "scheduleEditorTitle": "Weekly Schedule",
+    "scheduleEditorDescription": "Set the provider's working hours used for appointment availability.",
+    "editSchedule": "Edit Schedule",
+    "closeSchedule": "Close Schedule",
+    "scheduleLoading": "Loading schedule...",
+    "scheduleSave": "Save Schedule",
+    "scheduleSaving": "Saving...",
+    "scheduleDefaultHint": "New providers default to Monday-Friday, 8:00 AM to 5:00 PM.",
+    "scheduleDay": "Day",
+    "scheduleAvailable": "Available",
+    "scheduleStart": "Start",
+    "scheduleEnd": "End",
+    "days": {
+      "sunday": "Sunday",
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Saturday"
     }
   },
   "auth": {

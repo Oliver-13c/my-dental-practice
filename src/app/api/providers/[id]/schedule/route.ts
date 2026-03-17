@@ -6,7 +6,7 @@ import {
   updateProviderScheduleSchema,
   createTimeBlockSchema,
 } from '@/entities/appointment/model/appointment.types';
-import { getCurrentAdminProfile, getCurrentStaffProfile } from '@/features/admin-dashboard/api/admin-auth';
+import { getCurrentStaffProfile } from '@/features/admin-dashboard/api/admin-auth';
 import { ApiErrors } from '@/shared/lib/api-error';
 
 interface RouteParams {
@@ -70,11 +70,16 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
  */
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
-    const { profile, error: authError } = await getCurrentAdminProfile();
+    const { profile, error: authError } = await getCurrentStaffProfile();
     if (!profile) {
       return authError?.includes('Forbidden')
         ? ApiErrors.forbidden(authError)
         : ApiErrors.unauthorized(authError || 'Unauthorized');
+    }
+
+    const canManageSchedule = profile?.is_admin || profile?.role === 'admin' || profile?.role === 'receptionist';
+    if (!canManageSchedule) {
+      return ApiErrors.forbidden('Forbidden: Admin or receptionist access required');
     }
 
     const { id } = await params;
@@ -125,11 +130,16 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
  */
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    const { profile, error: authError } = await getCurrentAdminProfile();
+    const { profile, error: authError } = await getCurrentStaffProfile();
     if (!profile) {
       return authError?.includes('Forbidden')
         ? ApiErrors.forbidden(authError)
         : ApiErrors.unauthorized(authError || 'Unauthorized');
+    }
+
+    const canManageSchedule = profile?.is_admin || profile?.role === 'admin' || profile?.role === 'receptionist';
+    if (!canManageSchedule) {
+      return ApiErrors.forbidden('Forbidden: Admin or receptionist access required');
     }
 
     const { id } = await params;
