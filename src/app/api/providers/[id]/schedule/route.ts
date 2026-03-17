@@ -77,7 +77,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         : ApiErrors.unauthorized(authError || 'Unauthorized');
     }
 
-    const canManageSchedule = profile?.is_admin || profile?.role === 'admin' || profile?.role === 'receptionist';
+    const normalizedRole = String(profile?.role ?? '').toLowerCase();
+    const canManageSchedule = profile?.is_admin || normalizedRole === 'admin' || normalizedRole === 'receptionist';
     if (!canManageSchedule) {
       return ApiErrors.forbidden('Forbidden: Admin or receptionist access required');
     }
@@ -137,7 +138,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         : ApiErrors.unauthorized(authError || 'Unauthorized');
     }
 
-    const canManageSchedule = profile?.is_admin || profile?.role === 'admin' || profile?.role === 'receptionist';
+    const normalizedRole = String(profile?.role ?? '').toLowerCase();
+    const canManageSchedule = profile?.is_admin || normalizedRole === 'admin' || normalizedRole === 'receptionist';
     if (!canManageSchedule) {
       return ApiErrors.forbidden('Forbidden: Admin or receptionist access required');
     }

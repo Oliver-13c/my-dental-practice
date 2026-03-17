@@ -204,6 +204,37 @@
     }
   },
   "admin": {
+    "title": "Admin",
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "appointments": "Appointments",
+    "staff": "Staff",
+    "auditLogs": "Audit Logs",
+    "analytics": "Analytics",
+    "systemAdministration": "System Administration",
+    "staffDescription": "Manage staff schedules and assignments",
+    "staffManagement": "Staff Management",
+    "totalProviders": "Total Providers",
+    "activeProviders": "Active Providers",
+    "totalReceptionists": "Receptionists",
+    "search": "Search",
+    "all": "All",
+    "active": "Active",
+    "inactive": "Inactive",
+    "error": "Could not load staff data.",
+    "retry": "Retry",
+    "loading": "Loading staff...",
+    "noData": "No staff members found.",
+    "name": "Name",
+    "email": "Email",
+    "role": "Role",
+    "status": "Status",
+    "lastLogin": "Last Login",
+    "actions": "Actions",
+    "neverLoggedIn": "Never",
+    "edit": "Edit",
+    "deactivate": "Deactivate",
+    "activate": "Activate",
     "dentistLabel": "Dentist",
     "hygienistLabel": "Hygienist",
     "receptionistLabel": "Front Desk",
@@ -214,6 +245,9 @@
     "scheduleLoading": "Loading schedule...",
     "scheduleSave": "Save Schedule",
     "scheduleSaving": "Saving...",
+    "scheduleSaved": "Schedule updated successfully.",
+    "scheduleLoadError": "Could not load provider schedule.",
+    "scheduleSaveError": "Could not save provider schedule.",
     "scheduleDefaultHint": "New providers default to Monday-Friday, 8:00 AM to 5:00 PM.",
     "scheduleDay": "Day",
     "scheduleAvailable": "Available",
@@ -227,6 +261,20 @@
       "thursday": "Thursday",
       "friday": "Friday",
       "saturday": "Saturday"
+    },
+    "users": {
+      "title": "User Management",
+      "openStaffDashboard": "Open Staff Dashboard",
+      "version": "v{value}",
+      "language": {
+        "english": "English",
+        "spanish": "Spanish",
+        "switchToEnglish": "EN",
+        "switchToSpanish": "ES"
+      },
+      "form": {
+        "roleAdmin": "Admin"
+      }
     }
   },
   "auth": {

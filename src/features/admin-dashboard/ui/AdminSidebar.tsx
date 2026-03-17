@@ -9,6 +9,7 @@ import { Button } from '@/shared/ui/button';
 export function AdminSidebar() {
   const t = useTranslations('admin');
   const tu = useTranslations('admin.users');
+  const tc = useTranslations('contacts');
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
@@ -30,6 +31,7 @@ export function AdminSidebar() {
     { href: '/admin/users', label: t('usersNav'), icon: '👥' },
     { href: '/admin/appointments', label: t('appointments'), icon: '📅' },
     { href: '/admin/staff', label: t('staff'), icon: '👨‍⚕️' },
+    { href: '/admin/contacts', label: tc('title'), icon: '💬' },
     { href: '/admin/audit-logs', label: t('auditLogs'), icon: '📋' },
     { href: '/admin/analytics', label: t('analytics'), icon: '📈' },
   ];
