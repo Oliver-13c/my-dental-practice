@@ -77,13 +77,24 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         : ApiErrors.unauthorized(authError || 'Unauthorized');
     }
 
+    const { id } = await params;
     const normalizedRole = String(profile?.role ?? '').toLowerCase();
-    const canManageSchedule = profile?.is_admin || normalizedRole === 'admin' || normalizedRole === 'receptionist';
+    
+    // Allow: admins, receptionists, or providers managing their own schedule
+    const isOwnProfile = profile?.id === id;
+    const canManageSchedule = 
+      profile?.is_admin || 
+      normalizedRole === 'admin' || 
+      normalizedRole === 'receptionist' ||
+      (isOwnProfile && (normalizedRole === 'dentist' || normalizedRole === 'hygienist'));
+    
     if (!canManageSchedule) {
-      return ApiErrors.forbidden('Forbidden: Admin or receptionist access required');
+      console.error(
+        `[Schedule PUT] Permission denied. User: ${profile?.id}, Role: ${normalizedRole}, is_admin: ${profile?.is_admin}, Target: ${id}`,
+      );
+      return ApiErrors.forbidden('Forbidden: Admin, receptionist, or own profile access required');
     }
 
-    const { id } = await params;
     const body = await request.json();
     const parsed = updateProviderScheduleSchema.safeParse(body);
 

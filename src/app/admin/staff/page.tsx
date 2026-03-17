@@ -154,6 +154,14 @@ export default function StaffPage() {
 
         const json = await res.json();
         setScheduleRows(mergeScheduleRows(json.data?.schedules));
+        
+        // Scroll schedule editor into view after brief delay to allow DOM update
+        setTimeout(() => {
+          const scheduleEditor = document.querySelector('[data-testid="schedule-editor"]');
+          if (scheduleEditor) {
+            scheduleEditor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 100);
       } catch {
         setScheduleRows(buildDefaultSchedule());
         setScheduleError(tx('scheduleLoadError', 'Could not load provider schedule.'));
@@ -510,7 +518,7 @@ export default function StaffPage() {
         )}
 
         {selectedScheduleMember && CLINICAL_ROLES.has(selectedScheduleMember.role) && (
-          <Card className="rounded-xl border-slate-200 bg-white p-6">
+          <Card className="rounded-xl border-slate-200 bg-white p-6" data-testid="schedule-editor">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-slate-900">
